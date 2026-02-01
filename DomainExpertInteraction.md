@@ -1,21 +1,28 @@
 # Summary of the interaction
 
 ## Basic information
-    Domain: Service & Capacity Management System
-    Problem statement:  Restaurant reservation and capacity management for dine-ins'.
-    Date of interaction: Requirements elicitation phase
-    Mode of interaction: Video call
-    Duration (in-minutes): 31 
-    Publicly accessible Video link: https://drive.google.com/file/d/1nLGgF40rVxh2r_NYEzeRnJvZJN6H97Ul/view?usp=drivesdk
+Domain: Service & Capacity Management System
+
+Problem statement:  Restaurant reservation and capacity management for dine-ins'.
+
+Date of interaction: Requirements elicitation phase
+
+Mode of interaction: Video call
+
+Duration (in-minutes): 31 
+
+Publicly accessible Video link: https://drive.google.com/file/d/1nLGgF40rVxh2r_NYEzeRnJvZJN6H97Ul/view?usp=drivesdk
 
 ## Domain Expert Details
-    Role/ designation:
-    Software Development Engineer (SDE) / Technical Domain Mentor
+Role/ designation:
 
-    Experience in the domain (Brief description of responsibilities and years of experience in domain):
-    Experience with relevant software systems involving restaurant reservation workflows, focusing on requirements engineering, CRUD operations, and ACID-compliant transactions.
+Software Development Engineer (SDE) / Technical Domain Mentor
 
-   Nature of work: Technical
+Experience in the domain (Brief description of responsibilities and years of experience in domain):
+
+Experience with relevant software systems involving restaurant reservation workflows, focusing on requirements engineering, CRUD operations, and ACID-compliant transactions.
+
+Nature of work: Technical
 
 
 ## Domain Context and Terminology
@@ -120,3 +127,4 @@ Document rules that govern how the domain operates.
 - Open questions that need follow-up
   - Handling reservation deposits or advance payments
   - Policy for repeated no-shows
+
