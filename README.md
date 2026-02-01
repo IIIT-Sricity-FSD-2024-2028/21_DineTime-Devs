@@ -29,14 +29,13 @@ Actors represent external roles that interact with the system to achieve specifi
 ### 4.1 Customer (Diner)
 
 **Description**  
-The Customer is an end user who interacts with the system to discover restaurants and manage dine-in reservations.
+The Customer is an end user who interacts with the system to discover restaurants and make reservation.
 
 **Planned Features**
 - Browse and search available restaurants.
 - View restaurant details such as location, ratings, and seating availability.
 - Check real-time table availability for selected date and time.
 - Create advance table reservations.
-- Modify existing reservations within allowed constraints.
 - Cancel reservations.
 - Receive reservation confirmations and updates.
 
