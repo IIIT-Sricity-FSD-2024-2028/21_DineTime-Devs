@@ -4,15 +4,15 @@
 
 ## 1. Overview
 
-The Restaurant Reservation and Capacity Management Platform is a software-based information system designed to support dine-in table reservations and real-time seating operations in restaurants. The system facilitates advance reservations, live table availability tracking, customer arrival management, and restaurant operational configuration in a consistent and reliable manner.
+The Restaurant Reservation and Capacity Management Platform is a software-based information system designed to support dine-in table reservations and real-time seating operations in restaurants. The system enables advance reservations, live table availability tracking, customer arrival management, and restaurant operational configuration in a consistent and structured manner.
 
-This document provides a formal requirements-level description of the problem domain, system actors, their responsibilities, and the interaction with external systems.
+This document presents a formal requirements-level description of the system by identifying the interacting actors and describing their **planned features**, which collectively define the functional scope of the platform.
 
 ---
 
 ## 2. Problem Definition
 
-Restaurants operate under limited seating capacity and time-sensitive demand, particularly during peak dining hours. In the absence of a centralized reservation and seating management system, restaurants frequently encounter operational challenges such as overbooking, inefficient table utilization, lack of real-time visibility into table availability, and difficulty in handling customer arrivals and no-shows.
+Restaurants operate under limited seating capacity and time-sensitive demand, particularly during peak dining hours. In the absence of a centralized reservation and seating management system, restaurants frequently face challenges such as overbooking, inefficient table utilization, lack of real-time availability information, and difficulty in managing customer arrivals and no-shows.
 
 The problem addressed by this project is the need for a centralized reservation and capacity management system that supports the complete reservation lifecycle while enabling real-time restaurant operations.
 
@@ -20,65 +20,53 @@ The problem addressed by this project is the need for a centralized reservation 
 
 ## 3. Identification of System Actors
 
-Actors represent external roles that interact with the system to achieve specific goals. Actor identification follows UML use-case modeling principles and focuses on roles rather than job titles.
+Actors represent external roles that interact with the system to achieve specific objectives. Actor identification follows UML use-case modeling principles and focuses on roles rather than internal system components or implementation details.
 
 ---
 
-## 4. Primary Actors and Their Responsibilities
+## 4. Primary Actors and Planned Features
 
 ### 4.1 Customer (Diner)
 
 **Description**  
-The Customer is an end user who interacts with the system to browse restaurants, check availability, and manage dine-in reservations.
+The Customer is an end user who interacts with the system to discover restaurants and manage dine-in reservations.
 
-**Responsibilities**
-- Browse and search for restaurants.
-- View restaurant details and availability.
-- Create, modify, or cancel table reservations.
-- Receive reservation confirmations and notifications.
-
-**Key Use Cases**
-- Browse Restaurants  
-- Check Real-Time Availability  
-- Reserve Dining Table  
-- Modify Booking  
-- Cancel Reservation  
+**Planned Features**
+- Browse and search available restaurants.
+- View restaurant details such as location, ratings, and seating availability.
+- Check real-time table availability for selected date and time.
+- Create advance table reservations.
+- Modify existing reservations within allowed constraints.
+- Cancel reservations.
+- Receive reservation confirmations and updates.
 
 ---
 
 ### 4.2 Restaurant Staff
 
 **Description**  
-Restaurant Staff are operational users responsible for managing real-time seating and customer arrivals.
+Restaurant Staff are operational users responsible for managing day-to-day seating activities within the restaurant.
 
-**Responsibilities**
-- Monitor daily reservations.
-- Update table occupancy status.
-- Verify customer check-ins.
+**Planned Features**
+- View the list of reservations for the current day.
+- Update table status (available, reserved, occupied).
+- Verify customer arrival during check-in.
 - Mark reservations as completed or no-show.
-
-**Key Use Cases**
-- View Today’s Reservations  
-- Update Table Status  
-- Verify Customer Check-In  
+- Support walk-in seating based on real-time availability.
 
 ---
 
 ### 4.3 Restaurant Manager
 
 **Description**  
-The Restaurant Manager is responsible for configuring restaurant operations and managing capacity-related information.
+The Restaurant Manager is responsible for configuring restaurant operations and managing capacity-related settings.
 
-**Responsibilities**
-- Maintain restaurant profile information.
+**Planned Features**
+- Create and maintain restaurant profile information.
 - Configure table layout and seating capacity.
-- Define reservation rules and operating hours.
-- Review reservation summaries.
-
-**Key Use Cases**
-- Manage Restaurant Profile  
-- Configure Table Layout and Capacity  
-- Configure Operating Hours  
+- Define operating hours and reservation rules.
+- Configure grace time and no-show policies.
+- View reservation summaries and basic analytics.
 
 ---
 
@@ -91,29 +79,29 @@ The System Administrator is responsible for basic platform maintenance and acces
 
 ## 5. External Systems
 
-The system interacts with the following external systems, which lie outside the system boundary and support core reservation workflows:
+The system interacts with the following external systems, which remain outside the system boundary but support core reservation workflows:
 
 - **Payment Gateway** – Processes reservation-related payments and refunds securely.
-- **GPS / Location Service** – Enables location-based restaurant discovery and navigation.
+- **GPS / Location Service** – Enables location-based restaurant discovery.
 - **External Reviews and Ratings Service** – Provides restaurant ratings and customer reviews.
 - **Notification Service** – Sends reservation confirmations, reminders, and updates via SMS or email.
 
 ---
 
-## 6. Summary of Use Case Allocation
+## 6. Summary of Planned Features by Actor
 
-| Actor | Major Use Cases |
-|------|-----------------|
-| Customer | Browse Restaurants, Reserve Table, Modify Booking |
-| Restaurant Staff | Update Table Status, Verify Check-In |
-| Restaurant Manager | Configure Restaurant, Manage Capacity |
-| System Administrator | Platform Maintenance |
-| External Systems | Payments, Notifications, Location Services |
+| Actor | Planned Features |
+|------|------------------|
+| Customer | Browse restaurants, check availability, reserve tables, modify or cancel bookings |
+| Restaurant Staff | Update table status, verify check-in, manage no-shows |
+| Restaurant Manager | Configure restaurant profile, manage capacity and policies |
+| System Administrator | Platform maintenance |
+| External Systems | Payments, notifications, location and reviews |
 
 ---
 
 ## 7. Conclusion
 
-The Restaurant Reservation and Capacity Management Platform provides a structured solution to manage dine-in reservations and seating operations in restaurants. The clear identification of actors, their responsibilities, and supporting external systems establishes a strong foundation for subsequent UML modeling and detailed system design activities.
+The Restaurant Reservation and Capacity Management Platform addresses operational challenges faced by restaurants by providing a structured set of planned features aligned with clearly identified actors. By expressing system functionality in terms of planned features rather than implementation details, this document establishes a strong foundation for subsequent UML modeling and detailed system design.
 
 This document serves as a formal requirements-level description of the system.
