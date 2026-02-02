@@ -33,7 +33,7 @@ Nature of work: Technical
 - What are the primary goals or outcomes of this problem statement?
   Accurate reservations, predictable seating capacity, reduced no-shows, faster customer check-in, and better coordination between restaurant staff and management.
 
-- List key terms used by the domain expert and their meanings (Copy these to definition.yml)
+- List key terms used by the domain expert and their meanings 
 
 | Term | Meaning as explained by the expert |
 |---|---|
@@ -127,4 +127,5 @@ Document rules that govern how the domain operates.
 - Open questions that need follow-up
   - Handling reservation deposits or advance payments
   - Policy for repeated no-shows
+
 
