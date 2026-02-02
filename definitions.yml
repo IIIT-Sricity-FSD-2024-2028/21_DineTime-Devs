@@ -124,3 +124,14 @@ Grace Time:
   aliases:
     - Arrival Buffer
     - Waiting Window
+
+  WalkIn:
+  definition:
+    A diner who arrives at the restaurant without a prior reservation and requests seating based on current table availability.
+  examples:
+    - A customer entering the restaurant without booking and asking for a table for two.
+  aliases:
+    - Walk-in Customer
+    - Guest
+
+
