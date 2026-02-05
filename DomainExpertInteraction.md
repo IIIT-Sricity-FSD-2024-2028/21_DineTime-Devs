@@ -20,7 +20,7 @@ Software Development Engineer (SDE) / Technical Domain Mentor
 
 Experience in the domain (Brief description of responsibilities and years of experience in domain):
 
-Experience with relevant software systems involving restaurant reservation workflows, focusing on requirements engineering, CRUD operations, and ACID-compliant transactions.
+Experience in the restaurant dine-in reservation domain, with an understanding of restaurant operations, seating management, and customer booking practices, and the ability to translate real-world dining workflows into clear system requirements.
 
 Nature of work: Technical
 
@@ -127,5 +127,6 @@ Document rules that govern how the domain operates.
 - Open questions that need follow-up
   - Handling reservation deposits or advance payments
   - Policy for repeated no-shows
+
 
 
