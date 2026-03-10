@@ -22,8 +22,6 @@ CREATE TABLE USER (
     CONSTRAINT fk_user_location
         FOREIGN KEY (location_id)
         REFERENCES LOCATION(location_id)
-        ON DELETE SET NULL
-        ON UPDATE CASCADE
 );
 
 CREATE TABLE DINER (
@@ -33,7 +31,6 @@ CREATE TABLE DINER (
     CONSTRAINT fk_diner_user
         FOREIGN KEY (diner_id)
         REFERENCES USER(user_id)
-        ON DELETE CASCADE
 );
 
 CREATE TABLE RESTAURANT_MANAGER (
@@ -45,7 +42,6 @@ CREATE TABLE RESTAURANT_MANAGER (
     CONSTRAINT fk_manager_user
         FOREIGN KEY (manager_id)
         REFERENCES USER(user_id)
-        ON DELETE CASCADE
 );
 
 CREATE TABLE RESTAURANT (
@@ -75,7 +71,6 @@ CREATE TABLE RESTAURANT_STAFF (
     CONSTRAINT fk_staff_restaurant
         FOREIGN KEY (restaurant_id)
         REFERENCES RESTAURANT(restaurant_id)
-        ON DELETE CASCADE
 );
 
 CREATE TABLE TABLES (
@@ -89,7 +84,6 @@ CREATE TABLE TABLES (
     CONSTRAINT fk_table_restaurant
         FOREIGN KEY (restaurant_id)
         REFERENCES RESTAURANT(restaurant_id)
-        ON DELETE CASCADE
 );
 
 CREATE TABLE TIME_SLOT (
@@ -130,8 +124,7 @@ CREATE TABLE RESERVATION_TABLE (
     PRIMARY KEY (reservation_id, table_id),
     CONSTRAINT fk_rt_reservation
         FOREIGN KEY (reservation_id)
-        REFERENCES RESERVATION(reservation_id)
-        ON DELETE CASCADE,
+        REFERENCES RESERVATION(reservation_id),
     CONSTRAINT fk_rt_table
         FOREIGN KEY (table_id)
         REFERENCES TABLES(table_id)
@@ -147,7 +140,6 @@ CREATE TABLE MENU_ITEM (
     CONSTRAINT fk_menu_restaurant
         FOREIGN KEY (restaurant_id)
         REFERENCES RESTAURANT(restaurant_id)
-        ON DELETE CASCADE
 );
 
 CREATE TABLE ORDERS (
@@ -172,8 +164,7 @@ CREATE TABLE ORDER_ITEM (
     price DECIMAL(10,2) NOT NULL CHECK (price >= 0),
     CONSTRAINT fk_oi_order
         FOREIGN KEY (order_id)
-        REFERENCES ORDERS(order_id)
-        ON DELETE CASCADE,
+        REFERENCES ORDERS(order_id),
     CONSTRAINT fk_oi_item
         FOREIGN KEY (item_id)
         REFERENCES MENU_ITEM(item_id)
@@ -224,12 +215,11 @@ CREATE TABLE NOTIFICATION (
     notification_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     message TEXT NOT NULL,
-    notification_type VARCHAR(50),
+    type VARCHAR(50),
     is_read BOOLEAN DEFAULT FALSE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     
     CONSTRAINT fk_notification_user
         FOREIGN KEY (user_id)
         REFERENCES USER(user_id)
-        ON DELETE CASCADE
 );
