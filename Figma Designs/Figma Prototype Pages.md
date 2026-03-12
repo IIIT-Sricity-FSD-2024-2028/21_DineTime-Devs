@@ -6,7 +6,7 @@ This document contains the interactive Figma prototypes for the three platforms 
 
 ## DineTime Platform
 
-🔗 **[Open DineTime Prototype](https://www.figma.com/proto/6IW35xeYWxVrXDpJf4OJzm/ALL-UI?node-id=732-3&p=f&viewport=373%2C1015%2C0.11&t=47oSgtnryqAYYegj-1&scaling=min-zoom&content-scaling=fixed&starting-point-node-id=732%3A3&page-id=732%3A2)**
+🔗 **[Open DineTime Prototype]([https://www.figma.com/proto/6IW35xeYWxVrXDpJf4OJzm/ALL-UI?node-id=732-3&p=f&viewport=373%2C1015%2C0.11&t=47oSgtnryqAYYegj-1&scaling=min-zoom&content-scaling=fixed&starting-point-node-id=732%3A3&page-id=732%3A2](https://www.figma.com/proto/6IW35xeYWxVrXDpJf4OJzm/ALL-UI?node-id=915-740&p=f&t=eBUzrWX9VNpUUVCp-1&scaling=min-zoom&content-scaling=fixed&page-id=732%3A2&starting-point-node-id=915%3A740))**
 
 ---
 
@@ -21,5 +21,6 @@ This document contains the interactive Figma prototypes for the three platforms 
 ## Design Tool
 
 All UI/UX designs were created using **Figma**.
+
 
 
