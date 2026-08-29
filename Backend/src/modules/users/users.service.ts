@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { hash } from 'bcrypt';
 import { Role } from 'src/common/enums/role.enum';
 import { generateId } from 'src/common/utils/id.util';
 import { CreateUserDto, UpdateUserDto } from 'src/modules/users/dto/users.dto';
@@ -84,7 +85,7 @@ export class UsersService {
     return `rst-${this.nextSequence('rst')}`;
   }
 
-  create(dto: CreateUserDto) {
+  async create(dto: CreateUserDto) {
     const existing = this.userRepository.findByEmail(dto.email);
     if (existing) {
       throw new BadRequestException('Email already exists');
@@ -95,11 +96,12 @@ export class UsersService {
       name: dto.name,
       email: dto.email,
       phone: dto.phone,
-      password_hash: dto.password_hash,
+      password_hash: await hash(dto.password_hash, 10),
       role: dto.role,
       status: dto.status ?? 'active',
       created_at: new Date().toISOString(),
       location_id: dto.location_id,
+      photo_url: dto.photo_url,
     });
 
     if (dto.role === Role.DINER) {
@@ -140,8 +142,13 @@ export class UsersService {
     return user;
   }
 
-  update(id: string, dto: UpdateUserDto) {
-    const updated = this.userRepository.update(id, dto);
+  async update(id: string, dto: UpdateUserDto) {
+    const payload = { ...dto };
+    if (payload.password_hash) {
+      payload.password_hash = await hash(payload.password_hash, 10);
+    }
+
+    const updated = this.userRepository.update(id, payload);
     if (!updated) {
       throw new NotFoundException('User not found');
     }
@@ -165,6 +172,15 @@ export class UsersService {
         employee_code: dto.employee_code ?? current?.employee_code ?? '',
         role_type: dto.role_type ?? current?.role_type ?? '',
       });
+    }
+
+    return this.enrichUser(updated);
+  }
+
+  uploadPhoto(id: string, photoUrl: string) {
+    const updated = this.userRepository.update(id, { photo_url: photoUrl });
+    if (!updated) {
+      throw new NotFoundException('User not found');
     }
 
     return this.enrichUser(updated);

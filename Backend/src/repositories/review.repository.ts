@@ -21,6 +21,10 @@ export class ReviewRepository {
     return this.reviews.filter((item) => item.user_id === userId);
   }
 
+  findByReservationId(reservationId: string): Review | undefined {
+    return this.reviews.find((item) => item.reservation_id === reservationId);
+  }
+
   create(review: Review): Review {
     this.reviews.push(review);
     return review;

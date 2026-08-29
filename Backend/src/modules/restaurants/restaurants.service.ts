@@ -84,6 +84,18 @@ export class RestaurantsService {
     return updated;
   }
 
+  uploadImage(id: string, imageUrl: string) {
+    const restaurant = this.findOne(id);
+    const imageUrls = [...(restaurant.image_urls || []), imageUrl];
+    const updated = this.restaurantRepository.update(id, { image_urls: imageUrls });
+
+    if (!updated) {
+      throw new NotFoundException('Restaurant not found');
+    }
+
+    return updated;
+  }
+
   delete(id: string) {
     const deleted = this.restaurantRepository.remove(id);
     if (!deleted) {

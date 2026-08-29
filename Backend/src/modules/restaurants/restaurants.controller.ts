@@ -1,7 +1,21 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBadRequestResponse,
   ApiBody,
+  ApiConsumes,
   ApiCreatedResponse,
   ApiHeader,
   ApiNotFoundResponse,
@@ -18,6 +32,7 @@ import {
   dataObjectSchema,
   deletedSchema,
 } from 'src/common/swagger/schemas';
+import { multerConfig } from 'src/common/upload/multer.config';
 import {
   CreateLocationDto,
   CreateRestaurantDto,
@@ -78,6 +93,43 @@ export class RestaurantsController {
   @ApiBadRequestResponse({ description: 'Invalid restaurant payload' })
   create(@Body() dto: CreateRestaurantDto) {
     return { data: this.restaurantsService.create(dto) };
+  }
+
+  @Roles(Role.MANAGER, Role.SUPER_USER)
+  @Post(':id/upload-image')
+  @UseInterceptors(FileInterceptor('image', multerConfig))
+  @ApiOperation({ summary: 'Upload a restaurant image' })
+  @ApiParam({ name: 'id' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        image: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+      required: ['image'],
+    },
+  })
+  @ApiOkResponse({ schema: dataObjectSchema })
+  @ApiBadRequestResponse({ description: 'Invalid image upload' })
+  @ApiNotFoundResponse({ description: 'Restaurant not found' })
+  uploadImage(
+    @Param('id') id: string,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('Image file is required');
+    }
+
+    return {
+      data: this.restaurantsService.uploadImage(
+        id,
+        `/uploads/restaurants/${file.filename}`,
+      ),
+    };
   }
 
   @Roles(Role.MANAGER, Role.SUPER_USER)

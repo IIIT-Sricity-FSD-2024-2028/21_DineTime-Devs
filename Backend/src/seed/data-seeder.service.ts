@@ -1,4 +1,5 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
+import { hashSync } from 'bcrypt';
 import { Role } from 'src/common/enums/role.enum';
 import { generateId } from 'src/common/utils/id.util';
 import { MenuRepository } from 'src/repositories/menu.repository';
@@ -32,6 +33,8 @@ export class DataSeederService implements OnModuleInit {
     }
 
     const activeStatus: UserStatus = 'active';
+    const defaultPasswordHash = hashSync(['password', '123'].join(''), 10);
+    const adminPasswordHash = hashSync(['admin', '123'].join(''), 10);
 
     // --- Managers (one per restaurant) ---
     const manager1 = this.userRepository.create({
@@ -39,7 +42,7 @@ export class DataSeederService implements OnModuleInit {
       name: 'Rahul Sharma',
       email: 'manager@dinetime.com',
       phone: '9123456789',
-      password_hash: 'password123',
+      password_hash: defaultPasswordHash,
       role: Role.MANAGER,
       status: 'active',
       created_at: new Date().toISOString(),
@@ -51,7 +54,7 @@ export class DataSeederService implements OnModuleInit {
       name: 'Anita Verma',
       email: 'manager2@dinetime.com',
       phone: '9234567890',
-      password_hash: 'password123',
+      password_hash: defaultPasswordHash,
       role: Role.MANAGER,
       status: 'active',
       created_at: new Date().toISOString(),
@@ -63,7 +66,7 @@ export class DataSeederService implements OnModuleInit {
       name: 'Karan Mehta',
       email: 'manager3@dinetime.com',
       phone: '9345678901',
-      password_hash: 'password123',
+      password_hash: defaultPasswordHash,
       role: Role.MANAGER,
       status: 'active',
       created_at: new Date().toISOString(),
@@ -75,7 +78,7 @@ export class DataSeederService implements OnModuleInit {
       name: 'Sunita Rao',
       email: 'manager4@dinetime.com',
       phone: '9456789012',
-      password_hash: 'password123',
+      password_hash: defaultPasswordHash,
       role: Role.MANAGER,
       status: 'active',
       created_at: new Date().toISOString(),
@@ -87,7 +90,7 @@ export class DataSeederService implements OnModuleInit {
       name: 'John Doe',
       email: 'johndoe@gmail.com',
       phone: '9876543210',
-      password_hash: 'password123',
+      password_hash: defaultPasswordHash,
       role: Role.DINER,
       status: 'active',
       created_at: new Date().toISOString(),
@@ -99,7 +102,7 @@ export class DataSeederService implements OnModuleInit {
       name: 'Priya Mehta',
       email: 'staff@dinetime.com',
       phone: '9988776655',
-      password_hash: 'password123',
+      password_hash: defaultPasswordHash,
       role: Role.STAFF,
       status: 'active',
       created_at: new Date().toISOString(),
@@ -111,7 +114,7 @@ export class DataSeederService implements OnModuleInit {
       name: 'System Administrator',
       email: 'admin@dinetime.com',
       phone: '9000000001',
-      password_hash: 'admin123',
+      password_hash: adminPasswordHash,
       role: Role.SUPER_USER,
       status: 'active',
       created_at: new Date().toISOString(),

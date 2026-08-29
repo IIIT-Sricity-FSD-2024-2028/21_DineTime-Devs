@@ -161,17 +161,18 @@ export class ReservationsService {
       throw new NotFoundException('Reservation not found');
     }
 
-    if (
-      (dto.reservation_status === 'cancelled' ||
-        dto.reservation_status === 'completed' ||
-        dto.reservation_status === 'no_show') &&
-      reservation.table_id &&
-      reservation.slot_id
-    ) {
+    if (dto.reservation_status && reservation.table_id && reservation.slot_id) {
+      const nextTableSlotStatus =
+        dto.reservation_status === 'checked_in'
+          ? 'occupied'
+          : dto.reservation_status === 'reserved'
+            ? 'reserved'
+            : 'available';
+
       this.tableSlotRepository.updateStatus(
         reservation.table_id,
         reservation.slot_id,
-        'available',
+        nextTableSlotStatus,
       );
     }
 

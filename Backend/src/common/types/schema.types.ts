@@ -21,6 +21,7 @@ export interface User {
   status: UserStatus;
   created_at: string;
   location_id?: string;
+  photo_url?: string;
 }
 
 export interface DinerDetails {
@@ -145,6 +146,7 @@ export interface Review {
   id: string;
   user_id: string;
   restaurant_id: string;
+  reservation_id?: string;
   rating: number;
   comment: string;
   created_at: string;

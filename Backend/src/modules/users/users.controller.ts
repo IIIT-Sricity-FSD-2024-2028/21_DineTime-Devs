@@ -1,7 +1,20 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBadRequestResponse,
   ApiBody,
+  ApiConsumes,
   ApiCreatedResponse,
   ApiHeader,
   ApiNotFoundResponse,
@@ -17,6 +30,7 @@ import {
   dataObjectSchema,
   deletedSchema,
 } from 'src/common/swagger/schemas';
+import { profilePhotoMulterConfig } from 'src/common/upload/multer.config';
 import { CreateUserDto, UpdateUserDto } from 'src/modules/users/dto/users.dto';
 import { UsersService } from 'src/modules/users/users.service';
 
@@ -64,6 +78,43 @@ export class UsersController {
   @ApiNotFoundResponse({ description: 'User not found' })
   update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
     return { data: this.usersService.update(id, dto) };
+  }
+
+  @Roles(Role.DINER, Role.MANAGER, Role.STAFF, Role.SUPER_USER)
+  @Post(':id/upload-photo')
+  @UseInterceptors(FileInterceptor('photo', profilePhotoMulterConfig))
+  @ApiOperation({ summary: 'Upload user profile photo' })
+  @ApiParam({ name: 'id' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        photo: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+      required: ['photo'],
+    },
+  })
+  @ApiOkResponse({ schema: dataObjectSchema })
+  @ApiBadRequestResponse({ description: 'Invalid profile photo upload' })
+  @ApiNotFoundResponse({ description: 'User not found' })
+  uploadPhoto(
+    @Param('id') id: string,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('Photo file is required');
+    }
+
+    return {
+      data: this.usersService.uploadPhoto(
+        id,
+        `/uploads/profiles/${file.filename}`,
+      ),
+    };
   }
 
   @Roles(Role.MANAGER, Role.SUPER_USER)

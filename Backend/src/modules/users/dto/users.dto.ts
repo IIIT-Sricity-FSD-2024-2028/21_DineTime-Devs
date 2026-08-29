@@ -40,6 +40,11 @@ export class CreateUserDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
+  photo_url?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
   business_license_number?: string;
 
   @ApiPropertyOptional()
@@ -103,6 +108,11 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString()
   location_id?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  photo_url?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
