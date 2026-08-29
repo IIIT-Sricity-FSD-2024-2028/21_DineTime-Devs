@@ -153,17 +153,18 @@ function setupEventListeners() {
                 };
                 try {
                     const slotsRes = await apiRequest('/tableslots', {}, 'staff');
-                    const slot = (slotsRes?.data || []).find((s) => s.table_id === tableList[tableIndex].table_id);
-                    if (slot) {
-                        await apiRequest('/tableslots/status', {
+                    const slots = (slotsRes?.data || []).filter((s) => s.table_id === tableList[tableIndex].table_id);
+                    await Promise.all(slots.map((slot) =>
+                        apiRequest('/tableslots/status', {
                             method: 'PATCH',
                             body: JSON.stringify({
                                 table_id: slot.table_id,
                                 slot_id: slot.slot_id,
                                 status: slotStatusMap[newStatus] || 'available',
                             }),
-                        }, 'staff');
-                    }
+                        }, 'staff'),
+                    ));
+                    await loadTablesFromStorage();
                 } catch (_e) {
                 }
                 

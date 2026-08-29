@@ -58,8 +58,13 @@ function statusBadge(status) {
 
 function buildCard(r) {
   var cancelBtn = '';
+  var reviewBtn = '';
   if (r.status === 'Confirmed') {
     cancelBtn = '<button class="btn-cancel" data-id="' + r.id + '">Cancel</button>';
+  } else if (r.status === 'Completed') {
+    reviewBtn = '<button class="btn-rate" data-id="' + r.id + '">' +
+      '<i class="fa-regular fa-star"></i> ' + (r.hasRated ? 'View Rating' : 'Rate Experience') +
+      '</button>';
   }
 
   var tableRow = '';
@@ -89,6 +94,7 @@ function buildCard(r) {
         '<button class="btn-view-details" data-id="' + r.id + '">' +
           '<i class="fa-regular fa-eye"></i> View Details' +
         '</button>' +
+        reviewBtn +
         cancelBtn +
       '</div>' +
     '</div>' +
@@ -123,6 +129,14 @@ function renderList() {
     btn.addEventListener('click', function() {
       var id = btn.dataset.id;
       window.location.href = 'details.html?id=' + id;
+    });
+  });
+
+  list.querySelectorAll('.btn-rate').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var id = btn.dataset.id;
+      window.location.href = 'profile.html?review=' + encodeURIComponent(id);
     });
   });
 }

@@ -292,6 +292,27 @@
 
 .btn-view-details i { font-size: 0.85rem; }
 
+.btn-rate {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border: 1.5px solid var(--accent);
+  border-radius: var(--radius-md);
+  background: var(--accent);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-rate:hover {
+  background: var(--accent-hover);
+  box-shadow: 0 3px 10px rgba(230, 126, 34, 0.28);
+}
+
 .btn-cancel {
   background: none;
   border: none;

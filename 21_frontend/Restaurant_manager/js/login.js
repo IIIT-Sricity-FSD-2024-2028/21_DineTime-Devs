@@ -123,21 +123,21 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     }
     if (!valid) return;
 
-    let isRegisteredUser = false;
+    let auth = null;
     try {
-        const usersRes = await apiRequest('/users', {}, 'manager');
-        const users = usersRes?.data || [];
-        const user = users.find((u) => u.role === 'manager' && u.email.toLowerCase() === emailVal.toLowerCase());
-        isRegisteredUser = !!user && user.password_hash === passwordVal;
+        auth = await apiRequest('/auth/login', {
+            method: 'POST',
+            body: JSON.stringify({ email: emailVal.toLowerCase(), password: passwordVal }),
+        }, 'manager');
     } catch (_err) {
         pwInput.classList.add('input-error');
-        passwordErr.textContent = 'Unable to reach server. Please try again.';
+        passwordErr.textContent = 'Invalid email or password. Please try again.';
         passwordErr.classList.add('show');
-        showToast('Login failed. Server is unavailable.', 'error');
+        showToast('Login failed. Check your credentials.', 'error');
         return;
     }
 
-    if (!isRegisteredUser) {
+    if (!auth?.user || auth.user.role !== 'manager' || auth.user.status !== 'active') {
         pwInput.classList.add('input-error');
         passwordErr.textContent = 'Invalid email or password. Please try again.';
         passwordErr.classList.add('show');
@@ -146,7 +146,7 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     }
 
     // Success - Load the correct user context
-    StorageManager.login(emailVal);
+    StorageManager.login(emailVal, auth.access_token);
     
     const btn = document.getElementById('login-btn');
     btn.textContent = 'Logging in…';

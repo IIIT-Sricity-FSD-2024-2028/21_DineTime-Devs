@@ -55,10 +55,7 @@ class StorageManager {
     }
 
     static async init() {
-        const ids = this._getIds();
-        if (!ids.managerId || !ids.restaurantId) {
-            await this._ensureManagerEntities();
-        }
+        await this._ensureManagerEntities();
         try {
             await this.refreshFromBackend();
         } catch (_e) {
@@ -69,12 +66,13 @@ class StorageManager {
         const saved = JSON.parse(sessionStorage.getItem(this.SESSION_KEY) || '{}');
         return {
             email: saved.email || 'manager@dinetime.com',
+            access_token: saved.access_token || '',
             role: 'manager',
         };
     }
 
-    static _setSession(email) {
-        sessionStorage.setItem(this.SESSION_KEY, JSON.stringify({ email }));
+    static _setSession(email, accessToken = '') {
+        sessionStorage.setItem(this.SESSION_KEY, JSON.stringify({ email, access_token: accessToken }));
     }
 
     static _getIds() {
@@ -83,6 +81,15 @@ class StorageManager {
 
     static _setIds(data) {
         sessionStorage.setItem(this.IDS_KEY, JSON.stringify(data));
+    }
+
+    static _assetUrl(url) {
+        if (!url) return url;
+        const value = String(url);
+        if (value.startsWith('/uploads/')) {
+            return `${this.API_BASE}${value}`;
+        }
+        return value;
     }
 
     static async _request(path, options = {}) {
@@ -107,6 +114,16 @@ class StorageManager {
 
         let managerId = null;
         try {
+            const users = await this._request('/users', { headers: this._headers('manager') });
+            const match = (users?.data || []).find((u) =>
+                u.role === 'manager' &&
+                String(u.email || '').toLowerCase() === session.email.toLowerCase(),
+            );
+            managerId = match?.id || null;
+        } catch (_e) {}
+
+        if (!managerId) {
+            try {
             const createdUser = await this._request('/users', {
                 method: 'POST',
                 headers: this._headers('manager'),
@@ -124,10 +141,14 @@ class StorageManager {
                 }),
             });
             managerId = createdUser?.data?.id;
-        } catch (_e) {
-            const users = await this._request('/users', { headers: this._headers('manager') });
-            const match = (users?.data || []).find((u) => u.email === session.email);
-            managerId = match?.id;
+            } catch (_e) {
+                const users = await this._request('/users', { headers: this._headers('manager') });
+                const match = (users?.data || []).find((u) =>
+                    u.role === 'manager' &&
+                    String(u.email || '').toLowerCase() === session.email.toLowerCase(),
+                );
+                managerId = match?.id;
+            }
         }
 
         try {
@@ -136,9 +157,12 @@ class StorageManager {
                 headers: this._headers('manager'),
                 body: JSON.stringify({
                     id: locationId,
+                    latitude: 12.9716,
+                    longitude: 77.5946,
                     city: 'Bangalore',
                     pincode: '560001',
                     address: 'MG Road, Bangalore',
+                    country: 'India',
                 }),
             });
         } catch (_e) {}
@@ -244,7 +268,7 @@ class StorageManager {
             capacity: `${tables.length} tables`,
             location: 'Bangalore',
             contact: restaurant.phone || this._cache.profile.phone,
-            image: (restaurant.image_urls && restaurant.image_urls[0]) || this._cache.restaurant.image,
+            image: this._assetUrl((restaurant.image_urls && restaurant.image_urls[0]) || this._cache.restaurant.image),
         };
 
         const parsedPolicies = this._extractPolicies(restaurant.description);
@@ -252,7 +276,9 @@ class StorageManager {
             this._cache.policies = parsedPolicies;
         }
 
-        this._cache.gallery = Array.isArray(restaurant.image_urls) ? [...restaurant.image_urls] : [];
+        this._cache.gallery = Array.isArray(restaurant.image_urls)
+            ? restaurant.image_urls.map((image) => this._assetUrl(image))
+            : [];
 
         this._cache.tables = tables.map((t) => ({
             id: t.id,
@@ -266,7 +292,7 @@ class StorageManager {
             category: m.category,
             price: m.price,
             available: m.is_available ?? m.availability,
-            image: (m.image_urls && m.image_urls[0]) || 'images/dish-1.jpg',
+            image: this._assetUrl((m.image_urls && m.image_urls[0]) || 'images/dish-1.jpg'),
         }));
 
         this._cache.reservations = reservations
@@ -300,6 +326,7 @@ class StorageManager {
 
         this._cache.reviews = reviews.map((r) => ({
             id: r.id,
+            reservationId: r.reservation_id,
             author: userById[r.user_id]?.name || 'Guest',
             initials: (userById[r.user_id]?.name || 'G').split(' ').map((x) => x[0]).join('').slice(0, 2),
             date: r.created_at,
@@ -386,10 +413,10 @@ class StorageManager {
         };
     }
 
-    static login(email) {
+    static login(email, accessToken = '') {
         const nextEmail = email.toLowerCase();
         const current = this._session();
-        this._setSession(nextEmail);
+        this._setSession(nextEmail, accessToken);
         if (current.email !== nextEmail) {
             sessionStorage.removeItem(this.IDS_KEY);
         }
@@ -561,9 +588,7 @@ class StorageManager {
     static toggleMenuAvailability(id, date) {
         const item = this._cache.menu.find((m) => m.id === id);
         if (!item) return;
-        if (!item.dateAvailability) item.dateAvailability = {};
-        const current = item.dateAvailability[date] !== undefined ? item.dateAvailability[date] : (item.available !== false);
-        item.dateAvailability[date] = !current;
+        const current = item.available !== false;
         item.available = !current;
         void this.updateMenuItem(id, { available: !current });
     }
@@ -641,7 +666,17 @@ class StorageManager {
             throw e;
         }
 
-        // 3. Final Refresh to get real backend IDs
+        try {
+            await this._request('/tableslots/seed', {
+                method: 'POST',
+                headers: this._headers('manager'),
+                body: JSON.stringify({ restaurant_id: ids.restaurantId }),
+            });
+        } catch (e) {
+            console.error('Failed to seed table-slot availability:', e);
+        }
+
+        // 3. Final Refresh to get real backend IDs and table-slot availability
         await this.refreshFromBackend();
     }
 

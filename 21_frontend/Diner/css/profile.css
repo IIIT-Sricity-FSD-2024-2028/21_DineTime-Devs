@@ -85,7 +85,10 @@
   width: 110px; height: 110px; border-radius: 50%;
   background: var(--bg); color: var(--text-muted); font-size: 3rem;
   display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
 }
+
+.avatar-circle img { display: block; width: 100%; height: 100%; object-fit: cover; }
 
 .profile-name { font-size: 1.4rem; font-weight: 700; color: var(--text-main); text-align: center; }
 

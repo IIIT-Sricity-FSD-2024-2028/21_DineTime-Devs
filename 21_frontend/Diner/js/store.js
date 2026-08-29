@@ -87,9 +87,24 @@ const DinetimeStore = {
     this._writeJson(this.CACHE_KEY, this._cache);
   },
 
+  _assetUrl(url) {
+    if (!url) return url;
+    const value = String(url);
+    if (value.startsWith('/uploads/')) {
+      return `${this.API_BASE}${value}`;
+    }
+    return value;
+  },
+
   _headers(role = 'diner') {
     return {
       'Content-Type': 'application/json',
+      role,
+    };
+  },
+
+  _authHeaders(role = 'diner') {
+    return {
       role,
     };
   },
@@ -160,8 +175,8 @@ const DinetimeStore = {
       price: 'INR 400 - 700',
       availableSlots: availableSlots.length ? availableSlots : fixedSlots,
       amenities: ['Family Friendly', 'Indoor Seating'],
-      image: images[0] || '../images/indian.jpg',
-      images,
+      image: this._assetUrl(images[0]) || '../images/indian.jpg',
+      images: images.map((image) => this._assetUrl(image)),
       description: raw.description,
       phone: '8000000000',
       openingHours: '11:00 AM - 11:00 PM',
@@ -172,7 +187,8 @@ const DinetimeStore = {
         { days: 'Fri - Sat', hours: '11:00 AM - 11:30 PM', isOpen: true },
         { days: 'Sunday', hours: '12:00 PM - 10:00 PM', isOpen: true },
       ],
-      menuImages: menuImages.length ? menuImages.slice(0, 4) : images.slice(0, 4),
+      menuImages: (menuImages.length ? menuImages.slice(0, 4) : images.slice(0, 4))
+        .map((image) => this._assetUrl(image)),
       reviews,
     };
   },
@@ -202,7 +218,7 @@ const DinetimeStore = {
       id: raw.id,
       backend_id: raw.id,
       restaurant: restaurant?.name || 'Restaurant',
-      image: restaurant?.image || '../images/indian.jpg',
+      image: this._assetUrl(restaurant?.image) || '../images/indian.jpg',
       date: raw.slot_date || new Date().toISOString().split('T')[0],
       time: raw.slot_time || '7:00 PM',
       guests: raw.guest_count,
@@ -227,6 +243,68 @@ const DinetimeStore = {
       hasRated: Boolean(review),
       rating: review?.rating,
       reviewText: review?.comment,
+    };
+  },
+
+  _normalizeDateToIso(value) {
+    if (!value) return '';
+    const raw = String(value).trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) return raw;
+    const year = parsed.getFullYear();
+    const month = String(parsed.getMonth() + 1).padStart(2, '0');
+    const day = String(parsed.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  },
+
+  _normalizeTimeTo24(value) {
+    if (!value) return '';
+    const raw = String(value).trim();
+    if (/^\d{2}:\d{2}$/.test(raw)) return raw;
+    const match = raw.match(/^(\d{1,2}):(\d{2})\s*([AP]M)$/i);
+    if (!match) return raw;
+    let hour = Number(match[1]);
+    const minute = match[2];
+    const period = match[3].toUpperCase();
+    if (period === 'PM' && hour !== 12) hour += 12;
+    if (period === 'AM' && hour === 12) hour = 0;
+    return `${String(hour).padStart(2, '0')}:${minute}`;
+  },
+
+  async _resolveReservationSelection(payload, restaurantBackendId) {
+    const dateIso = this._normalizeDateToIso(payload.date);
+    const time24 = this._normalizeTimeTo24(payload.time);
+    const guests = Number(payload.guests || 2);
+    const slots = this.getTimeslots();
+    const tables = this.getTables();
+    const slot = slots.find((item) =>
+      item.restaurant_id === restaurantBackendId &&
+      (!dateIso || this._normalizeDateToIso(item.slot_date || item.date) === dateIso) &&
+      (!time24 || this._normalizeTimeTo24(item.start_time) === time24),
+    ) || slots.find((item) => item.restaurant_id === restaurantBackendId);
+
+    if (!slot) {
+      return null;
+    }
+
+    const availability = await this._request(
+      `/tableslots/availability?restaurant_id=${restaurantBackendId}&slot_id=${slot.id}`,
+      { headers: this._headers('diner') },
+    );
+
+    const available = (availability?.data || []).find((item) => {
+      const table = tables.find((candidate) => candidate.backend_table_id === item.table_id);
+      return item.status === 'available' && table && Number(table.seats || 0) >= guests;
+    });
+
+    if (!available) {
+      return null;
+    }
+
+    return {
+      slot_id: slot.id,
+      table_id: available.table_id,
     };
   },
 
@@ -326,6 +404,7 @@ const DinetimeStore = {
         id: review.id,
         restaurant_id: review.restaurant_id,
         user_id: review.user_id,
+        reservation_id: review.reservation_id,
         name: reviewer?.name || 'Guest',
         stars: review.rating,
         text: review.comment,
@@ -363,7 +442,7 @@ const DinetimeStore = {
       name: item.item_name || item.name,
       cat: item.category,
       price: item.price,
-      image: (item.image_urls && item.image_urls[0]) || '../images/starter.png',
+      image: this._assetUrl((item.image_urls && item.image_urls[0]) || '../images/starter.png'),
       isChefSpecial: index % 4 === 0,
       is_available: item.is_available ?? item.availability,
     }));
@@ -402,6 +481,9 @@ const DinetimeStore = {
             email: userRes.data.email,
             phone: userRes.data.phone,
             location_id: userRes.data.location_id,
+            role: userRes.data.role || user.role || 'diner',
+            photo_url: userRes.data.photo_url || user.photo_url,
+            photo: this._assetUrl(userRes.data.photo_url || user.photo),
           });
         }
       } catch (_e) {
@@ -419,9 +501,12 @@ const DinetimeStore = {
 
       this._cache.reservations = (reservationsRes?.data || []).map((reservation) => {
         const slot = rawSlots.find((candidate) => candidate.id === reservation.slot_id);
-        const review = this._cache.reviews.find((item) =>
-          item.user_id === reservation.user_id && item.restaurant_id === reservation.restaurant_id,
-        );
+        const review = this._cache.reviews.find((item) => item.reservation_id === reservation.id)
+          || this._cache.reviews.find((item) =>
+            !item.reservation_id &&
+            item.user_id === reservation.user_id &&
+            item.restaurant_id === reservation.restaurant_id,
+          );
         return this._normalizeReservation({
           ...reservation,
           slot_date: slot?.slot_date || slot?.date,
@@ -481,8 +566,14 @@ const DinetimeStore = {
     const restaurants = this.getRestaurants();
     const restaurant = restaurants.find((item) => item.id === Number(reservationPayload.restaurantId)) || restaurants[0];
     const restaurantBackendId = reservationPayload.restaurant_backend_id || restaurant?.backend_id;
-    const slotId = reservationPayload.slot_id || '';
-    const tableId = reservationPayload.table_id || reservationPayload.backend_table_id || '';
+    let slotId = reservationPayload.slot_id || '';
+    let tableId = reservationPayload.table_id || reservationPayload.backend_table_id || '';
+
+    if ((!slotId || !tableId) && restaurantBackendId) {
+      const resolved = await this._resolveReservationSelection(reservationPayload, restaurantBackendId);
+      slotId = slotId || resolved?.slot_id || '';
+      tableId = tableId || resolved?.table_id || '';
+    }
 
     if (!restaurantBackendId || !slotId || !tableId) {
       throw new Error('Selected date/time slot is unavailable. Please pick another slot.');
@@ -543,6 +634,42 @@ const DinetimeStore = {
       body: JSON.stringify(payload),
     });
     return created?.data || null;
+  },
+
+  async uploadProfilePhoto(file) {
+    const user = this.getUser();
+    if (!user?.backend_user_id) {
+      throw new Error('Please log in before uploading a profile photo.');
+    }
+
+    const formData = new FormData();
+    formData.append('photo', file);
+
+    const response = await fetch(`${this.API_BASE}/users/${user.backend_user_id}/upload-photo`, {
+      method: 'POST',
+      headers: this._authHeaders('diner'),
+      body: formData,
+    });
+
+    if (!response.ok) {
+      let message = `Photo upload failed (${response.status})`;
+      try {
+        const body = await response.json();
+        message = Array.isArray(body.message) ? body.message.join(', ') : (body.message || message);
+      } catch (_e) {
+      }
+      throw new Error(message);
+    }
+
+    const payload = await response.json();
+    const photoUrl = payload?.data?.photo_url;
+    const nextUser = {
+      ...user,
+      photo: this._assetUrl(photoUrl || user.photo),
+      photo_url: photoUrl || user.photo_url,
+    };
+    this.setUser(nextUser);
+    return nextUser;
   },
 
   initNewUser() {

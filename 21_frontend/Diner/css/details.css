@@ -278,6 +278,14 @@
   box-shadow: var(--shadow-md);
 }
 
+.btn-review {
+  background: var(--accent);
+}
+
+.btn-review:hover {
+  background: var(--accent-hover);
+}
+
 @media (max-width: 650px) {
   .pass-header { flex-direction: column; text-align: center; }
   .pass-title-row { flex-direction: column; align-items: center; gap: 12px; }

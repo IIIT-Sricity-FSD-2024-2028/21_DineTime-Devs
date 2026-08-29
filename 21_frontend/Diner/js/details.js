@@ -11,6 +11,11 @@ function statusBadge(status) {
 }
 
 function renderOverview(r) {
+  const heroTitle = document.querySelector('.hero-title');
+  const heroSub = document.querySelector('.hero-sub');
+  if (heroTitle) heroTitle.textContent = r.status === 'Completed' ? 'Reservation Completed' : r.status === 'Cancelled' ? 'Reservation Cancelled' : 'Reservation Check-In';
+  if (heroSub) heroSub.textContent = r.status === 'Completed' ? 'Share your experience with the restaurant' : r.status === 'Cancelled' ? 'This booking is no longer active' : 'Confirm your arrival and get seated quickly';
+
   document.getElementById('resThumb').src = r.image;
   document.getElementById('resThumb').alt = r.restaurant;
   document.getElementById('resName').textContent = r.restaurant;
@@ -41,17 +46,59 @@ function renderOverview(r) {
 
   const qrSection = document.getElementById('qrSection');
   const cancelledSection = document.getElementById('cancelledSection');
-  const qrImage = document.getElementById('qrImage');
   const resIdDisplay = document.getElementById('resIdDisplay');
   
   if (r.status === 'Cancelled') {
       qrSection.classList.add('hidden');
       cancelledSection.classList.remove('hidden');
+  } else if (r.status === 'Completed') {
+      qrSection.classList.add('hidden');
+      cancelledSection.classList.add('hidden');
   } else {
       qrSection.classList.remove('hidden');
       cancelledSection.classList.add('hidden');
       if (resIdDisplay) resIdDisplay.textContent = r.id;
   }
+}
+
+function renderActionSection(r) {
+  const actionContainer = document.getElementById('menuButtonContainer');
+  if (!actionContainer) return;
+
+  if (r.status === 'Confirmed') {
+    actionContainer.innerHTML = `
+      <button class="btn-menu" id="btnViewMenu">
+        <i class="fa-solid fa-utensils"></i> View Restaurant Menu
+      </button>
+    `;
+    actionContainer.classList.remove('hidden');
+    const btnViewMenu = document.getElementById('btnViewMenu');
+    if (btnViewMenu) {
+      btnViewMenu.addEventListener('click', function() {
+        window.location.href = 'menu.html?id=' + encodeURIComponent(r.id);
+      });
+    }
+    return;
+  }
+
+  if (r.status === 'Completed') {
+    actionContainer.innerHTML = `
+      <button class="btn-menu btn-review" id="btnRateExperience">
+        <i class="fa-regular fa-star"></i> ${r.hasRated ? 'View Rating' : 'Rate Experience'}
+      </button>
+    `;
+    actionContainer.classList.remove('hidden');
+    const btnRateExperience = document.getElementById('btnRateExperience');
+    if (btnRateExperience) {
+      btnRateExperience.addEventListener('click', function() {
+        window.location.href = 'profile.html?review=' + encodeURIComponent(r.id);
+      });
+    }
+    return;
+  }
+
+  actionContainer.classList.add('hidden');
+  actionContainer.innerHTML = '';
 }
 
 function updateHero(r) {
@@ -90,20 +137,7 @@ function init() {
   if (res) {
       updateHero(res);
       renderOverview(res);
-
-      var menuBtnContainer = document.getElementById('menuButtonContainer');
-      if (res.status === 'Confirmed') {
-        if(menuBtnContainer) menuBtnContainer.classList.remove('hidden');
-      } else {
-        if(menuBtnContainer) menuBtnContainer.classList.add('hidden');
-      }
-
-      const btnViewMenu = document.getElementById('btnViewMenu');
-      if (btnViewMenu) {
-          btnViewMenu.addEventListener('click', function() {
-            window.location.href = 'menu.html?id=' + encodeURIComponent(res.id);
-          });
-      }
+      renderActionSection(res);
   } else {
       showToast("Reservation not found!", "error");
       setTimeout(() => {

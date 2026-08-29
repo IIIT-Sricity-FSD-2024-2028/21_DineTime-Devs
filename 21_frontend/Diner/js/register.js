@@ -284,7 +284,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     status: 'active',
                     location_id: 'loc_blr_1',
                 }),
-            }, 'manager');
+            }, 'diner');
             createdUserId = created?.data?.id || null;
         } catch (_e) {
             showToast('Unable to create account right now.', 'error', 'ph-warning-circle');
@@ -311,6 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
             reviews: 0,
             photos: 0,
             backend_user_id: createdUserId,
+            role: 'diner',
         });
 
         // Wipe all old user-specific data so new user starts fresh

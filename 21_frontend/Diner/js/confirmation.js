@@ -131,6 +131,8 @@ async function init() {
       restaurant_backend_id: getUrlParam('restaurant_backend_id') || (restaurant && restaurant.backend_id),
       table_id: getUrlParam('table_id'),
       slot_id: getUrlParam('slot_id'),
+      date: rawDate,
+      time: time,
       guests: guests
     });
   } catch (e) {

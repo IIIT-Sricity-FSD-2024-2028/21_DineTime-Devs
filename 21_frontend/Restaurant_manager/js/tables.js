@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         totalTablesEl.innerText = stagedTables.length;
         totalCapacityEl.innerText = capacity + " Seats";
 
-        populateBlockDropdown();
+        void populateBlockDropdown();
         bindGridEvents();
         updateConfigPanelState();
     }
@@ -314,6 +314,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function getSlotsForDate(dateStr) {
         const ids = StorageManager._getIds();
         if (!ids.restaurantId) return [];
+        try {
+            await StorageManager._request('/tableslots/seed', {
+                method: 'POST',
+                headers: StorageManager._headers('manager'),
+                body: JSON.stringify({ restaurant_id: ids.restaurantId }),
+            });
+        } catch (_e) {
+        }
         const slotsRes = await StorageManager._request(`/timeslots?restaurant_id=${ids.restaurantId}`, {
             headers: StorageManager._headers('manager'),
         });
@@ -323,6 +331,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function populateBlockDropdown() {
+        if (!blockSelect || !blockTimeslot || !blockDate) return;
         blockSelect.innerHTML = '<option value="" disabled selected>Choose a table</option>';
         stagedTables.forEach(t => {
             blockSelect.innerHTML += `<option value="${t.id}">${t.number} (${t.seats} Seats)</option>`;
@@ -362,6 +371,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             showToast('Table successfully blocked for selected timeslot.');
             blockForm.reset();
             blockDate.value = todayStr;
+            renderGrid();
             await populateBlockDropdown();
             await renderBlockedTables();
         } catch (_e) {
@@ -436,6 +446,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     });
                     await StorageManager.refreshFromBackend();
                     stagedTables = JSON.parse(JSON.stringify(StorageManager.getTables()));
+                    renderGrid();
                     await renderBlockedTables();
                     showToast("Table unblocked.", "info");
                 } catch (_e) {
