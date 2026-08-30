@@ -195,7 +195,21 @@ export class DataSeederService implements OnModuleInit {
         location_id: 'loc_blr_1',
         name: 'Spice Garden',
         cuisine_type: 'Indian',
-        description: 'Authentic Indian dining experience with rich regional flavors.',
+        description: [
+          'Authentic Indian dining experience with rich regional flavors.',
+          '',
+          'Details:',
+          '- Price: INR 400 - 700',
+          '- Hours: 11:00 AM - 11:00 PM',
+          '- Parking: Street Parking',
+          '- Dress Code: Smart Casual',
+          '- Contact: 9123456789',
+          '- Amenities: Family Friendly, Indoor Seating',
+          '',
+          'Policies:',
+          '- Cancellation Policy: Cancellations must be made at least 2 hours in advance.',
+          '- Late Arrival: Tables are held for 15 minutes after the reservation time.',
+        ].join('\n'),
         total_tables: 8,
         rating_avg: 4.6,
         total_reviews: 128,
@@ -214,7 +228,21 @@ export class DataSeederService implements OnModuleInit {
         location_id: 'loc_blr_2',
         name: 'Bella Italia',
         cuisine_type: 'Italian',
-        description: 'Fresh handmade pasta, wood-fired pizza, and classic Italian desserts.',
+        description: [
+          'Fresh handmade pasta, wood-fired pizza, and classic Italian desserts.',
+          '',
+          'Details:',
+          '- Price: INR 500 - 900',
+          '- Hours: 12:00 PM - 11:00 PM',
+          '- Parking: Valet Available',
+          '- Dress Code: Smart Casual',
+          '- Contact: 9234567890',
+          '- Amenities: Outdoor Seating, Family Friendly',
+          '',
+          'Policies:',
+          '- Cancellation Policy: Cancellations must be made at least 2 hours in advance.',
+          '- Late Arrival: Tables are held for 15 minutes after the reservation time.',
+        ].join('\n'),
         total_tables: 8,
         rating_avg: 4.4,
         total_reviews: 96,
@@ -233,7 +261,21 @@ export class DataSeederService implements OnModuleInit {
         location_id: 'loc_blr_3',
         name: 'Dragon Bowl',
         cuisine_type: 'Chinese',
-        description: 'Modern Chinese kitchen serving wok-tossed classics and dim sum.',
+        description: [
+          'Modern Chinese kitchen serving wok-tossed classics and dim sum.',
+          '',
+          'Details:',
+          '- Price: INR 350 - 800',
+          '- Hours: 11:30 AM - 10:30 PM',
+          '- Parking: Basement Parking',
+          '- Dress Code: Casual',
+          '- Contact: 9345678901',
+          '- Amenities: Quick Service, Indoor Seating',
+          '',
+          'Policies:',
+          '- Cancellation Policy: Cancellations must be made at least 2 hours in advance.',
+          '- Late Arrival: Tables are held for 15 minutes after the reservation time.',
+        ].join('\n'),
         total_tables: 8,
         rating_avg: 4.2,
         total_reviews: 88,
@@ -252,7 +294,21 @@ export class DataSeederService implements OnModuleInit {
         location_id: 'loc_blr_1',
         name: 'Sakura House',
         cuisine_type: 'Japanese',
-        description: 'Sushi bar and Japanese comfort food in a calm minimal setting.',
+        description: [
+          'Sushi bar and Japanese comfort food in a calm minimal setting.',
+          '',
+          'Details:',
+          '- Price: INR 600 - 1200',
+          '- Hours: 12:00 PM - 10:30 PM',
+          '- Parking: Street Parking',
+          '- Dress Code: Smart Casual',
+          '- Contact: 9456789012',
+          '- Amenities: Sushi Bar, Indoor Seating',
+          '',
+          'Policies:',
+          '- Cancellation Policy: Cancellations must be made at least 2 hours in advance.',
+          '- Late Arrival: Tables are held for 15 minutes after the reservation time.',
+        ].join('\n'),
         total_tables: 8,
         rating_avg: 4.7,
         total_reviews: 112,
@@ -405,7 +461,7 @@ export class DataSeederService implements OnModuleInit {
     const reservationTables = tablesByRestaurant[reservationRestaurant.id];
     const reservationSlots = slotsByRestaurant[reservationRestaurant.id];
     const reservation = this.reservationRepository.create({
-      id: generateId('reservation'),
+      id: 'resv-seed-upcoming',
       user_id: diner.id,
       restaurant_id: reservationRestaurant.id,
       table_id: reservationTables[1].id,
@@ -419,23 +475,43 @@ export class DataSeederService implements OnModuleInit {
       this.tableslotRepository.updateStatus(reservation.table_id, reservation.slot_id, 'reserved');
     }
 
+    const completedSlotDate = new Date(today);
+    completedSlotDate.setDate(today.getDate() - 1);
+    const completedSlotIso = [
+      completedSlotDate.getFullYear(),
+      String(completedSlotDate.getMonth() + 1).padStart(2, '0'),
+      String(completedSlotDate.getDate()).padStart(2, '0'),
+    ].join('-');
+    const completedSlot = this.timeslotRepository.create({
+      id: 'slt-seed-completed',
+      restaurant_id: reservationRestaurant.id,
+      slot_date: completedSlotIso,
+      start_time: '18:00',
+      end_time: '20:00',
+    });
+    this.tableslotRepository.create({
+      id: 'table-slot-seed-completed',
+      table_id: reservationTables[0].id,
+      slot_id: completedSlot.id,
+      status: 'occupied',
+    });
+
     const completedReservation = this.reservationRepository.create({
-      id: generateId('reservation'),
+      id: 'resv-seed-completed',
       user_id: diner.id,
       restaurant_id: reservationRestaurant.id,
       table_id: reservationTables[0].id,
-      slot_id: reservationSlots[0].id,
+      slot_id: completedSlot.id,
       guest_count: 2,
       reservation_status: 'completed',
       created_at: new Date().toISOString(),
     });
 
-    void completedReservation;
-
     this.reviewRepository.create({
       id: generateId('review'),
       user_id: diner.id,
       restaurant_id: reservationRestaurant.id,
+      reservation_id: completedReservation.id,
       rating: 5,
       comment: 'Great service and delicious food.',
       created_at: new Date().toISOString(),

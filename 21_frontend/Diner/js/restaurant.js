@@ -65,6 +65,25 @@ function renderAbout(restaurant) {
   `).join('');
 }
 
+function renderPolicies(policies) {
+  const grid = document.querySelector('#policiesGrid');
+  if (!grid) return;
+
+  const safePolicies = Array.isArray(policies) ? policies : [];
+
+  if (!safePolicies.length) {
+    grid.innerHTML = '<div class="empty-state">No reservation policies have been added yet.</div>';
+    return;
+  }
+
+  grid.innerHTML = safePolicies.map(policy => `
+    <div class="policy-item">
+      <strong>${policy.title}</strong>
+      <span>${policy.desc}</span>
+    </div>
+  `).join('');
+}
+
 function renderHours(operationalHours) {
   const safeHours = Array.isArray(operationalHours) && operationalHours.length
     ? operationalHours
@@ -82,9 +101,12 @@ function renderHours(operationalHours) {
 }
 
 function renderMenu(menuImages) {
-  const safeMenuImages = Array.isArray(menuImages) && menuImages.length
-    ? menuImages
-    : ['../images/menu1.png', '../images/menu2.png'];
+  const safeMenuImages = Array.isArray(menuImages) ? menuImages : [];
+
+  if (!safeMenuImages.length) {
+    document.querySelector('#menuGrid').innerHTML = '<div class="empty-state">No menu photos have been added yet.</div>';
+    return;
+  }
 
   document.querySelector('#menuGrid').innerHTML = safeMenuImages.map(src => `
     <div class="menu-img-wrapper">
@@ -94,9 +116,12 @@ function renderMenu(menuImages) {
 }
 
 function renderReviews(reviews) {
-  const safeReviews = Array.isArray(reviews) && reviews.length
-    ? reviews
-    : [{ name: 'Guest', stars: 4, text: 'Nice food and service.', avatar: '../images/logo.png' }];
+  const safeReviews = Array.isArray(reviews) ? reviews : [];
+
+  if (!safeReviews.length) {
+    document.querySelector('#reviewsGrid').innerHTML = '<div class="empty-state">No customer reviews yet.</div>';
+    return;
+  }
 
   document.querySelector('#reviewsGrid').innerHTML = safeReviews.map(r => `
     <div class="review-card">
@@ -133,6 +158,7 @@ function init() {
   renderCarousel(restaurant.images);
   renderInfo(restaurant);
   renderAbout(restaurant);
+  renderPolicies(restaurant.policies);
   renderHours(restaurant.operationalHours);
   renderMenu(restaurant.menuImages);
   renderReviews(restaurant.reviews);
@@ -142,9 +168,12 @@ function init() {
     window.location.href = `book.html?id=${id}`;
   });
 
-  document.querySelector('#viewMenuBtn').addEventListener('click', () => {
-    window.location.href = `menu.html?id=${id}`;
-  });
+  const viewMenuBtn = document.querySelector('#viewMenuBtn');
+  if (viewMenuBtn) {
+    viewMenuBtn.addEventListener('click', () => {
+      window.location.href = `menu.html?id=${id}`;
+    });
+  }
 
   const searchInput = document.querySelector('#globalSearchInput');
   if (searchInput) {

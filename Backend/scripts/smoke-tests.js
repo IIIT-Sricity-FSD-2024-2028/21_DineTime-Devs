@@ -1,7 +1,7 @@
 const { spawn } = require('node:child_process');
 const { setTimeout: wait } = require('node:timers/promises');
 
-const port = Number(process.env.SMOKE_TEST_PORT || 3100);
+const port = Number(process.env.SMOKE_TEST_PORT || (3200 + Math.floor(Math.random() * 1000)));
 const baseUrl = `http://localhost:${port}`;
 const server = spawn(process.execPath, ['start.js'], {
   cwd: process.cwd(),
@@ -22,7 +22,7 @@ server.stderr.on('data', (chunk) => {
 });
 
 async function waitForServer() {
-  for (let attempt = 0; attempt < 40; attempt += 1) {
+  for (let attempt = 0; attempt < 80; attempt += 1) {
     try {
       const response = await fetch(`${baseUrl}/api-docs`);
       if (response.ok) {
@@ -301,6 +301,39 @@ async function main() {
     const managerReviews = (await parseJson(managerResponse)).data || [];
     if (!managerReviews.some((item) => item.id === body.data.id)) {
       throw new Error('Created review is not visible to manager reviews view');
+    }
+
+    const duplicateResponse = await fetch(`${baseUrl}/reviews`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        role: 'diner',
+      },
+      body: JSON.stringify({
+        user_id: completedReservationForReview.user_id,
+        restaurant_id: completedReservationForReview.restaurant_id,
+        reservation_id: completedReservationForReview.id,
+        rating: 4,
+        comment: 'Duplicate should be rejected',
+      }),
+    });
+    if (duplicateResponse.status !== 400) {
+      throw new Error(`Duplicate review was not rejected: ${duplicateResponse.status}`);
+    }
+
+    const editResponse = await fetch(`${baseUrl}/reviews/${body.data.id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        role: 'diner',
+      },
+      body: JSON.stringify({
+        rating: 1,
+        comment: 'Editing should be rejected',
+      }),
+    });
+    if (editResponse.status !== 400) {
+      throw new Error(`Review edit was not rejected: ${editResponse.status}`);
     }
 
     return body.data.id;

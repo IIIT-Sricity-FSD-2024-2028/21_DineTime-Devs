@@ -96,6 +96,24 @@ const DinetimeStore = {
     return value;
   },
 
+  _assetKey(url) {
+    const value = String(url || '').trim();
+    return value.replace(this.API_BASE, '');
+  },
+
+  _uniqueAssetUrls(urls) {
+    const seen = new Set();
+    return (Array.isArray(urls) ? urls : [])
+      .map((url) => this._assetUrl(url))
+      .filter(Boolean)
+      .filter((url) => {
+        const key = this._assetKey(url);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+  },
+
   _headers(role = 'diner') {
     return {
       'Content-Type': 'application/json',
@@ -106,6 +124,56 @@ const DinetimeStore = {
   _authHeaders(role = 'diner') {
     return {
       role,
+    };
+  },
+
+  _splitDescriptionSections(description) {
+    const raw = String(description || '').trim();
+    const detailsMarker = 'Details:';
+    const policiesMarker = 'Policies:';
+    const detailsIndex = raw.indexOf(detailsMarker);
+    const policiesIndex = raw.indexOf(policiesMarker);
+    const firstStructuredIndex = [detailsIndex, policiesIndex].filter((index) => index >= 0).sort((a, b) => a - b)[0];
+    const about = firstStructuredIndex >= 0 ? raw.slice(0, firstStructuredIndex).trim() : raw;
+    const detailsBlock = detailsIndex >= 0
+      ? raw.slice(detailsIndex + detailsMarker.length, policiesIndex > detailsIndex ? policiesIndex : raw.length)
+      : '';
+    const policiesBlock = policiesIndex >= 0
+      ? raw.slice(policiesIndex + policiesMarker.length)
+      : '';
+
+    const details = {};
+    String(detailsBlock || '')
+      .split('\n')
+      .map((line) => line.trim().replace(/^-\s*/, ''))
+      .filter(Boolean)
+      .forEach((line) => {
+        const [label, ...rest] = line.split(':');
+        const key = String(label || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const value = rest.join(':').trim();
+        if (key && value) {
+          details[key] = value;
+        }
+      });
+
+    const policies = String(policiesBlock || '')
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => {
+        const cleaned = line.replace(/^-\s*/, '');
+        const [title, ...rest] = cleaned.split(':');
+        return {
+          title: (title || 'Policy').trim(),
+          desc: rest.join(':').trim(),
+        };
+      })
+      .filter((policy) => policy.title || policy.desc);
+
+    return {
+      about,
+      details,
+      policies,
     };
   },
 
@@ -129,13 +197,9 @@ const DinetimeStore = {
     const location = locationMap[raw.location_id];
     const city = location?.city || 'Bangalore';
     const address = location?.address || 'City Center';
-    const images = Array.isArray(raw.image_urls) && raw.image_urls.length
-      ? raw.image_urls
-      : [];
+    const images = this._uniqueAssetUrls(raw.image_urls || []);
 
-    const menuImages = (menuByRestaurant[raw.id] || [])
-      .map((item) => item.image)
-      .filter(Boolean);
+    const menuImages = this._uniqueAssetUrls((menuByRestaurant[raw.id] || []).map((item) => item.image));
 
     const reviews = reviewsByRestaurant[raw.id] || [];
     const ratingFallback = raw.rating_avg || 4.5;
@@ -149,18 +213,17 @@ const DinetimeStore = {
         if (da !== db) return da.localeCompare(db);
         return String(a.start_time || '').localeCompare(String(b.start_time || ''));
       });
-    const todayIso = new Date().toISOString().split('T')[0];
-    const fixedSlots = ['18:00', '20:00', '22:00'];
-    const isSpiceGarden = String(raw.name || '').toLowerCase() === 'spice garden';
-
-    const availableSlots = isSpiceGarden
-      ? Array.from(new Set(
-          restaurantSlots
-            .filter((slot) => (slot.slot_date || slot.date) === todayIso)
-            .map((slot) => String(slot.start_time || '').slice(0, 5))
-            .filter(Boolean),
-        ))
-      : fixedSlots;
+    const availableSlots = Array.from(new Set(
+      restaurantSlots
+        .map((slot) => String(slot.start_time || '').slice(0, 5))
+        .filter(Boolean),
+    ));
+    const sections = this._splitDescriptionSections(raw.description);
+    const amenities = String(sections.details.amenities || '')
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+    const openingHours = sections.details.hours || sections.details.openinghours || 'Hours not provided';
 
     return {
       id: index + 1,
@@ -172,23 +235,21 @@ const DinetimeStore = {
       reviewCount: reviewCountFallback,
       distance: Number((1.2 + index * 0.6).toFixed(1)),
       location: `${address}, ${city}`,
-      price: 'INR 400 - 700',
-      availableSlots: availableSlots.length ? availableSlots : fixedSlots,
-      amenities: ['Family Friendly', 'Indoor Seating'],
-      image: this._assetUrl(images[0]) || '../images/indian.jpg',
-      images: images.map((image) => this._assetUrl(image)),
-      description: raw.description,
-      phone: '8000000000',
-      openingHours: '11:00 AM - 11:00 PM',
-      parking: 'Street Parking',
-      dressCode: 'Smart Casual',
+      price: sections.details.price || 'Price not provided',
+      availableSlots,
+      amenities: amenities.length ? amenities : ['Amenities not provided'],
+      image: images[0] || '../images/indian.jpg',
+      images,
+      description: sections.about || raw.description,
+      policies: sections.policies,
+      phone: sections.details.contact || sections.details.phone || 'Contact not provided',
+      openingHours,
+      parking: sections.details.parking || 'Parking not provided',
+      dressCode: sections.details.dresscode || 'Dress code not provided',
       operationalHours: [
-        { days: 'Mon - Thu', hours: '11:00 AM - 10:30 PM', isOpen: true },
-        { days: 'Fri - Sat', hours: '11:00 AM - 11:30 PM', isOpen: true },
-        { days: 'Sunday', hours: '12:00 PM - 10:00 PM', isOpen: true },
+        { days: 'Everyday', hours: openingHours, isOpen: openingHours !== 'Hours not provided' },
       ],
-      menuImages: (menuImages.length ? menuImages.slice(0, 4) : images.slice(0, 4))
-        .map((image) => this._assetUrl(image)),
+      menuImages: menuImages.slice(0, 4),
       reviews,
     };
   },
@@ -501,12 +562,7 @@ const DinetimeStore = {
 
       this._cache.reservations = (reservationsRes?.data || []).map((reservation) => {
         const slot = rawSlots.find((candidate) => candidate.id === reservation.slot_id);
-        const review = this._cache.reviews.find((item) => item.reservation_id === reservation.id)
-          || this._cache.reviews.find((item) =>
-            !item.reservation_id &&
-            item.user_id === reservation.user_id &&
-            item.restaurant_id === reservation.restaurant_id,
-          );
+        const review = this._cache.reviews.find((item) => item.reservation_id === reservation.id);
         return this._normalizeReservation({
           ...reservation,
           slot_date: slot?.slot_date || slot?.date,

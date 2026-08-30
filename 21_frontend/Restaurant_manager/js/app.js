@@ -51,16 +51,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         }, "Remove Photo", "Remove");
     });
 
-    photoUploadInput?.addEventListener('change', (e) => {
+    photoUploadInput?.addEventListener('change', async (e) => {
         if (e.target.files.length > 0) {
             const file = e.target.files[0];
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                StorageManager.updateProfile({ avatar: event.target.result });
+            try {
+                await StorageManager.uploadProfilePhoto(file);
                 UIRenderer.renderProfile(StorageManager.getData().profile);
                 showToast('Profile photo updated successfully!');
-            };
-            reader.readAsDataURL(file);
+            } catch (error) {
+                showToast(error.message || 'Profile photo upload failed.', 'error');
+            } finally {
+                e.target.value = '';
+            }
         }
     });
 
@@ -68,21 +70,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     const restImgUploadInput = document.getElementById('rest-img-upload');
     const restImgRemoveBtn = document.getElementById('rest-img-remove');
     
-    restImgUploadInput?.addEventListener('change', (e) => {
+    restImgUploadInput?.addEventListener('change', async (e) => {
         if (e.target.files.length > 0) {
             const file = e.target.files[0];
-            const reader = new FileReader();
-            reader.onload = function(event) {
+            try {
+                await StorageManager.uploadRestaurantImage(file, true);
                 const data = StorageManager.getData();
-                data.restaurant.image = event.target.result;
-                data.gallery = [event.target.result, ...(data.gallery || []).filter((img) => img !== event.target.result)];
-                StorageManager.saveData(data);
-                StorageManager.updateRestaurantDetails({});
                 UIRenderer.renderRestaurantDetails(data.restaurant);
                 UIRenderer.renderGallery(data.gallery || []);
                 showToast('Restaurant profile photo updated!');
-            };
-            reader.readAsDataURL(file);
+            } catch (error) {
+                showToast(error.message || 'Restaurant photo upload failed.', 'error');
+            } finally {
+                e.target.value = '';
+            }
         }
     });
 
@@ -90,10 +91,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (window.showConfirm) {
             window.showConfirm("Are you sure you want to remove the restaurant photo?", () => {
                 const data = StorageManager.getData();
+                const removedImage = data.restaurant.image;
                 data.restaurant.image = null;
+                data.gallery = (data.gallery || []).filter((image) => image !== removedImage);
                 StorageManager.saveData(data);
                 StorageManager.updateRestaurantDetails({});
                 UIRenderer.renderRestaurantDetails(data.restaurant);
+                UIRenderer.renderGallery(data.gallery || []);
                 showToast('Restaurant photo removed.', 'info');
             }, "Remove Photo", "Remove");
         }
@@ -101,30 +105,24 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const galleryUploadInput = document.getElementById('gallery-upload-input');
     document.getElementById('upload-images-btn')?.addEventListener('click', () => galleryUploadInput?.click());
-    galleryUploadInput?.addEventListener('change', (e) => {
+    galleryUploadInput?.addEventListener('change', async (e) => {
         if (e.target.files.length > 0) {
             const files = Array.from(e.target.files);
-            let processed = 0;
-            const newImages = [];
-            files.forEach(file => {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    newImages.push(event.target.result);
-                    processed++;
-                    if (processed === files.length) {
-                        const allData = StorageManager.getData();
-                        const updatedGallery = [...allData.gallery, ...newImages];
-                        allData.gallery = updatedGallery;
-                        StorageManager.saveData(allData);
-                        StorageManager.updateRestaurantDetails({});
-                        if (document.querySelector('.gallery-grid')) {
-                            UIRenderer.renderGallery(updatedGallery);
-                        }
-                        showToast(`${files.length} images added to gallery.`);
-                    }
-                };
-                reader.readAsDataURL(file);
-            });
+            try {
+                for (const file of files) {
+                    await StorageManager.uploadRestaurantImage(file, false);
+                }
+                const data = StorageManager.getData();
+                if (document.querySelector('.gallery-grid')) {
+                    UIRenderer.renderGallery(data.gallery || []);
+                }
+                UIRenderer.renderRestaurantDetails(data.restaurant);
+                showToast(`${files.length} images added to gallery.`);
+            } catch (error) {
+                showToast(error.message || 'Gallery upload failed.', 'error');
+            } finally {
+                e.target.value = '';
+            }
         }
     });
 

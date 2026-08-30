@@ -97,24 +97,19 @@ function populateTimeOptions(restaurant) {
   const selectedDate = normalizeDateToIso(dateInput.value);
   const selectedCurrent = timeInput.value;
   const restaurantBackendId = resolveRestaurantBackendId(restaurant);
-  const isSpiceGarden = String(restaurant?.name || '').toLowerCase() === 'spice garden';
 
-  const fixedSlots = ['18:00', '20:00', '22:00'];
-  const dynamicSlots = (DinetimeStore.getTimeslots ? DinetimeStore.getTimeslots() : [])
+  const slots = Array.from(new Set((DinetimeStore.getTimeslots ? DinetimeStore.getTimeslots() : [])
     .filter((slot) =>
       slot.restaurant_id === restaurantBackendId &&
       normalizeDateToIso(slot.slot_date || slot.date) === selectedDate,
     )
     .map((slot) => String(slot.start_time || '').slice(0, 5))
-    .filter(Boolean)
+    .filter(Boolean)))
     .sort();
 
-  const slots = isSpiceGarden ? Array.from(new Set(dynamicSlots)) : fixedSlots;
-  const finalSlots = slots.length ? slots : fixedSlots;
-
   timeInput.innerHTML = [
-    '<option value="" disabled>Select Time</option>',
-    ...finalSlots.map((slot) => `<option value="${to12hFrom24(slot)}">${to12hFrom24(slot)}</option>`),
+    `<option value="" disabled>${slots.length ? 'Select Time' : 'No time slots available'}</option>`,
+    ...slots.map((slot) => `<option value="${to12hFrom24(slot)}">${to12hFrom24(slot)}</option>`),
   ].join('');
 
   if (selectedCurrent && [...timeInput.options].some((opt) => opt.value === selectedCurrent)) {

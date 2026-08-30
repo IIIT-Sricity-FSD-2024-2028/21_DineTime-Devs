@@ -1,7 +1,15 @@
 let tableList = [];
 let currentFilter = 'All';
 let editingTableId = null;
+let currentDate = '';
 const API_BASE = (window.DINETIME_CONFIG && window.DINETIME_CONFIG.API_BASE) || 'http://localhost:3000';
+
+function toIsoDate(date) {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+}
 
 async function apiRequest(path, options = {}, role = 'staff') {
     const response = await fetch(`${API_BASE}${path}`, {
@@ -34,6 +42,11 @@ function checkAuth() {
 // Initialize the dashboard
 document.addEventListener('DOMContentLoaded', async () => {
     if (!checkAuth()) return;
+    currentDate = toIsoDate(new Date());
+    const dateInput = document.getElementById('staff-date-selector');
+    if (dateInput) {
+        dateInput.value = currentDate;
+    }
     loadProfileName();
     await loadTablesFromStorage();
     setupEventListeners();
@@ -54,8 +67,9 @@ function loadProfileName() {
 }
 
 async function loadTablesFromStorage() {
-    const [tablesRes, tableSlotsRes] = await Promise.all([
+    const [tablesRes, slotsRes, tableSlotsRes] = await Promise.all([
         apiRequest('/tables', {}, 'staff'),
+        apiRequest('/timeslots', {}, 'staff'),
         apiRequest('/tableslots', {}, 'staff'),
     ]);
 
@@ -68,8 +82,14 @@ async function loadTablesFromStorage() {
     const filteredTables = (tablesRes?.data || []).filter((table) =>
         !restaurantId || table.restaurant_id === restaurantId,
     );
+    const daySlots = (slotsRes?.data || []).filter((slot) =>
+        (!restaurantId || slot.restaurant_id === restaurantId) &&
+        (slot.slot_date || slot.date) === currentDate,
+    );
+    const daySlotIds = new Set(daySlots.map((slot) => slot.id));
 
     (tableSlotsRes?.data || []).forEach((slot) => {
+        if (!daySlotIds.has(slot.slot_id)) return;
         const current = statusByTable[slot.table_id] || 'available';
         const next = slot.status || 'available';
         if ((statusRank[next] || 0) >= (statusRank[current] || 0)) {
@@ -87,6 +107,7 @@ async function loadTablesFromStorage() {
         id: table.table_number,
         seats: table.capacity,
         table_id: table.id,
+        slot_ids: daySlots.map((slot) => slot.id),
         status: statusMap[statusByTable[table.id] || 'available'] || 'Available',
     }));
 }
@@ -110,6 +131,16 @@ function updateStats() {
 
 // Bind event listeners for the filter chips and modal
 function setupEventListeners() {
+    const dateInput = document.getElementById('staff-date-selector');
+    if (dateInput) {
+        dateInput.addEventListener('change', async () => {
+            currentDate = dateInput.value || toIsoDate(new Date());
+            await loadTablesFromStorage();
+            updateStats();
+            renderTables();
+        });
+    }
+
     const chips = document.querySelectorAll('.filter-chip');
     chips.forEach(chip => {
         chip.addEventListener('click', () => {
@@ -152,14 +183,16 @@ function setupEventListeners() {
                     Available: 'available',
                 };
                 try {
-                    const slotsRes = await apiRequest('/tableslots', {}, 'staff');
-                    const slots = (slotsRes?.data || []).filter((s) => s.table_id === tableList[tableIndex].table_id);
-                    await Promise.all(slots.map((slot) =>
+                    const targetSlots = tableList[tableIndex].slot_ids || [];
+                    if (targetSlots.length === 0) {
+                        throw new Error('No time slots configured for selected date');
+                    }
+                    await Promise.all(targetSlots.map((slotId) =>
                         apiRequest('/tableslots/status', {
                             method: 'PATCH',
                             body: JSON.stringify({
-                                table_id: slot.table_id,
-                                slot_id: slot.slot_id,
+                                table_id: tableList[tableIndex].table_id,
+                                slot_id: slotId,
                                 status: slotStatusMap[newStatus] || 'available',
                             }),
                         }, 'staff'),
@@ -183,6 +216,13 @@ function renderTables() {
     if (!container) return;
 
     container.innerHTML = '';
+    const label = document.getElementById('floor-date-label');
+    if (label) {
+        const dateObj = new Date(currentDate);
+        label.textContent = Number.isNaN(dateObj.getTime())
+            ? currentDate
+            : dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
 
     const filteredTables = tableList.filter(t => 
         currentFilter === 'All' || t.status === currentFilter

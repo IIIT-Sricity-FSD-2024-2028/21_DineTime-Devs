@@ -69,21 +69,21 @@ export class ReviewsService {
     });
   }
 
-  update(id: string, dto: UpdateReviewDto) {
-    const updated = this.reviewRepository.update(id, dto);
-    if (!updated) {
+  update(id: string, _dto: UpdateReviewDto) {
+    const existing = this.reviewRepository.findById(id);
+    if (!existing) {
       throw new NotFoundException('Review not found');
     }
 
-    return updated;
+    throw new BadRequestException('Reviews are read-only after submission');
   }
 
   delete(id: string) {
-    const deleted = this.reviewRepository.remove(id);
-    if (!deleted) {
+    const existing = this.reviewRepository.findById(id);
+    if (!existing) {
       throw new NotFoundException('Review not found');
     }
 
-    return { deleted: true };
+    throw new BadRequestException('Reviews are read-only after submission');
   }
 }
