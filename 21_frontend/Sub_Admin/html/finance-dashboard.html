@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finance Team - DineTime Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        if (!window.DINETIME_CONFIG) window.DINETIME_CONFIG = {};
+        if (!window.DINETIME_CONFIG.API_BASE) window.DINETIME_CONFIG.API_BASE = 'http://localhost:3000';
+        const _profile = JSON.parse(sessionStorage.getItem('subadmin_profile') || '{}');
+        if (sessionStorage.getItem('subadmin_auth_status') !== 'true' || _profile.team !== 'finance') {
+            window.location.href = 'login.html';
+        }
+    </script>
+
+    <style>
+        :root {
+            --primary-green: #5F7A61; --bg-light: #FDF9F6; --card-bg: #FFFFFF; --text-dark: #1A1A1A;
+            --text-muted: #666666; --border-light: #EAE0D5; --shadow-sm: 0 4px 12px rgba(0,0,0,0.04);
+            --shadow-md: 0 12px 30px rgba(0,0,0,0.08);
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; color: var(--text-dark); overflow-x: hidden; }
+        .dashboard-layout { display: flex; min-height: 100vh; background-color: var(--bg-light); }
+
+        .sidebar { width: 250px; padding: 1.5rem 1rem; display: flex; flex-direction: column; background-color: #0F1714; color: white; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; box-sizing: border-box; overflow-y: auto;}
+        .sidebar-logo { font-size: 1.15rem; font-weight: 800; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.5rem; line-height: 1.2; padding: 0 0.5rem;}
+        .nav-item { padding: 0.75rem 1rem; border-radius: 8px; font-weight: 500; cursor: pointer; margin-bottom: 0.25rem; transition: all 0.2s; color: #A3B5A4; display: flex; align-items: center; gap: 10px; font-size: 0.85rem;}
+        .nav-item i { width: 18px; text-align: center; font-size: 1rem; }
+        .nav-item.active { color: white; background: rgba(255,255,255,0.1); border-left: 4px solid var(--primary-green); }
+
+        .main-wrapper { margin-left: 250px; width: calc(100% - 250px); display: flex; flex-direction: column; min-height: 100vh; box-sizing: border-box; }
+        .main-content { flex-grow: 1; padding: 1.5rem 2.5rem; }
+
+        .dashboard-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem; }
+        .dashboard-header h1 { margin: 0; font-size: 1.7rem; font-weight: 800; letter-spacing: -0.5px; }
+        .dashboard-header p { margin: 0.25rem 0 0 0; color: var(--text-muted); font-size: 0.9rem;}
+
+        .kpi-grid { display: grid; gap: 1rem; margin-bottom: 1.5rem; grid-template-columns: repeat(4, 1fr); }
+        .kpi-card { background: white; padding: 1.15rem; border-radius: 8px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-light); border-left: 4px solid var(--primary-green); }
+        .kpi-card h4 { margin: 0; color: var(--text-muted); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+        .kpi-card .value { margin: 0.5rem 0 0 0; font-size: 1.7rem; font-weight: 800; line-height: 1; }
+
+        .table-container { background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-light); overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th, td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-light); font-size: 0.82rem; vertical-align: top;}
+        th { background-color: #F9F5F2; color: var(--text-muted); font-size: 0.68rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;}
+        tr:hover { background-color: #FAFAFA; }
+
+        .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.72rem; font-weight: 700; }
+        .badge-escalated_finance_team { background: #F3E5F5; color: #6A1B9A; }
+        .badge-resolved { background: #E8F5E9; color: #2E7D32; }
+        .badge-rejected { background: #ECEFF1; color: #455A64; }
+        .badge-paid { background: #E8F5E9; color: #2E7D32; }
+        .badge-refunded { background: #FFF3E0; color: #E65100; }
+        .badge-pending { background: #E3F2FD; color: #1565C0; }
+        .badge-failed { background: #FFEBEE; color: #C62828; }
+        .badge-blocked { background: #FFEBEE; color: #C62828; }
+        .badge-active { background: #E8F5E9; color: #2E7D32; }
+
+        .btn-sm { padding: 0.4rem 0.7rem; font-size: 0.8rem; border-radius: 6px; cursor: pointer; border: 1px solid var(--border-light); background: white; font-weight: 600; }
+        .btn-sm:hover { background: #F5F5F5; }
+        .btn-sm.danger { color: #C62828; border-color: #FFCDD2; }
+        .btn-sm.success { color: #2E7D32; border-color: #C8E6C9; }
+        .filter-bar { display: flex; gap: 0.75rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+        .filter-bar select { padding: 0.5rem 0.75rem; border: 1px solid var(--border-light); border-radius: 6px; font-family: inherit; font-size: 0.83rem; background: white; }
+        .search-input-wrap { position: relative; flex: 1; min-width: 220px; }
+        .search-input-wrap i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.85rem; }
+        .search-input-wrap input { width: 100%; padding: 0.5rem 0.75rem 0.5rem 2.2rem; border: 1px solid var(--border-light); border-radius: 6px; font-family: inherit; font-size: 0.83rem; box-sizing: border-box; }
+
+        #toast-container { position: fixed; bottom: 2rem; right: 2rem; z-index: 2000; display: flex; flex-direction: column; gap: 0.5rem; }
+        .toast { background: #333; color: white; padding: 1rem 1.5rem; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); font-weight: 500; display: flex; align-items: center; gap: 0.5rem; transform: translateY(100px); opacity: 0; transition: all 0.3s; font-size: 0.9rem;}
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast-success { border-left: 4px solid #2E7D32; }
+        .toast-error { border-left: 4px solid #C62828; }
+
+        .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); display:none; align-items:center; justify-content:center; z-index: 1000; backdrop-filter: blur(4px); }
+        .modal-content { background: white; padding: 2rem; border-radius: 12px; width: 100%; max-width: 640px; box-shadow: var(--shadow-md); max-height: 90vh; overflow-y: auto; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.4rem; font-weight: 600; font-size: 0.85rem; }
+        .form-group input, .form-group textarea { width: 100%; padding: 0.6rem 0.8rem; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-family: inherit; font-size: 0.85rem;}
+        .modal-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.25rem; flex-wrap: wrap; }
+
+        .detail-section { border: 1px solid var(--border-light); border-radius: 8px; padding: 1rem 1.1rem; margin-bottom: 1rem; background: #FCFAF8; }
+        .detail-section h4 { margin: 0 0 0.6rem; font-size: 0.85rem; }
+        .detail-row { display: flex; justify-content: space-between; font-size: 0.82rem; padding: 0.3rem 0; border-bottom: 1px dashed #EEE; }
+        .detail-row:last-child { border-bottom: none; }
+
+        .btn-decision { padding: 0.6rem 1rem; border: none; border-radius: 6px; font-weight: 700; font-size: 0.83rem; cursor: pointer; color: white; }
+        .btn-approve { background: #2E7D32; }
+        .btn-deny { background: #C62828; }
+
+        .panel-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+        .panel { background: white; border-radius: 8px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-light); padding: 1.25rem; }
+        .panel h3 { margin: 0 0 1rem 0; font-size: 0.95rem; }
+        .analytics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+        .analytics-tile { background: white; padding: 1.15rem; border-radius: 8px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-light); }
+        .analytics-tile .value { margin: 0.4rem 0 0 0; font-size: 1.6rem; font-weight: 800; }
+        .analytics-tile h4 { margin: 0; color: var(--text-muted); font-size: 0.68rem; text-transform: uppercase; font-weight: 700; }
+        .cuisine-row { margin-bottom: 0.75rem; }
+        .cuisine-row-head { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.83rem; }
+        .cuisine-track { width: 100%; background: #F1F5F9; height: 8px; border-radius: 4px; overflow: hidden; }
+        .cuisine-fill { height: 100%; border-radius: 4px; }
+        .top-restaurant-row { display: flex; justify-content: space-between; align-items: center; padding: 0.7rem 0; border-bottom: 1px dashed #EEE; }
+        .top-restaurant-row:last-child { border-bottom: none; }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-layout">
+        <aside class="sidebar">
+            <div class="sidebar-logo"><i class="fa-solid fa-sack-dollar" style="margin-right: 8px;"></i> DineTime <span style="font-size: 0.62rem; color: #A3B5A4; display: block; letter-spacing: 1px; margin-top: 4px;">FINANCE TEAM</span></div>
+            <div class="nav-item active" id="nav-dashboard" onclick="switchTab('dashboard')"><i class="fa-solid fa-chart-line"></i> Dashboard</div>
+            <div class="nav-item" id="nav-refunds" onclick="switchTab('refunds')"><i class="fa-solid fa-money-bill-transfer"></i> Refund Requests</div>
+            <div class="nav-item" id="nav-payouts" onclick="switchTab('payouts')"><i class="fa-solid fa-store"></i> Restaurant Payouts</div>
+            <div class="nav-item" id="nav-audit" onclick="switchTab('audit')"><i class="fa-solid fa-clock-rotate-left"></i> Transaction Audit</div>
+            <div class="nav-item" style="margin-top: auto; color: #fca5a5;" onclick="logoutFinanceAdmin()"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</div>
+        </aside>
+
+        <div class="main-wrapper">
+            <main class="main-content">
+
+                <section id="view-dashboard" class="dashboard-view">
+                    <div class="dashboard-header">
+                        <div>
+                            <h1>Finance Dashboard</h1>
+                            <p id="agentGreeting">Welcome back.</p>
+                        </div>
+                    </div>
+
+                    <div class="kpi-grid">
+                        <div class="kpi-card" style="border-left-color:#1565C0;"><h4>Total Paid by Diners</h4><p class="value" id="kpiPaidByDiners">₹0</p></div>
+                        <div class="kpi-card" style="border-left-color:#2E7D32;"><h4>Total Platform Revenue</h4><p class="value" id="kpiRevenue">₹0</p></div>
+                        <div class="kpi-card" style="border-left-color:#00897B;"><h4>Total Payouts Paid</h4><p class="value" id="kpiPayoutsPaid">₹0</p></div>
+                        <div class="kpi-card" style="border-left-color:#E65100;"><h4>Total Refunds Made</h4><p class="value" id="kpiRefundsIssued">₹0</p></div>
+                    </div>
+
+                    <div class="analytics-grid" style="grid-template-columns: repeat(2, 1fr);">
+                        <div class="analytics-tile"><h4>Total Restaurants</h4><p class="value" id="anTotalRestaurants">0</p></div>
+                        <div class="analytics-tile"><h4>Total Bookings</h4><p class="value" id="anTotalBookings">0</p></div>
+                    </div>
+
+                    <div class="panel" style="margin-bottom:1.5rem;">
+                        <h3>Top Restaurants by Reservation Payments</h3>
+                        <div id="topRestaurantsContainer"></div>
+                    </div>
+
+                    <div class="dashboard-header">
+                        <div><h1 style="font-size:1.1rem;">Recent Reservation Payments</h1></div>
+                    </div>
+                    <div class="filter-bar">
+                        <div class="search-input-wrap">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="dashboardSearch" placeholder="Search by restaurant, diner, or payment id..." oninput="renderRecentPayments()">
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>Payment</th><th>Diner</th><th>Restaurant</th><th>Amount</th><th>Status</th><th>When</th></tr></thead>
+                            <tbody id="recentPaymentsBody"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="view-refunds" class="dashboard-view" style="display:none;">
+                    <div class="dashboard-header"><div><h1>Refund Requests</h1><p>Tickets escalated by Customer Support for a refund decision — pending and settled.</p></div></div>
+                    <div class="filter-bar">
+                        <div class="search-input-wrap">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="refundsSearch" placeholder="Search by diner, ticket, or subject..." oninput="renderRefunds()">
+                        </div>
+                        <select id="refundsStatusFilter" onchange="renderRefunds()">
+                            <option value="">All</option>
+                            <option value="pending">Pending</option>
+                            <option value="settled">Settled</option>
+                        </select>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>Ticket</th><th>Diner</th><th>Reservation</th><th>Deposit Paid</th><th>Subject</th><th>Status</th><th style="text-align:right;">Action</th></tr></thead>
+                            <tbody id="refundsBody"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="view-payouts" class="dashboard-view" style="display:none;">
+                    <div class="dashboard-header">
+                        <div><h1>Restaurant Payouts</h1><p>Unsettled reservation payments, one row per payment.</p></div>
+                        <button class="btn-decision btn-approve" onclick="settleAll()">Settle All Unblocked Payments</button>
+                    </div>
+                    <div class="filter-bar">
+                        <div class="search-input-wrap">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="pendingPaymentsSearch" placeholder="Search by restaurant..." oninput="renderPendingPayments()">
+                        </div>
+                    </div>
+                    <div class="table-container" style="margin-bottom:1.5rem;">
+                        <table>
+                            <thead><tr><th>Payment</th><th>Restaurant</th><th>Net Amount</th><th>Paid On</th><th>Auto-Settles In</th><th>Status</th><th style="text-align:right;">Action</th></tr></thead>
+                            <tbody id="pendingPaymentsBody"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="dashboard-header">
+                        <div><h1 style="font-size:1.1rem;">Restaurant Summary</h1><p>Already paid vs. yet to pay, per restaurant.</p></div>
+                    </div>
+                    <div class="filter-bar">
+                        <div class="search-input-wrap">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="payoutsSearch" placeholder="Search by restaurant..." oninput="renderPayouts()">
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>Restaurant</th><th>Pending Reservations</th><th>Pending Payout</th><th>Settled Payout</th><th>Payout Status</th><th style="text-align:right;">Action</th></tr></thead>
+                            <tbody id="payoutsBody"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="view-audit" class="dashboard-view" style="display:none;">
+                    <div class="dashboard-header"><div><h1>Transaction Audit</h1><p>Every reservation payment made by diners on the platform, in every status.</p></div></div>
+                    <div class="filter-bar">
+                        <div class="search-input-wrap">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="auditSearch" placeholder="Search by diner, restaurant, or payment id..." oninput="renderAudit()">
+                        </div>
+                        <select id="auditStatusFilter" onchange="loadAll()">
+                            <option value="">All Statuses</option>
+                            <option value="paid">Paid</option>
+                            <option value="refunded">Refunded</option>
+                            <option value="pending">Pending</option>
+                            <option value="failed">Failed</option>
+                        </select>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>Payment</th><th>Reservation</th><th>Diner</th><th>Restaurant</th><th>Status</th><th>Amount</th><th>Refunded</th><th>Settled</th><th>Settled By</th><th>When</th></tr></thead>
+                            <tbody id="auditBody"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Refund decision modal -->
+    <div class="modal-overlay" id="refundModal">
+        <div class="modal-content" id="refundModalContent"></div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script src="../js/finance-admin.js"></script>
+</body>
+</html>
