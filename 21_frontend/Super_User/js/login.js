@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const user = payload?.data;
 
                 sessionStorage.setItem('super_auth_status', 'true');
+                sessionStorage.setItem('super_access_token', user.access_token || '');
                 sessionStorage.setItem('super_admin_profile', JSON.stringify({
                     id: user.id,
                     name: user.name,

@@ -84,10 +84,10 @@
             <div class="nav-item" id="nav-restaurants" onclick="switchTab('restaurants')"><i class="fa-solid fa-building"></i> Restaurants</div>
             <div class="nav-item" id="nav-users" onclick="switchTab('users')"><i class="fa-solid fa-users"></i> User Management</div>
             <div class="nav-item" id="nav-reservations" onclick="switchTab('reservations')"><i class="fa-solid fa-calendar-check"></i> Reservations</div>
-            <div class="nav-item" id="nav-payments" onclick="switchTab('payments')"><i class="fa-solid fa-credit-card"></i> Payments</div>
-            <div class="nav-item" id="nav-reports" onclick="switchTab('reports')"><i class="fa-solid fa-chart-pie"></i> Reports & Analytics</div>
             <div class="nav-item" id="nav-notifications" onclick="switchTab('notifications')"><i class="fa-solid fa-bullhorn"></i> Broadcast Center</div>
             <div class="nav-item" id="nav-audit" onclick="switchTab('audit')"><i class="fa-solid fa-clipboard-list"></i> System Audit Logs</div>
+            <div class="nav-item" id="nav-subadmins" onclick="switchTab('subadmins')"><i class="fa-solid fa-user-shield"></i> Sub-Admin Teams</div>
+            <div class="nav-item" id="nav-escalated" onclick="switchTab('escalated')"><i class="fa-solid fa-triangle-exclamation"></i> Escalated Issues</div>
             <div class="nav-item" style="margin-top: auto; color: #fca5a5;" onclick="logoutSuperAdmin()"><i class="fa-solid fa-right-from-bracket"></i> Terminate Session</div>
         </aside>
 
@@ -102,7 +102,7 @@
                         </div>
                     </div>
 
-                    <div class="kpi-grid" style="grid-template-columns: repeat(5, 1fr);">
+                    <div class="kpi-grid" style="grid-template-columns: repeat(4, 1fr);">
                         <div class="kpi-card" style="border-left-color: #1976D2;">
                             <h4>Total Bookings</h4>
                             <p class="value" id="dashTotalBookings">0</p>
@@ -114,10 +114,6 @@
                         <div class="kpi-card" style="border-left-color: #5F7A61;">
                             <h4>Total Restaurants</h4>
                             <p class="value" id="dashTotalRes">0</p>
-                        </div>
-                        <div class="kpi-card" style="border-left-color: #F57F17;">
-                            <h4>Total Revenue</h4>
-                            <p class="value" id="dashTotalRev" style="font-size: 1.6rem; margin-top: 0.6rem;">₹0</p>
                         </div>
                         <div class="kpi-card" style="border-left-color: #C62828;">
                             <h4>Pending Approvals</h4>
@@ -136,14 +132,11 @@
                         <div class="panel">
                             <div class="panel-head"><div class="panel-title">Quick Actions</div></div>
                             <div class="panel-body" style="padding: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem;">
-                                <button class="btn-outline" onclick="switchTab('restaurants'); setTimeout(openRestaurantModal, 100);" style="text-align: left; padding: 0.8rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 10px; background: var(--bg-light); border: 1px solid var(--border-light);">
-                                    <i class="fa-solid fa-building" style="color: var(--primary-green);"></i> <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-dark);">Onboard New Restaurant</span>
+                                <button class="btn-outline" onclick="switchTab('restaurants')" style="text-align: left; padding: 0.8rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 10px; background: var(--bg-light); border: 1px solid var(--border-light);">
+                                    <i class="fa-solid fa-building" style="color: var(--primary-green);"></i> <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-dark);">View Restaurants</span>
                                 </button>
                                 <button class="btn-outline" onclick="switchTab('notifications')" style="text-align: left; padding: 0.8rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 10px; background: var(--bg-light); border: 1px solid var(--border-light);">
                                     <i class="fa-solid fa-bullhorn" style="color: #1976D2;"></i> <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-dark);">Compose Broadcast Message</span>
-                                </button>
-                                <button class="btn-outline" onclick="switchTab('reports')" style="text-align: left; padding: 0.8rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 10px; background: var(--bg-light); border: 1px solid var(--border-light);">
-                                    <i class="fa-solid fa-chart-pie" style="color: #F57F17;"></i> <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-dark);">View Platform Analytics</span>
                                 </button>
                             </div>
                         </div>
@@ -179,9 +172,8 @@
                     <div class="dashboard-header">
                         <div>
                             <h1>Restaurant Management</h1>
-                            <p>Onboard, verify, and control network nodes.</p>
+                            <p>Read-only directory. Restaurant details are managed by their owning manager.</p>
                         </div>
-                        <button class="btn-primary" onclick="openRestaurantModal()" style="background: var(--primary-green); color: white; padding: 0.6rem 1.2rem; font-size: 0.85rem; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; box-shadow: 0 4px 12px rgba(95, 122, 97, 0.3);"><i class="fa-solid fa-plus"></i> Add Restaurant</button>
                     </div>
                     
                     <div class="kpi-grid" style="grid-template-columns: repeat(3, 1fr);">
@@ -221,7 +213,6 @@
                                     <th>Capacity & Bookings</th>
                                     <th>Restaurant Manager</th>
                                     <th>Status</th>
-                                    <th style="text-align: right;">System Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="globalRestaurantsBody"></tbody>
@@ -233,9 +224,8 @@
                     <div class="dashboard-header">
                         <div>
                             <h1>User Management</h1>
-                            <p>Global database of Diners, Restaurant Managers, and Restaurant Staff.</p>
+                            <p>Read-only directory of Diners, Restaurant Managers, and Restaurant Staff.</p>
                         </div>
-                        <button class="btn-primary" onclick="openUserModal()" style="background: var(--primary-green); color: white; padding: 0.6rem 1.2rem; font-size: 0.85rem; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; box-shadow: 0 4px 12px rgba(95, 122, 97, 0.3);"><i class="fa-solid fa-user-plus"></i> Add User</button>
                     </div>
 
                     <div class="filter-bar" style="margin-bottom: 1.5rem;">
@@ -268,7 +258,6 @@
                                     <th>System Role</th>
                                     <th>Linked Restaurant</th>
                                     <th>Account Status</th>
-                                    <th style="text-align: right;">Action</th>
                                 </tr>
                             </thead>
                             <tbody id="globalUsersBody"></tbody>
@@ -280,9 +269,8 @@
                     <div class="dashboard-header">
                         <div>
                             <h1>Reservations</h1>
-                            <p>Track bookings, customer check-ins, and no-shows globally.</p>
+                            <p>Read-only view of bookings, check-ins, and no-shows globally.</p>
                         </div>
-                        <button class="btn-primary" onclick="openReservationModal()" style="background: var(--primary-green); color: white; padding: 0.6rem 1.2rem; font-size: 0.85rem; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; box-shadow: 0 4px 12px rgba(95, 122, 97, 0.3);"><i class="fa-solid fa-plus"></i> Add Reservation</button>
                     </div>
                     
                     <div class="filter-bar" style="margin-bottom: 1.5rem;">
@@ -323,118 +311,10 @@
                                     <th>Restaurant</th>
                                     <th>Party Size</th>
                                     <th>Booking Status</th>
-                                    <th style="text-align: right;">Action</th> 
                                 </tr>
                             </thead>
                             <tbody id="globalReservationsBody"></tbody>
                         </table>
-                    </div>
-                </section>
-
-                <section id="view-payments" class="dashboard-view" style="display: none;">
-                    <div class="dashboard-header">
-                        <div>
-                            <h1>Payments</h1>
-                            <p>Platform-wide transaction oversight.</p>
-                        </div>
-                    </div>
-                    
-                    <div class="kpi-grid" style="grid-template-columns: repeat(3, 1fr);">
-                        <div class="kpi-card" style="border-left-color: #2E7D32;">
-                            <h4 style="color: #2E7D32; font-weight: 700;">SUCCESSFUL TRANSACTIONS</h4>
-                            <p class="value" id="paySuccessCount">0</p>
-                        </div>
-                        <div class="kpi-card" style="border-left-color: #C62828;">
-                            <h4 style="color: #C62828; font-weight: 700;">FAILED TRANSACTIONS</h4>
-                            <p class="value" id="payFailedCount">0</p>
-                        </div>
-                        <div class="kpi-card" style="border-left-color: #F57F17;">
-                            <h4 style="color: #F57F17; font-weight: 700;">REFUNDS ISSUED</h4>
-                            <p class="value" id="payRefundTotal">INR 0</p>
-                        </div>
-                    </div>
-
-                    <div class="panel">
-                        <div class="panel-head"><div class="panel-title">Recent Transactions</div></div>
-                        <table style="margin: 0; width: 100%;">
-                            <thead>
-                                <tr>
-                                    <th>TRANSACTION ID</th>
-                                    <th>Diner Details</th>
-                                    <th>Restaurant Details</th>
-                                    <th>Amount</th>
-                                    <th>Payment Gateway</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="globalPaymentsBody"></tbody>
-                        </table>
-                    </div>
-                </section>
-
-                <section id="view-reports" class="dashboard-view" style="display: none;">
-                    <div class="dashboard-header">
-                        <div>
-                            <h1>Reports & Analytics</h1>
-                            <p>Platform performance, operational hours, and dining insights.</p>
-                        </div>
-                        <div style="display: flex; gap: 1rem;">
-                        </div>
-                    </div>
-
-                    <div class="filter-bar" style="margin-bottom: 1.5rem;">
-                        <div class="form-group" style="margin: 0; flex: 1;">
-                            <select id="reportScope" onchange="generateReport()" style="margin-bottom: 0;">
-                                <option value="platform">Entire Platform (All Regions)</option>
-                                <option value="Mumbai">Region: Mumbai</option>
-                                <option value="Bangalore">Region: Bangalore</option>
-                                <option value="Delhi">Region: Delhi</option>
-                                <option value="Hyderabad">Region: Hyderabad</option>
-                                <option value="Chennai">Region: Chennai</option>
-                            </select>
-                        </div>
-                        <div class="form-group" style="margin: 0; flex: 1; position: relative;">
-                            <div>
-                                <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; bottom: 12px; color: var(--text-muted); font-size: 0.9rem;"></i>
-                                <input type="text" id="reportRestaurantSearch" placeholder="Search by Restaurant Name..." style="padding-left: 35px; width: 100%; margin-bottom: 0;" onkeyup="generateReport()">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="reportResults">
-                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2rem;">
-                            <div style="background-color: white; padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border-light); box-shadow: var(--shadow-sm);">
-                                <div class="kpi-icon-wrap"><i class="fa-solid fa-store"></i></div>
-                                <p class="value" id="repNodes" style="margin: 0; font-size: 2rem; font-weight: 800; color: var(--text-dark);">0</p>
-                                <h4 style="margin: 0.5rem 0 0 0; color: var(--text-muted); font-size: 0.75rem; font-weight: 600;">Total Restaurants</h4>
-                            </div>
-                            <div style="background-color: white; padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border-light); box-shadow: var(--shadow-sm);">
-                                <div class="kpi-icon-wrap" style="background: #FCE4EC; color: #D81B60;"><i class="fa-solid fa-calendar-check"></i></div>
-                                <p class="value" id="repBook" style="margin: 0; font-size: 2rem; font-weight: 800; color: var(--text-dark);">0</p>
-                                <h4 style="margin: 0.5rem 0 0 0; color: var(--text-muted); font-size: 0.75rem; font-weight: 600;">Total Bookings</h4>
-                            </div>
-                            <div style="background-color: white; padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border-light); box-shadow: var(--shadow-sm);">
-                                <div class="kpi-icon-wrap" style="background: #FFF8E1; color: #F57F17;"><i class="fa-solid fa-indian-rupee-sign"></i></div>
-                                <p class="value" id="repRev" style="margin: 0; font-size: 2rem; font-weight: 800; color: var(--text-dark);">₹0</p>
-                                <h4 style="margin: 0.5rem 0 0 0; color: var(--text-muted); font-size: 0.75rem; font-weight: 600;">Total Payments</h4>
-                            </div>
-                            <div style="background-color: white; padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border-light); box-shadow: var(--shadow-sm);">
-                                <div class="kpi-icon-wrap" style="background: #E8F5E9; color: #2E7D32;"><i class="fa-solid fa-chair"></i></div>
-                                <p class="value" id="repCap" style="margin: 0; font-size: 2rem; font-weight: 800; color: var(--text-dark);">0%</p>
-                                <h4 style="margin: 0.5rem 0 0 0; color: var(--text-muted); font-size: 0.75rem; font-weight: 600;">Table Occupancy</h4>
-                            </div>
-                        </div>
-
-                        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.5rem;">
-                            <div style="background-color: white; padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border-light); box-shadow: var(--shadow-sm);">
-                                <h3 style="margin: 0 0 1.2rem 0; font-size: 1rem; color: var(--text-dark);">Bookings by Cuisine</h3>
-                                <div id="cuisineBarsContainer" style="display: flex; flex-direction: column; gap: 1rem;"></div>
-                            </div>
-                            <div style="background-color: white; padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border-light); box-shadow: var(--shadow-sm);">
-                                <h3 style="margin: 0 0 1.2rem 0; font-size: 1rem; color: var(--text-dark);">Top Payments by Restaurant</h3>
-                                <div id="revenueListContainer" style="display: flex; flex-direction: column; gap: 0;"></div>
-                            </div>
-                        </div>
                     </div>
                 </section>
 
@@ -484,7 +364,144 @@
                     </div>
                 </section>
 
+                <section id="view-subadmins" class="dashboard-view" style="display: none;">
+                    <div class="dashboard-header">
+                        <div>
+                            <h1>Sub-Admin Teams</h1>
+                            <p>Create and manage Customer Support, Finance, and Verification team accounts.</p>
+                        </div>
+                        <button class="btn-primary" onclick="openSubAdminModal()" style="background: var(--primary-green); color: white; padding: 0.6rem 1.2rem; font-size: 0.85rem; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; box-shadow: 0 4px 12px rgba(95, 122, 97, 0.3);"><i class="fa-solid fa-user-plus"></i> Add Sub-Admin</button>
+                    </div>
+
+                    <div class="kpi-grid" style="grid-template-columns: repeat(3, 1fr);">
+                        <div class="kpi-card" style="border-left-color: #1976D2;">
+                            <h4>Customer Support Team</h4>
+                            <p class="value" id="kpiSupportCount">0</p>
+                        </div>
+                        <div class="kpi-card" style="border-left-color: #F57F17;">
+                            <h4>Finance Team</h4>
+                            <p class="value" id="kpiFinanceCount">0</p>
+                        </div>
+                        <div class="kpi-card" style="border-left-color: #6A1B9A;">
+                            <h4>Verification Team <span style="font-weight: 600; text-transform: none; letter-spacing: 0;">(coming soon)</span></h4>
+                            <p class="value" id="kpiVerificationCount">0</p>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name & Email</th>
+                                    <th>Team</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th style="text-align: right;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="subAdminsBody"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="view-escalated" class="dashboard-view" style="display: none;">
+                    <div class="dashboard-header">
+                        <div>
+                            <h1>Escalated Issues</h1>
+                            <p>Technical issues the Customer Support team has escalated to you. All other tickets are visible below for reference only.</p>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-head"><div class="panel-title">Needs Your Action</div></div>
+                        <table style="margin: 0; width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th>Ticket</th>
+                                    <th>Raised By</th>
+                                    <th>Subject</th>
+                                    <th>Support Notes</th>
+                                    <th style="text-align: right;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="escalatedTicketsBody"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="panel" style="margin-top: 1.5rem;">
+                        <div class="panel-head"><div class="panel-title">All Support Tickets (View Only)</div></div>
+                        <table style="margin: 0; width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th>Ticket</th>
+                                    <th>Raised By</th>
+                                    <th>Category</th>
+                                    <th>Subject</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="allTicketsBody"></tbody>
+                        </table>
+                    </div>
+                </section>
+
             </main>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="subAdminModal">
+        <div class="modal-content" style="max-width: 450px;">
+            <h2 id="subAdminModalTitle" style="margin-top:0; border-bottom: 1px solid var(--border-light); padding-bottom: 1rem; font-size: 1.2rem;">Add Sub-Admin</h2>
+            <form id="subAdminForm">
+                <input type="hidden" id="subAdminId">
+                <div class="form-group"><label>Full Name *</label><input type="text" id="subAdminName" required></div>
+                <div class="form-group"><label>Email Address *</label><input type="email" id="subAdminEmail" required></div>
+                <div class="form-group"><label>Password *</label><input type="password" id="subAdminPassword" minlength="6" placeholder="Set the login password"></div>
+                <div class="form-group">
+                    <label>Team *</label>
+                    <select id="subAdminTeam" required onchange="toggleSubAdminLocationField()">
+                        <option value="support">Customer Support</option>
+                        <option value="finance">Finance Team</option>
+                        <option value="verification">Verification Team</option>
+                    </select>
+                </div>
+                <div class="form-group" id="subAdminLocationGroup" style="display: none;">
+                    <label>Assigned Location *</label>
+                    <select id="subAdminLocation">
+                        <option value="">Select a location</option>
+                    </select>
+                    <button type="button" onclick="toggleNewLocationForm()" style="background: none; border: none; color: var(--primary-green); font-size: 0.8rem; font-weight: 600; cursor: pointer; padding: 0.4rem 0; text-align: left;">
+                        <i class="fa-solid fa-plus"></i> <span id="newLocationToggleLabel">Add a new location</span>
+                    </button>
+                    <div id="newLocationForm" style="display: none; border: 1px solid var(--border-light); border-radius: 8px; padding: 0.9rem; margin-top: 0.4rem; background: var(--bg-light);">
+                        <div class="form-group" style="margin-bottom: 0.6rem;"><label style="font-size: 0.8rem;">City *</label><input type="text" id="newLocCity" placeholder="e.g. Pune" style="margin-bottom: 0;"></div>
+                        <div class="form-group" style="margin-bottom: 0.6rem;"><label style="font-size: 0.8rem;">Area / Address *</label><input type="text" id="newLocAddress" placeholder="e.g. Koregaon Park, Pune" style="margin-bottom: 0;"></div>
+                        <div style="display: flex; gap: 0.6rem;">
+                            <div class="form-group" style="flex: 1; margin-bottom: 0.6rem;"><label style="font-size: 0.8rem;">Pincode *</label><input type="text" id="newLocPincode" maxlength="6" placeholder="560001" style="margin-bottom: 0;"></div>
+                            <div class="form-group" style="flex: 1; margin-bottom: 0.6rem;"><label style="font-size: 0.8rem;">Country *</label><input type="text" id="newLocCountry" value="India" style="margin-bottom: 0;"></div>
+                        </div>
+                        <button type="button" onclick="createNewLocation()" class="btn-sm" style="background: var(--primary-green); color: white; border: none; padding: 0.5rem 0.9rem; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.8rem;">Create Location</button>
+                    </div>
+                </div>
+                <div class="modal-actions" style="border-top: 1px solid var(--border-light); padding-top: 1.2rem; margin-top: 0.5rem;">
+                    <button type="button" onclick="closeSubAdminModal()" class="btn-outline" style="padding: 0.6rem 1.2rem; border-radius: 6px;">Cancel</button>
+                    <button type="submit" style="background: var(--primary-green); color: white; padding: 0.6rem 1.2rem; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Save Sub-Admin</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="resolveEscalatedModal">
+        <div class="modal-content" style="max-width: 480px;">
+            <h2 style="margin-top:0; border-bottom: 1px solid var(--border-light); padding-bottom: 1rem; font-size: 1.2rem;">Resolve Escalated Ticket</h2>
+            <form id="resolveEscalatedForm">
+                <input type="hidden" id="resolveTicketId">
+                <div class="form-group"><label>Resolution Notes *</label><textarea id="resolveTicketNotes" rows="4" required placeholder="Explain what was done to resolve this."></textarea></div>
+                <div class="modal-actions" style="border-top: 1px solid var(--border-light); padding-top: 1.2rem; margin-top: 0.5rem;">
+                    <button type="button" onclick="closeResolveEscalatedModal()" class="btn-outline" style="padding: 0.6rem 1.2rem; border-radius: 6px;">Cancel</button>
+                    <button type="submit" style="background: var(--primary-green); color: white; padding: 0.6rem 1.2rem; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Mark Resolved</button>
+                </div>
+            </form>
         </div>
     </div>
 
