@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        if (!JSON.parse(sessionStorage.getItem('manager_session_v1') || 'null')?.email) {
+            window.location.href = 'login.html';
+        }
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DineTime - Revenue</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        .revenue-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        .revenue-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            border-left: 4px solid var(--primary-green);
+        }
+        .revenue-card h4 {
+            margin: 0 0 12px 0;
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748B;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .revenue-card .value {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+        .revenue-card p.note {
+            margin: 8px 0 0 0;
+            font-size: 13px;
+            color: #94A3B8;
+        }
+        .revenue-table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+        .revenue-table-container h3 {
+            margin: 0;
+            padding: 20px 24px;
+            font-size: 16px;
+            border-bottom: 1px solid #E2E8F0;
+        }
+        table.revenue-table { width: 100%; border-collapse: collapse; }
+        table.revenue-table th, table.revenue-table td { padding: 12px 24px; text-align: left; font-size: 14px; border-bottom: 1px solid #F1F5F9; }
+        table.revenue-table th { color: #64748B; font-size: 12px; text-transform: uppercase; letter-spacing: 0.4px; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo-container">
+                <img style="width: 38px; height: 38px; border-radius: 8px; object-fit: contain; margin-right: 4px;" src="images/logo.png" alt="DineTime Logo">
+                <div class="logo-text">
+                    <h1>DineTime</h1>
+                    <span>Manager Portal</span>
+                </div>
+            </div>
+
+            <nav class="main-nav">
+                <ul>
+                    <li>
+                        <a href="index.html">
+                            <i class="ph ph-user"></i>
+                            <span>Profile</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="reservations.html">
+                            <i class="ph ph-calendar-blank"></i>
+                            <span>Reservations</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="menu.html">
+                            <i class="ph ph-fork-knife"></i>
+                            <span>Menu Management</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="time-slots.html">
+                            <i class="ph ph-clock"></i>
+                            <span>Time Slot Management</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="tables.html">
+                            <i class="ph ph-squares-four"></i>
+                            <span>Table and Capacity<br>Management</span>
+                        </a>
+                    </li>
+                    <li class="active">
+                        <a href="revenue.html">
+                            <i class="ph ph-currency-circle-dollar"></i>
+                            <span>Revenue</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="reviews.html">
+                            <i class="ph ph-star"></i>
+                            <span>Customer Reviews</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="issues.html">
+                            <i class="ph ph-headset"></i>
+                            <span>Raise an Issue</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header" style="height: 180px; background-image: url('images/restaurant.jpg'); background-size: cover; background-position: center;">
+                <div class="header-overlay" style="background: linear-gradient(to right, rgba(0,0,0,0.8), rgba(0,0,0,0.4));"></div>
+                <div class="header-content">
+                    <div class="header-title">
+                        <h2>Revenue</h2>
+                        <p>What the platform still owes you, and what it has already paid you.</p>
+                    </div>
+                    <div class="header-actions">
+                        <div class="user-profile-widget">
+                            <div class="avatar-circle-small">
+                                <i class="ph ph-user"></i>
+                            </div>
+                            <div class="user-info">
+                                <h4></h4>
+                                <span>Restaurant Manager</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper" style="margin-top: -40px;">
+                <div class="revenue-grid">
+                    <div class="revenue-card" style="border-left-color: #E65100;">
+                        <h4>Yet to be Paid</h4>
+                        <p class="value" id="rev-pending">₹0</p>
+                        <p class="note">Owed to you by the platform, not yet paid out.</p>
+                    </div>
+                    <div class="revenue-card" style="border-left-color: #2E7D32;">
+                        <h4>Already Paid by Platform</h4>
+                        <p class="value" id="rev-settled">₹0</p>
+                        <p class="note">Total the platform has paid out to you so far.</p>
+                    </div>
+                </div>
+
+                <div class="revenue-table-container">
+                    <h3>Payout History</h3>
+                    <table class="revenue-table">
+                        <thead><tr><th>Date &amp; Time</th><th>Amount</th></tr></thead>
+                        <tbody id="rev-history-body">
+                            <tr><td colspan="2" style="text-align:center; color:#94A3B8;">No payouts yet.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="../js/data.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/revenue.js"></script>
+</body>
+</html>

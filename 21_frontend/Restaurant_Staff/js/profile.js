@@ -117,7 +117,7 @@ saveBtn.addEventListener('click', async () => {
                     email: data.email,
                     phone: data.phone,
                 }),
-            }, 'manager');
+            }, 'staff');
         }
 
         sessionStorage.setItem('dinetime_profile', JSON.stringify(data));
@@ -203,10 +203,12 @@ changePwdBtn.addEventListener('click', () => {
 
     (async () => {
         try {
-            const userRes = await apiRequest(`/users/${session.staffId}`, {}, 'manager');
-            const user = userRes?.data;
+            const verified = await apiRequest('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({ email: session.email, password: current }),
+            }, 'staff');
 
-            if (!user || user.password_hash !== current) {
+            if (!verified?.user || verified.user.id !== session.staffId) {
                 pwdError.textContent = 'Current password incorrect. Please try again.';
                 return;
             }
@@ -214,7 +216,7 @@ changePwdBtn.addEventListener('click', () => {
             await apiRequest(`/users/${session.staffId}`, {
                 method: 'PATCH',
                 body: JSON.stringify({ password_hash: newPwd }),
-            }, 'manager');
+            }, 'staff');
 
             document.getElementById('current-password').value = '';
             document.getElementById('new-password').value     = '';

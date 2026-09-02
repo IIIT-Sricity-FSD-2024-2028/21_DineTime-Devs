@@ -22,7 +22,7 @@ export class UserRepository {
   }
 
   findByEmail(email: string): User | undefined {
-    return this.users.find((user) => user.email === email);
+    return this.users.find((user) => user.email.toLowerCase() === email.toLowerCase());
   }
 
   create(user: User): User {

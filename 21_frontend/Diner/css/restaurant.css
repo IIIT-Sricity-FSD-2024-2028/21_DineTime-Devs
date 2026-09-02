@@ -240,6 +240,33 @@
   gap: 16px;
 }
 
+.policies-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.policy-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.policy-item strong {
+  font-size: 0.9rem;
+  color: var(--text-main);
+}
+
+.policy-item span {
+  font-size: 0.86rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
 .about-item {
   display: flex;
   align-items: flex-start;
@@ -330,6 +357,16 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 16px;
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  background: var(--bg);
+  padding: 18px;
+  font-size: 0.9rem;
 }
 
 .review-card {

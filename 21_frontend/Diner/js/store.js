@@ -87,10 +87,93 @@ const DinetimeStore = {
     this._writeJson(this.CACHE_KEY, this._cache);
   },
 
+  _assetUrl(url) {
+    if (!url) return url;
+    const value = String(url);
+    if (value.startsWith('/uploads/')) {
+      return `${this.API_BASE}${value}`;
+    }
+    return value;
+  },
+
+  _assetKey(url) {
+    const value = String(url || '').trim();
+    return value.replace(this.API_BASE, '');
+  },
+
+  _uniqueAssetUrls(urls) {
+    const seen = new Set();
+    return (Array.isArray(urls) ? urls : [])
+      .map((url) => this._assetUrl(url))
+      .filter(Boolean)
+      .filter((url) => {
+        const key = this._assetKey(url);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+  },
+
   _headers(role = 'diner') {
     return {
       'Content-Type': 'application/json',
       role,
+    };
+  },
+
+  _authHeaders(role = 'diner') {
+    return {
+      role,
+    };
+  },
+
+  _splitDescriptionSections(description) {
+    const raw = String(description || '').trim();
+    const detailsMarker = 'Details:';
+    const policiesMarker = 'Policies:';
+    const detailsIndex = raw.indexOf(detailsMarker);
+    const policiesIndex = raw.indexOf(policiesMarker);
+    const firstStructuredIndex = [detailsIndex, policiesIndex].filter((index) => index >= 0).sort((a, b) => a - b)[0];
+    const about = firstStructuredIndex >= 0 ? raw.slice(0, firstStructuredIndex).trim() : raw;
+    const detailsBlock = detailsIndex >= 0
+      ? raw.slice(detailsIndex + detailsMarker.length, policiesIndex > detailsIndex ? policiesIndex : raw.length)
+      : '';
+    const policiesBlock = policiesIndex >= 0
+      ? raw.slice(policiesIndex + policiesMarker.length)
+      : '';
+
+    const details = {};
+    String(detailsBlock || '')
+      .split('\n')
+      .map((line) => line.trim().replace(/^-\s*/, ''))
+      .filter(Boolean)
+      .forEach((line) => {
+        const [label, ...rest] = line.split(':');
+        const key = String(label || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const value = rest.join(':').trim();
+        if (key && value) {
+          details[key] = value;
+        }
+      });
+
+    const policies = String(policiesBlock || '')
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => {
+        const cleaned = line.replace(/^-\s*/, '');
+        const [title, ...rest] = cleaned.split(':');
+        return {
+          title: (title || 'Policy').trim(),
+          desc: rest.join(':').trim(),
+        };
+      })
+      .filter((policy) => policy.title || policy.desc);
+
+    return {
+      about,
+      details,
+      policies,
     };
   },
 
@@ -114,16 +197,12 @@ const DinetimeStore = {
     const location = locationMap[raw.location_id];
     const city = location?.city || 'Bangalore';
     const address = location?.address || 'City Center';
-    const images = Array.isArray(raw.image_urls) && raw.image_urls.length
-      ? raw.image_urls
-      : [];
+    const images = this._uniqueAssetUrls(raw.image_urls || []);
 
-    const menuImages = (menuByRestaurant[raw.id] || [])
-      .map((item) => item.image)
-      .filter(Boolean);
+    const menuImages = this._uniqueAssetUrls((menuByRestaurant[raw.id] || []).map((item) => item.image));
 
     const reviews = reviewsByRestaurant[raw.id] || [];
-    const ratingFallback = raw.rating_avg || 4.5;
+    const ratingFallback = raw.rating_avg ?? 0;
     const reviewCountFallback = raw.total_reviews || reviews.length;
 
     const restaurantSlots = this._cache.timeslots
@@ -134,18 +213,32 @@ const DinetimeStore = {
         if (da !== db) return da.localeCompare(db);
         return String(a.start_time || '').localeCompare(String(b.start_time || ''));
       });
-    const todayIso = new Date().toISOString().split('T')[0];
-    const fixedSlots = ['18:00', '20:00', '22:00'];
-    const isSpiceGarden = String(raw.name || '').toLowerCase() === 'spice garden';
+    const availableSlots = Array.from(new Set(
+      restaurantSlots
+        .map((slot) => String(slot.start_time || '').slice(0, 5))
+        .filter(Boolean),
+    ));
+    const sections = this._splitDescriptionSections(raw.description);
+    const amenities = String(sections.details.amenities || '')
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+    const openingHours = sections.details.hours || sections.details.openinghours || 'Hours not provided';
 
-    const availableSlots = isSpiceGarden
-      ? Array.from(new Set(
-          restaurantSlots
-            .filter((slot) => (slot.slot_date || slot.date) === todayIso)
-            .map((slot) => String(slot.start_time || '').slice(0, 5))
-            .filter(Boolean),
-        ))
-      : fixedSlots;
+    const customPolicies = (sections.policies || []).filter((policy) => {
+      const title = String(policy.title || '').toLowerCase();
+      return !title.includes('cancellation') && !title.includes('no-show') && !title.includes('no show') && !title.includes('late arrival');
+    });
+    const dynamicPolicies = [
+      {
+        title: 'Cancellation Policy',
+        desc: `Cancellations must be made at least ${raw.cancellation_cutoff_minutes ?? 120} minutes before your reservation.`,
+      },
+      {
+        title: 'No-Show Policy',
+        desc: `Your table is held for ${raw.no_show_grace_minutes ?? 15} minutes past the reservation time.`,
+      },
+    ];
 
     return {
       id: index + 1,
@@ -153,26 +246,28 @@ const DinetimeStore = {
       name: raw.name,
       cuisine: raw.cuisine_type,
       subtitle: `${raw.cuisine_type} - ${city}`,
+      reservationFeePerGuest: raw.reservation_fee_per_guest ?? 30,
+      cancellationCutoffMinutes: raw.cancellation_cutoff_minutes ?? 120,
+      noShowGraceMinutes: raw.no_show_grace_minutes ?? 15,
       rating: ratingFallback,
       reviewCount: reviewCountFallback,
       distance: Number((1.2 + index * 0.6).toFixed(1)),
-      location: `${address}, ${city}`,
-      price: 'INR 400 - 700',
-      availableSlots: availableSlots.length ? availableSlots : fixedSlots,
-      amenities: ['Family Friendly', 'Indoor Seating'],
+      location: address.toLowerCase().includes(city.toLowerCase()) ? address : `${address}, ${city}`,
+      price: sections.details.price || 'Price not provided',
+      availableSlots,
+      amenities: amenities.length ? amenities : ['Amenities not provided'],
       image: images[0] || '../images/indian.jpg',
       images,
-      description: raw.description,
-      phone: '8000000000',
-      openingHours: '11:00 AM - 11:00 PM',
-      parking: 'Street Parking',
-      dressCode: 'Smart Casual',
+      description: sections.about || raw.description,
+      policies: [...dynamicPolicies, ...customPolicies],
+      phone: sections.details.contact || sections.details.phone || 'Contact not provided',
+      openingHours,
+      parking: sections.details.parking || 'Parking not provided',
+      dressCode: sections.details.dresscode || 'Dress code not provided',
       operationalHours: [
-        { days: 'Mon - Thu', hours: '11:00 AM - 10:30 PM', isOpen: true },
-        { days: 'Fri - Sat', hours: '11:00 AM - 11:30 PM', isOpen: true },
-        { days: 'Sunday', hours: '12:00 PM - 10:00 PM', isOpen: true },
+        { days: 'Everyday', hours: openingHours, isOpen: openingHours !== 'Hours not provided' },
       ],
-      menuImages: menuImages.length ? menuImages.slice(0, 4) : images.slice(0, 4),
+      menuImages: menuImages.slice(0, 4),
       reviews,
     };
   },
@@ -198,11 +293,19 @@ const DinetimeStore = {
   _normalizeReservation(raw, restaurantMap, review) {
     const restaurant = restaurantMap[raw.restaurant_id];
     const statusValue = raw.reservation_status || raw.status || 'reserved';
+
+    const slotDateIso = raw.slot_date || new Date().toISOString().split('T')[0];
+    const slotTime24 = /^\d{2}:\d{2}$/.test(String(raw.slot_time || '')) ? raw.slot_time : '19:00';
+    const slotStart = new Date(`${slotDateIso}T${slotTime24}:00`);
+    const cutoffMinutes = restaurant?.cancellationCutoffMinutes ?? 120;
+    const cancelDeadline = new Date(slotStart.getTime() - cutoffMinutes * 60000);
+    const isCancellable = statusValue === 'reserved' && Date.now() < cancelDeadline.getTime();
+
     return {
       id: raw.id,
       backend_id: raw.id,
       restaurant: restaurant?.name || 'Restaurant',
-      image: restaurant?.image || '../images/indian.jpg',
+      image: this._assetUrl(restaurant?.image) || '../images/indian.jpg',
       date: raw.slot_date || new Date().toISOString().split('T')[0],
       time: raw.slot_time || '7:00 PM',
       guests: raw.guest_count,
@@ -227,6 +330,70 @@ const DinetimeStore = {
       hasRated: Boolean(review),
       rating: review?.rating,
       reviewText: review?.comment,
+      isCancellable,
+      cancelDeadline: cancelDeadline.toISOString(),
+    };
+  },
+
+  _normalizeDateToIso(value) {
+    if (!value) return '';
+    const raw = String(value).trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) return raw;
+    const year = parsed.getFullYear();
+    const month = String(parsed.getMonth() + 1).padStart(2, '0');
+    const day = String(parsed.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  },
+
+  _normalizeTimeTo24(value) {
+    if (!value) return '';
+    const raw = String(value).trim();
+    if (/^\d{2}:\d{2}$/.test(raw)) return raw;
+    const match = raw.match(/^(\d{1,2}):(\d{2})\s*([AP]M)$/i);
+    if (!match) return raw;
+    let hour = Number(match[1]);
+    const minute = match[2];
+    const period = match[3].toUpperCase();
+    if (period === 'PM' && hour !== 12) hour += 12;
+    if (period === 'AM' && hour === 12) hour = 0;
+    return `${String(hour).padStart(2, '0')}:${minute}`;
+  },
+
+  async _resolveReservationSelection(payload, restaurantBackendId) {
+    const dateIso = this._normalizeDateToIso(payload.date);
+    const time24 = this._normalizeTimeTo24(payload.time);
+    const guests = Number(payload.guests || 2);
+    const slots = this.getTimeslots();
+    const tables = this.getTables();
+    const slot = slots.find((item) =>
+      item.restaurant_id === restaurantBackendId &&
+      (!dateIso || this._normalizeDateToIso(item.slot_date || item.date) === dateIso) &&
+      (!time24 || this._normalizeTimeTo24(item.start_time) === time24),
+    ) || slots.find((item) => item.restaurant_id === restaurantBackendId);
+
+    if (!slot) {
+      return null;
+    }
+
+    const availability = await this._request(
+      `/tableslots/availability?restaurant_id=${restaurantBackendId}&slot_id=${slot.id}`,
+      { headers: this._headers('diner') },
+    );
+
+    const available = (availability?.data || []).find((item) => {
+      const table = tables.find((candidate) => candidate.backend_table_id === item.table_id);
+      return item.status === 'available' && table && Number(table.seats || 0) >= guests;
+    });
+
+    if (!available) {
+      return null;
+    }
+
+    return {
+      slot_id: slot.id,
+      table_id: available.table_id,
     };
   },
 
@@ -326,6 +493,7 @@ const DinetimeStore = {
         id: review.id,
         restaurant_id: review.restaurant_id,
         user_id: review.user_id,
+        reservation_id: review.reservation_id,
         name: reviewer?.name || 'Guest',
         stars: review.rating,
         text: review.comment,
@@ -363,7 +531,7 @@ const DinetimeStore = {
       name: item.item_name || item.name,
       cat: item.category,
       price: item.price,
-      image: (item.image_urls && item.image_urls[0]) || '../images/starter.png',
+      image: this._assetUrl((item.image_urls && item.image_urls[0]) || '../images/starter.png'),
       isChefSpecial: index % 4 === 0,
       is_available: item.is_available ?? item.availability,
     }));
@@ -402,6 +570,9 @@ const DinetimeStore = {
             email: userRes.data.email,
             phone: userRes.data.phone,
             location_id: userRes.data.location_id,
+            role: userRes.data.role || user.role || 'diner',
+            photo_url: userRes.data.photo_url || user.photo_url,
+            photo: this._assetUrl(userRes.data.photo_url || user.photo),
           });
         }
       } catch (_e) {
@@ -419,9 +590,7 @@ const DinetimeStore = {
 
       this._cache.reservations = (reservationsRes?.data || []).map((reservation) => {
         const slot = rawSlots.find((candidate) => candidate.id === reservation.slot_id);
-        const review = this._cache.reviews.find((item) =>
-          item.user_id === reservation.user_id && item.restaurant_id === reservation.restaurant_id,
-        );
+        const review = this._cache.reviews.find((item) => item.reservation_id === reservation.id);
         return this._normalizeReservation({
           ...reservation,
           slot_date: slot?.slot_date || slot?.date,
@@ -481,8 +650,14 @@ const DinetimeStore = {
     const restaurants = this.getRestaurants();
     const restaurant = restaurants.find((item) => item.id === Number(reservationPayload.restaurantId)) || restaurants[0];
     const restaurantBackendId = reservationPayload.restaurant_backend_id || restaurant?.backend_id;
-    const slotId = reservationPayload.slot_id || '';
-    const tableId = reservationPayload.table_id || reservationPayload.backend_table_id || '';
+    let slotId = reservationPayload.slot_id || '';
+    let tableId = reservationPayload.table_id || reservationPayload.backend_table_id || '';
+
+    if ((!slotId || !tableId) && restaurantBackendId) {
+      const resolved = await this._resolveReservationSelection(reservationPayload, restaurantBackendId);
+      slotId = slotId || resolved?.slot_id || '';
+      tableId = tableId || resolved?.table_id || '';
+    }
 
     if (!restaurantBackendId || !slotId || !tableId) {
       throw new Error('Selected date/time slot is unavailable. Please pick another slot.');
@@ -543,6 +718,42 @@ const DinetimeStore = {
       body: JSON.stringify(payload),
     });
     return created?.data || null;
+  },
+
+  async uploadProfilePhoto(file) {
+    const user = this.getUser();
+    if (!user?.backend_user_id) {
+      throw new Error('Please log in before uploading a profile photo.');
+    }
+
+    const formData = new FormData();
+    formData.append('photo', file);
+
+    const response = await fetch(`${this.API_BASE}/users/${user.backend_user_id}/upload-photo`, {
+      method: 'POST',
+      headers: this._authHeaders('diner'),
+      body: formData,
+    });
+
+    if (!response.ok) {
+      let message = `Photo upload failed (${response.status})`;
+      try {
+        const body = await response.json();
+        message = Array.isArray(body.message) ? body.message.join(', ') : (body.message || message);
+      } catch (_e) {
+      }
+      throw new Error(message);
+    }
+
+    const payload = await response.json();
+    const photoUrl = payload?.data?.photo_url;
+    const nextUser = {
+      ...user,
+      photo: this._assetUrl(photoUrl || user.photo),
+      photo_url: photoUrl || user.photo_url,
+    };
+    this.setUser(nextUser);
+    return nextUser;
   },
 
   initNewUser() {

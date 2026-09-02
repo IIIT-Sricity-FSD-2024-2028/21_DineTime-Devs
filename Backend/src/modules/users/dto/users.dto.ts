@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { Role } from 'src/common/enums/role.enum';
 import { UserStatus } from 'src/common/types/schema.types';
 
@@ -40,17 +40,12 @@ export class CreateUserDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  business_license_number?: string;
+  photo_url?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  government_id?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsBoolean()
-  verified_status?: boolean;
+  business_license_number?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -107,17 +102,12 @@ export class UpdateUserDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  business_license_number?: string;
+  photo_url?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  government_id?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsBoolean()
-  verified_status?: boolean;
+  business_license_number?: string;
 
   @ApiPropertyOptional()
   @IsOptional()

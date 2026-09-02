@@ -46,8 +46,14 @@
                     <h2>Table Status Management</h2>
                     <p class="subtitle">Monitor and update restaurant table availability in real-time.</p>
                 </div>
-                <a href="check-in.html" class="btn-orange" style="text-decoration: none;"><i
-                        class="fa-solid fa-bars"></i> Customer Check-In</a>
+                <div class="header-controls">
+                    <label class="date-control">
+                        <span>Viewing Date</span>
+                        <input type="date" id="staff-date-selector">
+                    </label>
+                    <a href="check-in.html" class="btn-orange" style="text-decoration: none;"><i
+                            class="fa-solid fa-bars"></i> Customer Check-In</a>
+                </div>
             </section>
 
             <!-- Summary Cards -->
@@ -86,6 +92,7 @@
                 <div class="list-header">
                     <div class="list-title">
                         <h3>Restaurant Floor</h3>
+                        <span class="floor-date-label" id="floor-date-label"></span>
                     </div>
                     <div class="floor-filters">
                         <button type="button" class="filter-chip active" data-status="All">All Tables</button>

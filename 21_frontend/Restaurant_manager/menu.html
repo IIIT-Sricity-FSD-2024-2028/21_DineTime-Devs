@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>
+        if (!JSON.parse(sessionStorage.getItem('manager_session_v1') || 'null')?.email) {
+            window.location.href = 'login.html';
+        }
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DineTime - Menu Management</title>
@@ -63,9 +68,21 @@
                         </a>
                     </li>
                     <li>
+                        <a href="revenue.html">
+                            <i class="ph ph-currency-circle-dollar"></i>
+                            <span>Revenue</span>
+                        </a>
+                    </li>
+                    <li>
                         <a href="reviews.html">
                             <i class="ph ph-star"></i>
                             <span>Customer Reviews</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="issues.html">
+                            <i class="ph ph-headset"></i>
+                            <span>Raise an Issue</span>
                         </a>
                     </li>
                 </ul>
@@ -79,7 +96,7 @@
                 <div class="header-content">
                     <div class="header-title">
                         <h2>Menu Management</h2>
-                        <p>Manage restaurant menu items and configure availability for specific dates.</p>
+                        <p>Manage restaurant menu items and live availability.</p>
                     </div>
                     <div class="header-actions">
                         <div class="user-profile-widget">
@@ -97,17 +114,6 @@
 
             <div class="content-wrapper" style="margin-top: -40px;">
                 
-                <!-- Select Date Context -->
-                <div class="card" style="margin-bottom: 24px;">
-                    <h4 style="margin-bottom: 12px; font-weight: 600;">Select Date</h4>
-                    <div class="date-picker-box">
-                        <input type="date" id="menu-date-picker" value="2026-03-20" style="border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 6px; outline: none; font-size: 14px; font-weight: 500; cursor: pointer; color: var(--text-dark); background: #F8FAFC;">
-                    </div>
-                    <p style="margin-top: 16px; font-size: 13px; color: var(--text-muted);">
-                        Menu for: <strong style="color: var(--text-dark);" id="menu-date-display">March 20, 2026</strong>
-                    </p>
-                </div>
-
                 <!-- Menu Items Wrapper -->
                 <div class="card menu-items-card">
                     <div class="menu-card-header">

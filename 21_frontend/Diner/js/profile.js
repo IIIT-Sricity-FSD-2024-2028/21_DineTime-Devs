@@ -14,9 +14,26 @@ function initProfile() {
         renderUpcoming();
         renderHistory();
         renderNotifications();
+        openPendingReviewFromUrl();
     } catch (err) {
         console.error("Critical error during profile initialization:", err);
     }
+}
+
+function openPendingReviewFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const reviewId = params.get('review');
+    if (!reviewId) return;
+
+    const reservation = (DinetimeStore.getReservations() || []).find(r => r.id === reviewId);
+    if (reservation && reservation.status === 'Completed') {
+        setTimeout(() => openRatingModal(reviewId), 0);
+    }
+
+    params.delete('review');
+    const query = params.toString();
+    const nextUrl = `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash || ''}`;
+    window.history.replaceState({}, document.title, nextUrl);
 }
 
 function loadUserDetails() {
@@ -45,7 +62,7 @@ function loadUserDetails() {
     if (document.getElementById('userCountry')) document.getElementById('userCountry').innerText = user.country || "India";
     if (document.getElementById('userSince')) document.getElementById('userSince').innerText = user.joinDate || "January 2026";
     
-    applyAvatarPhoto(user.photo);
+    applyAvatarPhoto(user.photo_url || user.photo);
     updateLocationUI();
 }
 
@@ -222,13 +239,16 @@ function applyAvatarPhoto(photoUrl) {
     if (!avatarCircle) return;
 
     if (photoUrl) {
+        const src = String(photoUrl).startsWith('/uploads/')
+            ? `${DinetimeStore.API_BASE}${photoUrl}`
+            : photoUrl;
         // Remove existing photo img if any, then add fresh one
         const existing = avatarCircle.querySelector('img');
         if (existing) existing.remove();
         if (avatarIcon) avatarIcon.style.display = 'none';
 
         const img = document.createElement('img');
-        img.src = photoUrl;
+        img.src = src;
         img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;';
         avatarCircle.appendChild(img);
         
@@ -286,20 +306,27 @@ function setupEventListeners() {
     const fileInput = document.getElementById('filePhotoInput');
     if (btnUpload && fileInput) {
         btnUpload.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', () => {
+        fileInput.addEventListener('change', async () => {
             const file = fileInput.files[0];
             if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const dataUrl = e.target.result;
-                const user = DinetimeStore.getUser() || {};
-                user.photo = dataUrl;
-                DinetimeStore.setUser(user);
-                applyAvatarPhoto(dataUrl);
+            try {
+                const updatedUser = await DinetimeStore.uploadProfilePhoto(file);
+                applyAvatarPhoto(updatedUser.photo_url || updatedUser.photo);
                 showToast('Photo updated successfully!');
-            };
-            reader.readAsDataURL(file);
-            fileInput.value = '';
+            } catch (error) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const dataUrl = e.target.result;
+                    const user = DinetimeStore.getUser() || {};
+                    user.photo = dataUrl;
+                    DinetimeStore.setUser(user);
+                    applyAvatarPhoto(dataUrl);
+                    showToast(error.message || 'Photo saved locally for this session.', 'error');
+                };
+                reader.readAsDataURL(file);
+            } finally {
+                fileInput.value = '';
+            }
         });
     }
 
@@ -312,6 +339,7 @@ function setupEventListeners() {
                 () => {
                     const user = DinetimeStore.getUser() || {};
                     user.photo = null;
+                    user.photo_url = null;
                     DinetimeStore.setUser(user);
                     applyAvatarPhoto(null);
                     showToast('Photo removed.');
@@ -418,6 +446,7 @@ function setupEventListeners() {
                         await DinetimeStore.addReview({
                             user_id: user.backend_user_id,
                             restaurant_id: reservation.restaurant_id,
+                            reservation_id: reservation.backend_id || reservation.id,
                             rating: currentStarValue,
                             comment: reviewText || 'Great experience!',
                         });

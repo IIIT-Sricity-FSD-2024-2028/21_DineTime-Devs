@@ -12,7 +12,13 @@ async function apiRequest(path, options = {}, role = 'manager') {
     });
 
     if (!response.ok) {
-        throw new Error(`Request failed (${response.status})`);
+        let message = `Request failed (${response.status})`;
+        try {
+            const body = await response.json();
+            message = Array.isArray(body.message) ? body.message.join(', ') : (body.message || message);
+        } catch (_e) {
+        }
+        throw new Error(message);
     }
 
     const text = await response.text();
@@ -123,21 +129,28 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     }
     if (!valid) return;
 
-    let isRegisteredUser = false;
+    let auth = null;
     try {
-        const usersRes = await apiRequest('/users', {}, 'manager');
-        const users = usersRes?.data || [];
-        const user = users.find((u) => u.role === 'manager' && u.email.toLowerCase() === emailVal.toLowerCase());
-        isRegisteredUser = !!user && user.password_hash === passwordVal;
-    } catch (_err) {
-        pwInput.classList.add('input-error');
-        passwordErr.textContent = 'Unable to reach server. Please try again.';
-        passwordErr.classList.add('show');
-        showToast('Login failed. Server is unavailable.', 'error');
+        auth = await apiRequest('/auth/login', {
+            method: 'POST',
+            body: JSON.stringify({ email: emailVal.toLowerCase(), password: passwordVal }),
+        }, 'manager');
+    } catch (err) {
+        const message = String(err?.message || '');
+        if (message.includes('pending verification')) {
+            showToast('Your restaurant application is still pending verification. Please check back once it has been reviewed.', 'error');
+        } else if (message.includes('was rejected')) {
+            showToast('Your restaurant application was rejected. Please register a new account to reapply.', 'error');
+        } else {
+            pwInput.classList.add('input-error');
+            passwordErr.textContent = 'Invalid email or password. Please try again.';
+            passwordErr.classList.add('show');
+            showToast('Login failed. Check your credentials.', 'error');
+        }
         return;
     }
 
-    if (!isRegisteredUser) {
+    if (!auth?.user || auth.user.role !== 'manager' || auth.user.status !== 'active') {
         pwInput.classList.add('input-error');
         passwordErr.textContent = 'Invalid email or password. Please try again.';
         passwordErr.classList.add('show');
@@ -146,7 +159,7 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     }
 
     // Success - Load the correct user context
-    StorageManager.login(emailVal);
+    StorageManager.login(emailVal, auth.access_token);
     
     const btn = document.getElementById('login-btn');
     btn.textContent = 'Logging in…';

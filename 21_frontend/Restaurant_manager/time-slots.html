@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>
+        if (!JSON.parse(sessionStorage.getItem('manager_session_v1') || 'null')?.email) {
+            window.location.href = 'login.html';
+        }
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DineTime - Time Slot Management</title>
@@ -12,45 +17,11 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link rel="stylesheet" href="css/style.css">
     <style>
-        /* Custom Checkbox Styling to match screenshot */
-        input[type="checkbox"]#non-working-checkbox {
-            appearance: none;
-            -webkit-appearance: none;
-            width: 18px;
-            height: 18px;
-            border-radius: 4px;
-            border: 2px solid #D1D5DB;
-            background-color: white;
-            cursor: pointer;
-            position: relative;
-            transition: all 0.2s ease;
-            margin-top: 2px;
-        }
-
-        input[type="checkbox"]#non-working-checkbox:checked {
-            background-color: #4B7951; /* Match the Green from the screenshot */
-            border-color: #4B7951;
-        }
-
-        input[type="checkbox"]#non-working-checkbox:checked::after {
-            content: '';
-            position: absolute;
-            left: 5px;
-            top: 1px;
-            width: 5px;
-            height: 10px;
-            border: solid white;
-            border-width: 0 2px 2px 0;
-            transform: rotate(45deg);
-        }
-
-        /* Center the Restaurant Closed Message (Match Screenshot) */
-        .closed-table-msg {
-            text-align: center;
-            padding: 40px 20px;
-            color: #94A3B8;
-            font-size: 15px;
-            font-weight: 500;
+        .slot-sync-note {
+            color: var(--text-muted);
+            font-size: 13px;
+            line-height: 1.5;
+            margin-top: 8px;
         }
     </style>
 </head>
@@ -99,9 +70,21 @@
                         </a>
                     </li>
                     <li>
+                        <a href="revenue.html">
+                            <i class="ph ph-currency-circle-dollar"></i>
+                            <span>Revenue</span>
+                        </a>
+                    </li>
+                    <li>
                         <a href="reviews.html">
                             <i class="ph ph-star"></i>
                             <span>Customer Reviews</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="issues.html">
+                            <i class="ph ph-headset"></i>
+                            <span>Raise an Issue</span>
                         </a>
                     </li>
                 </ul>
@@ -139,27 +122,6 @@
 
             <div class="content-wrapper" style="margin-top: -40px;">
                 
-                <!-- Select Date Card -->
-                <div class="card" style="margin-bottom: 24px;">
-                    <h4 style="margin-bottom: 16px; font-weight: 500; font-size: 16px; color: var(--text-dark);">Select Date</h4>
-                    <div style="margin-bottom: 24px;">
-                        <div style="position: relative; max-width: 250px;">
-                            <i class="ph ph-calendar-blank" style="position: absolute; left: 12px; top: 10px; color: var(--text-dark); font-size: 18px;"></i>
-                            <input type="date" id="date-selector" value="2026-03-18" style="width: 100%; border: 1px solid var(--border-color); padding: 8px 12px 8px 40px; border-radius: 6px; outline: none; font-size: 14px; font-weight: 500; color: var(--text-dark); background: #F8FAFC;">
-                        </div>
-
-                    </div>
-                    
-                    <div style="background-color: #FDF7EF; border-radius: 8px; padding: 16px;">
-                        <h5 style="margin-bottom: 12px; font-weight: 500; font-size: 14px; color: var(--text-dark);">Time Slots for: <span id="date-display">March 18, 2026</span></h5>
-                        <hr style="border: 0; border-top: 1px solid #EBE1D5; margin-bottom: 16px;">
-                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 13px; color: #555;">
-                            <input type="checkbox" id="non-working-checkbox" style="width: 16px; height: 16px; accent-color: var(--primary-green); border-radius: 4px; border: 1px solid #d1d5db;">
-                            Mark this date as a non-working day (restaurant closed)
-                        </label>
-                    </div>
-                </div>
-
                 <!-- Restaurant Operating Hours Card -->
                 <div class="card" style="margin-bottom: 24px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -186,7 +148,8 @@
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
                         <div>
                             <h4 style="font-weight: 500; font-size: 16px; color: var(--text-dark); margin-bottom: 6px;">Reservation Time Slots</h4>
-                            <p style="color: var(--text-muted); font-size: 13px;">Manage reservation slots for the selected date.</p>
+                            <p style="color: var(--text-muted); font-size: 13px;">Manage the daily reservation slot schedule.</p>
+                            <p class="slot-sync-note">These slots are synced to upcoming booking dates automatically.</p>
                         </div>
                         <button class="btn btn-primary-orange btn-small" id="add-slot-btn">
                             <i class="ph ph-plus"></i> Add Time Slot
