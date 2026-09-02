@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import { IsArray, IsBoolean, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 import { UserStatus } from 'src/common/types/schema.types';
 
 export class CreateRestaurantDto {
@@ -56,6 +56,34 @@ export class CreateRestaurantDto {
   @IsArray()
   @IsString({ each: true })
   image_urls?: string[];
+
+  @ApiPropertyOptional({ description: 'Reservation deposit charged per guest (INR)' })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  reservation_fee_per_guest?: number;
+
+  @ApiPropertyOptional({ description: 'Minutes before the reservation time after which a diner can no longer cancel' })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  cancellation_cutoff_minutes?: number;
+
+  @ApiPropertyOptional({ description: 'Minutes after the reservation time the table is held before staff can mark a no-show' })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  no_show_grace_minutes?: number;
+
+  @ApiPropertyOptional({ description: 'Daily opening time, HH:MM' })
+  @IsOptional()
+  @IsString()
+  opens_at?: string;
+
+  @ApiPropertyOptional({ description: 'Daily closing time, HH:MM' })
+  @IsOptional()
+  @IsString()
+  closes_at?: string;
 }
 
 export class UpdateRestaurantDto {
@@ -112,21 +140,62 @@ export class UpdateRestaurantDto {
   @IsArray()
   @IsString({ each: true })
   image_urls?: string[];
+
+  @ApiPropertyOptional({ description: 'Reservation deposit charged per guest (INR)' })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  reservation_fee_per_guest?: number;
+
+  @ApiPropertyOptional({ description: 'Minutes before the reservation time after which a diner can no longer cancel' })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  cancellation_cutoff_minutes?: number;
+
+  @ApiPropertyOptional({ description: 'Minutes after the reservation time the table is held before staff can mark a no-show' })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  no_show_grace_minutes?: number;
+
+  @ApiPropertyOptional({ description: 'Daily opening time, HH:MM' })
+  @IsOptional()
+  @IsString()
+  opens_at?: string;
+
+  @ApiPropertyOptional({ description: 'Daily closing time, HH:MM' })
+  @IsOptional()
+  @IsString()
+  closes_at?: string;
 }
 
-export class CreateLocationDto {
+export class ServingStatusDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  id: string;
+  manager_id: string;
 
   @ApiProperty()
-  @IsNumber()
-  latitude: number;
+  @IsBoolean()
+  is_open: boolean;
+}
 
-  @ApiProperty()
+export class CreateLocationDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  id?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsNumber()
-  longitude: number;
+  latitude?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  longitude?: number;
 
   @ApiProperty()
   @IsString()

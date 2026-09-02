@@ -83,15 +83,15 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     loginBtn.disabled = true;
 
     try {
-        const [usersRes, restaurantsRes] = await Promise.all([
-            apiRequest('/users', {}, 'manager'),
-            apiRequest('/restaurants', {}, 'staff'),
-        ]);
-        const users = usersRes?.data || [];
+        const auth = await apiRequest('/auth/login', {
+            method: 'POST',
+            body: JSON.stringify({ email: staffId, password }),
+        }, 'staff');
+        const restaurantsRes = await apiRequest('/restaurants', {}, 'staff');
         const restaurants = restaurantsRes?.data || [];
-        const user = users.find((u) => u.role === 'staff' && u.email.toLowerCase() === staffId);
+        const user = auth?.user;
 
-        if (!user || user.password_hash !== password) {
+        if (!user || user.role !== 'staff') {
             throw new Error('Invalid Staff ID or Password.');
         }
 
@@ -103,10 +103,13 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 
         const sessionData = {
             id: user.id,
+            staffId: user.id,
             name: user.name,
+            email: user.email,
             role: 'Staff',
             restaurant: staffRestaurant?.name || 'Spice Garden',
             restaurant_id: staffRestaurant?.id || user.restaurant_id || '',
+            access_token: auth.access_token,
             loggedInAt: new Date().toISOString(),
             remember,
         };

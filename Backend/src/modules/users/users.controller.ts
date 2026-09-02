@@ -1,7 +1,22 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Req,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBadRequestResponse,
   ApiBody,
+  ApiConsumes,
   ApiCreatedResponse,
   ApiHeader,
   ApiNotFoundResponse,
@@ -10,13 +25,17 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
+import { Request } from 'express';
 import { Role } from 'src/common/enums/role.enum';
 import { Roles } from 'src/common/decorators/roles.decorator';
+import { ReadOnlyForSuperUserGuard } from 'src/common/guards/read-only-for-super-user.guard';
 import {
   dataArraySchema,
   dataObjectSchema,
   deletedSchema,
 } from 'src/common/swagger/schemas';
+import { profilePhotoMulterConfig } from 'src/common/upload/multer.config';
+import { getActingRole } from 'src/common/utils/acting-role.util';
 import { CreateUserDto, UpdateUserDto } from 'src/modules/users/dto/users.dto';
 import { UsersService } from 'src/modules/users/users.service';
 
@@ -30,8 +49,8 @@ export class UsersController {
   @Get()
   @ApiOperation({ summary: 'List users' })
   @ApiOkResponse({ schema: dataArraySchema })
-  findAll() {
-    return { data: this.usersService.findAll() };
+  findAll(@Req() req: Request) {
+    return { data: this.usersService.findAll(getActingRole(req)) };
   }
 
   @Roles(Role.DINER, Role.MANAGER, Role.STAFF, Role.SUPER_USER)
@@ -40,21 +59,23 @@ export class UsersController {
   @ApiParam({ name: 'id' })
   @ApiOkResponse({ schema: dataObjectSchema })
   @ApiNotFoundResponse({ description: 'User not found' })
-  findOne(@Param('id') id: string) {
-    return { data: this.usersService.findOne(id) };
+  findOne(@Param('id') id: string, @Req() req: Request) {
+    return { data: this.usersService.findOne(id, getActingRole(req)) };
   }
 
   @Roles(Role.DINER, Role.MANAGER, Role.SUPER_USER)
+  @UseGuards(ReadOnlyForSuperUserGuard)
   @Post()
   @ApiOperation({ summary: 'Create user (registration or admin creation)' })
   @ApiBody({ type: CreateUserDto })
   @ApiCreatedResponse({ schema: dataObjectSchema })
   @ApiBadRequestResponse({ description: 'Invalid user payload' })
-  create(@Body() dto: CreateUserDto) {
-    return { data: this.usersService.create(dto) };
+  async create(@Body() dto: CreateUserDto) {
+    return { data: await this.usersService.create(dto) };
   }
 
   @Roles(Role.DINER, Role.MANAGER, Role.STAFF, Role.SUPER_USER)
+  @UseGuards(ReadOnlyForSuperUserGuard)
   @Patch(':id')
   @ApiOperation({ summary: 'Update user' })
   @ApiParam({ name: 'id' })
@@ -62,11 +83,49 @@ export class UsersController {
   @ApiOkResponse({ schema: dataObjectSchema })
   @ApiBadRequestResponse({ description: 'Invalid user payload' })
   @ApiNotFoundResponse({ description: 'User not found' })
-  update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
-    return { data: this.usersService.update(id, dto) };
+  async update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
+    return { data: await this.usersService.update(id, dto) };
+  }
+
+  @Roles(Role.DINER, Role.MANAGER, Role.STAFF, Role.SUPER_USER)
+  @Post(':id/upload-photo')
+  @UseInterceptors(FileInterceptor('photo', profilePhotoMulterConfig))
+  @ApiOperation({ summary: 'Upload user profile photo' })
+  @ApiParam({ name: 'id' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        photo: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+      required: ['photo'],
+    },
+  })
+  @ApiOkResponse({ schema: dataObjectSchema })
+  @ApiBadRequestResponse({ description: 'Invalid profile photo upload' })
+  @ApiNotFoundResponse({ description: 'User not found' })
+  uploadPhoto(
+    @Param('id') id: string,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('Photo file is required');
+    }
+
+    return {
+      data: this.usersService.uploadPhoto(
+        id,
+        `/uploads/profiles/${file.filename}`,
+      ),
+    };
   }
 
   @Roles(Role.MANAGER, Role.SUPER_USER)
+  @UseGuards(ReadOnlyForSuperUserGuard)
   @Delete(':id')
   @ApiOperation({ summary: 'Delete user' })
   @ApiParam({ name: 'id' })

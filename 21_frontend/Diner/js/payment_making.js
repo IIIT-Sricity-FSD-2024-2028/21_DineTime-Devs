@@ -1,5 +1,7 @@
 // payment_making.js
 
+var DINER_PLATFORM_FEE = 20;
+
 var reservationState = {
   restaurantId: 1,
   date: "Friday, 22 March",
@@ -7,10 +9,7 @@ var reservationState = {
   guests: 4,
   tableType: "Indoor Table",
   specialRequest: "Window seat if available",
-  deposit: 200,
-  serviceFee: 20,
-  taxes: 36,
-  discountPct: 10
+  ratePerGuest: 30
 };
 
 // Data from DinetimeStore
@@ -51,12 +50,10 @@ function loadReservationState() {
 }
 
 function calcCost() {
-  var deposit = reservationState.deposit;
-  var service = reservationState.serviceFee;
-  var taxes = reservationState.taxes;
-  var discountAmt = Math.round((deposit + service) * (reservationState.discountPct / 100));
-  var total = deposit + service + taxes - discountAmt;
-  return { deposit: deposit, service: service, taxes: taxes, discountAmt: discountAmt, total: total };
+  var deposit = reservationState.guests * reservationState.ratePerGuest;
+  var service = DINER_PLATFORM_FEE;
+  var total = deposit + service;
+  return { deposit: deposit, service: service, total: total };
 }
 
 function renderRestaurant(restaurant) {
@@ -117,10 +114,9 @@ function renderCost() {
   var lines = document.getElementById('costLines');
   if(lines) {
       lines.innerHTML =
-        costLine('Reservation Deposit', '\u20B9' + cost.deposit) +
+        costLine('Reservation Deposit (\u20B9' + reservationState.ratePerGuest + ' \u00D7 ' + reservationState.guests + ' guests)', '\u20B9' + cost.deposit) +
         costLine('Platform Service Fee', '\u20B9' + cost.service) +
-        costLine('Taxes', '\u20B9' + cost.taxes) +
-        costLineDiscount('Discount (' + reservationState.discountPct + '%)', '-\u20B9' + cost.discountAmt);
+        '<div class="cost-line-note">Your deposit is adjustable against your final bill at the restaurant.</div>';
   }
 
   var totalRow = document.getElementById('costTotalRow');
@@ -138,13 +134,6 @@ function costLine(label, value) {
   '</div>';
 }
 
-function costLineDiscount(label, value) {
-  return '<div class="cost-line">' +
-    '<span class="cost-line-label">' + label + '</span>' +
-    '<span class="cost-line-value discount">' + value + '</span>' +
-  '</div>';
-}
-
 function buildModifyLink(restaurantId) {
   var link = document.getElementById('modifyLink');
   if(link) link.href = 'book.html?id=' + restaurantId;
@@ -154,6 +143,9 @@ function init() {
   loadReservationState();
 
   var restaurant = getRestaurant(reservationState.restaurantId);
+  reservationState.ratePerGuest = restaurant && restaurant.reservationFeePerGuest
+    ? restaurant.reservationFeePerGuest
+    : reservationState.ratePerGuest;
 
   document.title = 'DineTime - Review Payment';
 

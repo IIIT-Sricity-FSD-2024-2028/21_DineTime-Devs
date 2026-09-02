@@ -1,0 +1,115 @@
+/* support.css */
+
+.support-helper {
+  background: rgba(95, 122, 97, 0.08);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 0.85rem;
+  color: var(--text-main);
+  margin-bottom: 20px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.support-helper i {
+  color: var(--primary);
+  margin-top: 2px;
+}
+
+.file-input-wrap {
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  text-align: center;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+.file-input-wrap input { display: none; }
+.file-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.file-chip {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.file-chip button {
+  border: none;
+  background: none;
+  color: #C1121F;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.ticket-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.ticket-item {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+}
+.ticket-item-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.ticket-item-head h4 {
+  margin: 0 0 4px;
+  font-size: 0.95rem;
+  color: var(--text-main);
+}
+.ticket-meta {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.ticket-desc {
+  font-size: 0.85rem;
+  color: var(--text-main);
+  margin: 6px 0 0;
+  white-space: pre-wrap;
+}
+.ticket-resolution {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: var(--bg);
+  border-radius: 8px;
+  font-size: 0.83rem;
+  border-left: 3px solid var(--primary);
+}
+
+.status-pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.status-open { background: #FFF3E0; color: #E65100; }
+.status-in_review { background: #E3F2FD; color: #1565C0; }
+.status-escalated_finance_team { background: #F3E5F5; color: #6A1B9A; }
+.status-escalated_super_admin { background: #FFEBEE; color: #C62828; }
+.status-resolved { background: #E8F5E9; color: #2E7D32; }
+.status-rejected { background: #ECEFF1; color: #455A64; }
+
+.empty-state {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 20px 0;
+}

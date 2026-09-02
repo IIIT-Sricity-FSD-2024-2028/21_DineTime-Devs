@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>
+        if (!JSON.parse(sessionStorage.getItem('manager_session_v1') || 'null')?.email) {
+            window.location.href = 'login.html';
+        }
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DineTime - Manager Profile</title>
@@ -11,6 +16,22 @@
     <!-- Phosphor Icons for modern light icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        #serving-status-widget { background: var(--bg-color); border: 1px solid var(--border-color); transition: background-color .3s, border-color .3s; }
+        #serving-status-icon { background: var(--primary-orange); transition: background-color .3s; }
+        #serving-status-label { color: var(--text-dark); transition: color .3s; }
+        #serving-status-widget.is-open { background: #EFF5F0; border-color: var(--primary-green); }
+        #serving-status-widget.is-open #serving-status-icon { background: var(--primary-green); }
+        #serving-status-widget.is-open #serving-status-label { color: var(--primary-green); }
+
+        #serving-status-slider { position:absolute; cursor:pointer; inset:0; background-color: #CBD5E1; transition: background-color .3s; border-radius: 24px; }
+        #serving-status-toggle:checked + #serving-status-slider { background-color: var(--primary-green); }
+        #serving-status-slider::before {
+            content: ""; position: absolute; height: 18px; width: 18px; left: 3px; bottom: 3px;
+            background-color: white; transition: transform .3s; border-radius: 50%;
+        }
+        #serving-status-toggle:checked + #serving-status-slider::before { transform: translateX(20px); }
+    </style>
 </head>
 <body>
     <div class="app-container">
@@ -57,9 +78,21 @@
                         </a>
                     </li>
                     <li>
+                        <a href="revenue.html">
+                            <i class="ph ph-currency-circle-dollar"></i>
+                            <span>Revenue</span>
+                        </a>
+                    </li>
+                    <li>
                         <a href="reviews.html">
                             <i class="ph ph-star"></i>
                             <span>Customer Reviews</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="issues.html">
+                            <i class="ph ph-headset"></i>
+                            <span>Raise an Issue</span>
                         </a>
                     </li>
                 </ul>
@@ -157,9 +190,24 @@
 
                 <!-- Restaurant Overview Section -->
                 <section class="card restaurant-card" id="restaurant-overview">
-                    <div class="restaurant-card-header">
+                    <div class="restaurant-card-header" style="align-items: center;">
                         <h3>Restaurant Overview</h3>
-                        <button class="btn btn-primary-green btn-small" id="manage-staff-btn">Manage Staff Access</button>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div id="serving-status-widget" style="display: flex; align-items: center; gap: 12px; border-radius: 8px; padding: 8px 16px;">
+                                <div id="serving-status-icon" style="width: 30px; height: 30px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;">
+                                    <i class="ph ph-storefront" id="serving-status-icon-glyph"></i>
+                                </div>
+                                <div style="display: flex; flex-direction: column; line-height: 1.25;">
+                                    <span id="serving-status-label" style="font-size: 14px; font-weight: 700;">Closed to Serve</span>
+                                    <span id="serving-status-sublabel" style="font-size: 11px; color: var(--text-muted);">Diners can't find you yet</span>
+                                </div>
+                                <label style="position: relative; display: inline-block; width: 44px; height: 24px; margin-left: 4px;">
+                                    <input type="checkbox" id="serving-status-toggle" style="opacity:0; width:0; height:0;">
+                                    <span id="serving-status-slider"></span>
+                                </label>
+                            </div>
+                            <button class="btn btn-primary-green btn-small" id="manage-staff-btn">Manage Staff Access</button>
+                        </div>
                     </div>
                     
                     <!-- Tabs -->
@@ -240,6 +288,18 @@
                                             <div class="detail-item-small">
                                                 <span class="detail-label">Contact Number</span>
                                                 <span class="detail-value" id="rest-contact"></span>
+                                            </div>
+                                            <div class="detail-item-small">
+                                                <span class="detail-label">Reservation Deposit / Guest</span>
+                                                <span class="detail-value" id="rest-fee-per-guest"></span>
+                                            </div>
+                                            <div class="detail-item-small">
+                                                <span class="detail-label">Cancellation Cutoff</span>
+                                                <span class="detail-value" id="rest-cancellation-cutoff"></span>
+                                            </div>
+                                            <div class="detail-item-small">
+                                                <span class="detail-label">No-Show Grace Period</span>
+                                                <span class="detail-value" id="rest-no-show-grace"></span>
                                             </div>
                                         </div>
                                     </div>

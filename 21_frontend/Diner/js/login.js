@@ -47,11 +47,13 @@ document.addEventListener('DOMContentLoaded', () => {
             errorMsg.classList.add('hidden');
 
             try {
-                const usersRes = await apiRequest('/users', {}, 'manager');
-                const users = usersRes?.data || [];
-                const diner = users.find((u) => u.role === 'diner' && String(u.email || '').toLowerCase() === email);
+                const auth = await apiRequest('/auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify({ email, password }),
+                }, 'diner');
+                const diner = auth?.user;
 
-                if (!diner || diner.password_hash !== password || diner.status !== 'active') {
+                if (!diner || diner.role !== 'diner' || diner.status !== 'active') {
                     errorMsg.classList.remove('hidden');
                     setTimeout(() => errorMsg.classList.add('hidden'), 3500);
                     return;
@@ -60,12 +62,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 DinetimeStore.setUser({
                     name: diner.name,
                     email: diner.email,
-                    password,
                     location: 'Bangalore',
                     city: 'Bangalore',
                     country: 'India',
                     avatar: '../images/icon-profile.png',
                     backend_user_id: diner.id,
+                    access_token: auth.access_token,
+                    role: diner.role,
+                    photo_url: diner.photo_url,
+                    photo: diner.photo_url ? `${API_BASE}${diner.photo_url}` : undefined,
                 });
             } catch (_e) {
                 errorMsg.classList.remove('hidden');

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { TableSlot } from 'src/common/types/schema.types';
 import { generateId } from 'src/common/utils/id.util';
 import { UpdateTableSlotStatusDto } from 'src/modules/tableslots/dto/tableslots.dto';
@@ -66,6 +66,34 @@ export class TableslotsService {
   }
 
   updateStatus(dto: UpdateTableSlotStatusDto) {
+    const table = this.tableRepository.findById(dto.table_id);
+    if (!table) {
+      throw new NotFoundException('Table not found');
+    }
+
+    const slot = this.timeSlotRepository.findById(dto.slot_id);
+    if (!slot) {
+      throw new NotFoundException('Time slot not found');
+    }
+
+    if (table.restaurant_id !== slot.restaurant_id) {
+      throw new BadRequestException('Table and time slot belong to different restaurants');
+    }
+
+    const existing = this.tableSlotRepository.findByTableAndSlot(
+      dto.table_id,
+      dto.slot_id,
+    );
+
+    if (!existing) {
+      return this.tableSlotRepository.create({
+        id: generateId('table_slot'),
+        table_id: dto.table_id,
+        slot_id: dto.slot_id,
+        status: dto.status,
+      });
+    }
+
     const updated = this.tableSlotRepository.updateStatus(
       dto.table_id,
       dto.slot_id,

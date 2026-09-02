@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DineTime - Sub-Admin Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        if (!window.DINETIME_CONFIG) window.DINETIME_CONFIG = {};
+        if (!window.DINETIME_CONFIG.API_BASE) window.DINETIME_CONFIG.API_BASE = 'http://localhost:3000';
+    </script>
+
+    <style>
+        :root {
+            --primary-green: #5F7A61;
+            --bg-cream: #FAECE3;
+            --card-bg: #FFFFFF;
+            --text-dark: #1A1A1A;
+            --text-muted: #666666;
+            --border-light: #EAE0D5;
+            --shadow-md: 0 12px 30px rgba(0, 0, 0, 0.08);
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0F1714 0%, #24312A 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-dark);
+        }
+        .login-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 420px;
+        }
+        .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 0.5rem; font-weight: 800; font-size: 1.3rem; color: var(--primary-green); }
+        .brand small { font-size: 0.65rem; letter-spacing: 1px; color: var(--text-muted); display: block; font-weight: 700; }
+        h2 { margin: 1rem 0 0.25rem; font-size: 1.3rem; }
+        p.subtitle { color: var(--text-muted); margin: 0 0 1.75rem; font-size: 0.9rem; }
+        .form-group { margin-bottom: 1.1rem; }
+        label { display: block; margin-bottom: 0.4rem; font-weight: 600; font-size: 0.85rem; }
+        input, select {
+            width: 100%; padding: 0.7rem 0.85rem; border: 1px solid #ccc; border-radius: 8px;
+            font-family: inherit; font-size: 0.9rem;
+        }
+        button {
+            width: 100%; background: var(--primary-green); color: white; border: none;
+            padding: 0.85rem; border-radius: 8px; font-weight: 700; font-size: 0.95rem; cursor: pointer;
+            margin-top: 0.5rem;
+        }
+        button:hover { opacity: 0.92; }
+        .error-msg {
+            background: #FFF0F0; color: #C1121F; border: 1px solid #FFD8D8; padding: 0.7rem 0.9rem;
+            border-radius: 8px; font-size: 0.85rem; margin-bottom: 1rem; display: none;
+        }
+        .error-msg.show { display: block; }
+        .hint { text-align: center; margin-top: 1.25rem; font-size: 0.78rem; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="brand"><i class="fa-solid fa-user-shield"></i> DineTime <small>SUB-ADMIN PORTAL</small></div>
+        <h2>Team Sign In</h2>
+        <p class="subtitle">Sign in with the credentials provided by your Super Admin.</p>
+
+        <div id="loginError" class="error-msg">Invalid credentials for the selected team.</div>
+
+        <form id="subAdminLoginForm">
+            <div class="form-group">
+                <label for="team">Team</label>
+                <select id="team" required>
+                    <option value="support">Customer Support</option>
+                    <option value="finance">Finance Team</option>
+                    <option value="verification">Verification Team</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" placeholder="you@dinetime.com" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Enter your password" required>
+            </div>
+            <button type="submit">Sign In</button>
+        </form>
+        <p class="hint">Accounts are created by the Super Admin under Sub-Admin Teams.</p>
+    </div>
+
+    <script src="../js/login.js"></script>
+</body>
+</html>

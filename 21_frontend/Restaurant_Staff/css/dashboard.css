@@ -152,6 +152,32 @@ h3 { font-size: 1.15rem; font-weight: 600; color: #1f2937; }
     padding-top: 28px;
 }
 
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.date-control {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.date-control input {
+    border: 1.5px solid var(--border-medium);
+    border-radius: 10px;
+    padding: 9px 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    background: white;
+}
+
 .page-header h2 {
     font-size: 2rem;
     font-weight: 700;
@@ -262,6 +288,15 @@ h3 { font-size: 1.15rem; font-weight: 600; color: #1f2937; }
 
 .list-title { display: flex; align-items: center; gap: 10px; }
 .list-title h3 { font-size: 1.1rem; font-weight: 700; }
+
+.floor-date-label {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #f1f5f9;
+}
 
 /* ─── Filter Chips (pill group) ──────────────────── */
 .floor-filters {
@@ -482,6 +517,7 @@ h3 { font-size: 1.15rem; font-weight: 600; color: #1f2937; }
 
     /* Stack page header */
     .page-header { flex-direction: column; align-items: flex-start; gap: 14px; }
+    .header-controls { width: 100%; align-items: stretch; flex-direction: column; }
     .page-header .btn-orange { width: 100%; justify-content: center; }
 
     /* 2-col summary cards */

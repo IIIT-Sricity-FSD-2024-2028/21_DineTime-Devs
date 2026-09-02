@@ -33,45 +33,57 @@ export class ReviewsService {
   }
 
   create(dto: CreateReviewDto) {
-    const completedReservation = this.reservationRepository
-      .findByUserId(dto.user_id)
-      .find(
-        (reservation) =>
-          reservation.restaurant_id === dto.restaurant_id &&
-          reservation.reservation_status === 'completed',
-      );
+    const completedReservation = dto.reservation_id
+      ? this.reservationRepository.findById(dto.reservation_id)
+      : this.reservationRepository
+          .findByUserId(dto.user_id)
+          .find(
+            (reservation) =>
+              reservation.restaurant_id === dto.restaurant_id &&
+              reservation.reservation_status === 'completed',
+          );
 
-    if (!completedReservation) {
+    if (
+      !completedReservation ||
+      completedReservation.user_id !== dto.user_id ||
+      completedReservation.restaurant_id !== dto.restaurant_id ||
+      completedReservation.reservation_status !== 'completed'
+    ) {
       throw new BadRequestException(
         'Review allowed only after reservation is completed',
       );
+    }
+
+    if (this.reviewRepository.findByReservationId(completedReservation.id)) {
+      throw new BadRequestException('Reservation has already been reviewed');
     }
 
     return this.reviewRepository.create({
       id: generateId('review'),
       user_id: dto.user_id,
       restaurant_id: dto.restaurant_id,
+      reservation_id: completedReservation.id,
       rating: dto.rating,
       comment: dto.comment,
       created_at: new Date().toISOString(),
     });
   }
 
-  update(id: string, dto: UpdateReviewDto) {
-    const updated = this.reviewRepository.update(id, dto);
-    if (!updated) {
+  update(id: string, _dto: UpdateReviewDto) {
+    const existing = this.reviewRepository.findById(id);
+    if (!existing) {
       throw new NotFoundException('Review not found');
     }
 
-    return updated;
+    throw new BadRequestException('Reviews are read-only after submission');
   }
 
   delete(id: string) {
-    const deleted = this.reviewRepository.remove(id);
-    if (!deleted) {
+    const existing = this.reviewRepository.findById(id);
+    if (!existing) {
       throw new NotFoundException('Review not found');
     }
 
-    return { deleted: true };
+    throw new BadRequestException('Reviews are read-only after submission');
   }
 }

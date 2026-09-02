@@ -55,7 +55,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadProfileName();
     try {
         await loadBookingsFromStorage();
-        await resolvePastBookings(); // Clean up past dates on start
     } catch (_error) {
         bookingList = [];
         showToast('Unable to load reservations from backend.', 'error');
@@ -134,6 +133,7 @@ async function loadBookingsFromStorage() {
         checked_in: 'Checked-In',
         completed: 'Checked-In',
         cancelled: 'No-Show',
+        no_show: 'No-Show',
     };
 
     const rawReservations = (reservationsRes?.data || []).filter((reservation) =>
@@ -160,6 +160,7 @@ async function loadBookingsFromStorage() {
             table_id: reservation.table_id,
             slot_id: reservation.slot_id,
             status: statusMap[statusValue] || 'Upcoming',
+            no_show_eligible: Boolean(reservation.no_show_eligible),
             restaurant: currentStaffRestaurant,
         };
     });
@@ -188,7 +189,7 @@ async function saveBookingsToStorage() {
     const statusMap = {
         'Upcoming': 'reserved',
         'Checked-In': 'checked_in',
-        'No-Show': 'cancelled',
+        'No-Show': 'no_show',
     };
 
     await Promise.all(
@@ -201,24 +202,6 @@ async function saveBookingsToStorage() {
                 }, 'staff'),
             ),
     );
-}
-
-// Logic to "heal" past days - Upcoming should become No-Show
-async function resolvePastBookings() {
-    const today = new Date().toLocaleDateString('en-CA');
-    let changed = false;
-
-    bookingList.forEach(booking => {
-        if (booking.date < today && booking.status === 'Upcoming') {
-            booking.status = 'No-Show';
-            changed = true;
-        }
-    });
-
-    if (changed) {
-        await saveBookingsToStorage();
-        updateStats();
-    }
 }
 
 // Logic to update a table status in the central dinetime_tables storage
@@ -593,7 +576,7 @@ function renderBookings() {
             <div class="customer-info" style="grid-column: 1 / 2;">
                 <div class="customer-avatar">${initials}</div>
                 <div class="customer-details">
-                    <h4>${booking.name} <span class="status-badge ${statusClass}">• ${booking.status === 'Checked-In' ? 'Verified' : booking.status}</span></h4>
+                    <h4>${booking.name} <span class="status-badge ${statusClass}">• ${booking.status === 'Checked-In' ? 'Verified' : booking.status}</span>${booking.status === 'Upcoming' && booking.no_show_eligible ? ' <span class="status-badge noshow" title="Past the no-show grace period">• Overdue</span>' : ''}</h4>
                     <span class="booking-id"># ${booking.id}</span>
                 </div>
             </div>

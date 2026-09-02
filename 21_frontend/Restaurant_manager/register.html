@@ -9,7 +9,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <link rel="stylesheet" href="css/style.css">
 
 </head>
@@ -129,12 +128,21 @@
                     </div>
 
                     <div class="login-form-group">
-                        <label class="login-label">Government ID Number *</label>
-                        <div class="login-input-wrapper">
-                            <i class="ph ph-fingerprint login-input-icon"></i>
-                            <input type="text" id="reg-gov-id" class="login-input" placeholder="GOV-ID-XXXXXXXX" required pattern="GOV-ID-\d{8}" title="Please enter in format GOV-ID-XXXXXXXX.">
+                        <label class="login-label">Verification Document *</label>
+                        <div class="file-upload-container">
+                            <input type="file" id="reg-document" hidden accept="image/jpeg,image/png,image/webp,application/pdf">
+                            <div class="file-upload-box" id="doc-dropzone" style="height: auto; padding: 20px;">
+                                <div class="file-upload-content">
+                                    <div class="file-upload-icon"><i class="ph ph-file-text"></i></div>
+                                    <div class="file-upload-text">
+                                        <h4 id="doc-upload-title">Click to upload license or registration document</h4>
+                                        <p>JPG, PNG, or PDF — max 5MB</p>
+                                    </div>
+                                    <button type="button" class="file-upload-btn" id="doc-upload-btn"><i class="ph ph-upload-simple"></i> Browse files</button>
+                                </div>
+                            </div>
                         </div>
-                        <div class="login-field-error" id="err-gov-id">Format must be GOV-ID-XXXXXXXX (e.g. GOV-ID-12345678).</div>
+                        <div class="login-field-error" id="err-document">Please attach a verification document.</div>
                     </div>
 
                     <div class="auth-checkbox-group">
@@ -185,25 +193,7 @@
 
                     </div>
 
-                    <div class="login-form-group">
-                        <label class="login-label">RESTAURANT IMAGE</label>
-                        <div class="file-upload-container">
-                            <input type="file" id="res-image-input" hidden accept="image/*">
-                            <div class="file-upload-box" id="dropzone">
-                                <div class="image-preview-overlay" id="img-preview">
-                                    <button type="button" class="remove-img-btn" id="remove-img"><i class="ph ph-x"></i></button>
-                                </div>
-                                <div class="file-upload-content">
-                                    <div class="file-upload-icon"><i class="ph ph-image"></i></div>
-                                    <div class="file-upload-text">
-                                        <h4>Click to upload or drag and drop</h4>
-                                        <p>PNG, JPG, WEBP — max 5MB</p>
-                                    </div>
-                                    <button type="button" class="file-upload-btn"><i class="ph ph-upload-simple"></i> Browse files</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <p style="font-size: 12px; color: var(--text-muted);"><i class="ph ph-info"></i> You can add restaurant photos, tables, and menu items after your account is verified.</p>
 
                     <div class="step-actions">
                         <button type="button" class="btn-login" id="btn-to-step-3">Set Restaurant location <i class="ph ph-arrow-right"></i></button>
@@ -217,65 +207,28 @@
             <div class="register-step" id="step-3">
                 <div class="map-setup-badge"><i class="ph ph-map-pin"></i> Location Setup</div>
                 <h2>Restaurant Location</h2>
-                <p class="login-subtitle">Enter the location details of your restaurant.</p>
+                <p class="login-subtitle">Select which of DineTime's serviceable locations your restaurant belongs to.</p>
 
                 <form id="form-step-3" novalidate>
                     <div class="login-form-group">
-                        <label class="login-label">Address *</label>
-                        <div class="login-input-wrapper">
-                            <i class="ph ph-map-pin login-input-icon"></i>
-                            <input type="text" id="loc-address" class="login-input" placeholder="e.g. 221B Baker Street" required>
-                        </div>
-                    </div>
-
-                    <div style="display: flex; gap: 16px;">
-                        <div class="login-form-group" style="flex: 1;">
-                            <label class="login-label">City *</label>
-                            <input type="text" id="loc-city" class="login-input" placeholder="Enter city" required style="padding-left: 16px;">
-                        </div>
-                        <div class="login-form-group" style="flex: 1;">
-                            <label class="login-label">Pincode *</label>
-                            <input type="text" id="loc-zip" class="login-input" placeholder="6-digit pincode" required maxlength="6" oninput="this.value = this.value.replace(/[^0-9]/g, '')" style="padding-left: 16px;">
-                        </div>
-                    </div>
-
-                    <div class="login-form-group">
-                        <label class="login-label">Country *</label>
+                        <label class="login-label">Location *</label>
                         <div class="dropdown-wrapper" style="width: 100%;">
-                            <select id="loc-country" class="login-input" style="padding-left: 16px; width: 100%;" required>
-                                <option value="" disabled selected>Select country</option>
-                                <option value="india">India</option>
-                                <option value="usa">USA</option>
-                                <option value="uk">UK</option>
-                                <option value="canada">Canada</option>
+                            <select id="loc-select" class="login-input" style="padding-left: 16px; width: 100%;" required>
+                                <option value="" disabled selected>Loading locations...</option>
                             </select>
                         </div>
+                        <div class="login-field-error" id="err-location">Please select a location.</div>
                     </div>
 
-                    <div class="business-divider">Pin Your Location</div>
-
-                    <div class="map-container" id="reg-map-container">
-                        <div id="reg-map-ui" style="width: 100%; height: 100%; border-radius: 12px; z-index: 1;"></div>
-                        
-                        <div class="map-coords-card" style="z-index: 1000;">
-                            <span class="map-coords-label">Coordinates</span>
-                            <span class="map-coords-value" id="map-coords">51.505000, -0.090000</span>
-                        </div>
-                        <div class="map-zoom-level" id="map-zoom" style="z-index: 1000;">Zoom 13</div>
-                    </div>
-
-
-                    <p style="font-size: 11px; color: var(--text-muted); text-align: center; margin-top: 8px;">Click on the map or drag the pin to set your restaurant location.</p>
-
-
+                    <p style="font-size: 12px; color: var(--text-muted);"><i class="ph ph-info"></i> Don't see your area listed? Locations are added by the DineTime team — contact support to request one.</p>
 
                     <div class="step-actions">
-                        <button type="submit" class="btn-login" id="btn-finish">Save Location Details <i class="ph ph-check"></i></button>
+                        <button type="submit" class="btn-login" id="btn-finish">Submit for Verification <i class="ph ph-check"></i></button>
                         <button type="button" class="btn-back-step" id="back-to-step-2"><i class="ph ph-arrow-left"></i> Back to Restaurant Details</button>
                     </div>
 
                     <div class="location-footer-note">
-                        <i class="ph ph-lock"></i> Your location data is secured and only shared with verified diners.
+                        <i class="ph ph-shield-check"></i> Your restaurant won't be visible to diners until our Verification Team approves your application.
                     </div>
                 </form>
             </div>
@@ -293,7 +246,6 @@
 
     <div id="toast-container" class="toast-container"></div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="../js/data.js"></script>
     <script src="js/storage.js"></script>
     <script src="js/register.js"></script>

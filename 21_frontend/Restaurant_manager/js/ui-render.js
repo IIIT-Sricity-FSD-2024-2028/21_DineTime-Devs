@@ -28,9 +28,14 @@ class UIRenderer {
         document.getElementById('rest-location').innerText = rest.location;
         document.getElementById('rest-hours').innerText = rest.hours;
         document.getElementById('rest-parking').innerText = rest.parking;
-        document.getElementById('rest-rating').innerHTML = `<i class="ph-fill ph-star" style="color: #F59E0B;"></i> ${rest.rating}`;
+        document.getElementById('rest-rating').innerHTML = rest.rating
+            ? `<i class="ph-fill ph-star" style="color: #F59E0B;"></i> ${rest.rating}`
+            : 'No ratings yet';
         document.getElementById('rest-dress').innerText = rest.dressCode;
         document.getElementById('rest-contact').innerText = rest.contact;
+        document.getElementById('rest-fee-per-guest').innerText = `₹${rest.reservationFeePerGuest ?? 0} / guest`;
+        document.getElementById('rest-cancellation-cutoff').innerText = `${rest.cancellationCutoffMinutes ?? 0} minutes before`;
+        document.getElementById('rest-no-show-grace').innerText = `${rest.noShowGraceMinutes ?? 0} minutes after`;
 
         const imgEl = document.getElementById('rest-profile-img');
         const emptyEl = document.getElementById('rest-img-empty');

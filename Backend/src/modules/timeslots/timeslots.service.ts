@@ -4,6 +4,7 @@ import {
   CreateTimeSlotDto,
   UpdateTimeSlotDto,
 } from 'src/modules/timeslots/dto/timeslots.dto';
+import { ReservationRepository } from 'src/repositories/reservation.repository';
 import { TableRepository } from 'src/repositories/table.repository';
 import { TableSlotRepository } from 'src/repositories/tableslot.repository';
 import { TimeSlotRepository } from 'src/repositories/timeslot.repository';
@@ -14,6 +15,7 @@ export class TimeslotsService {
     private readonly timeslotRepository: TimeSlotRepository,
     private readonly tableRepository: TableRepository,
     private readonly tableSlotRepository: TableSlotRepository,
+    private readonly reservationRepository: ReservationRepository,
   ) {}
 
   private toMinutes(time: string): number {
@@ -145,11 +147,22 @@ export class TimeslotsService {
   }
 
   delete(id: string) {
-    const deleted = this.timeslotRepository.remove(id);
-    if (!deleted) {
+    const existing = this.timeslotRepository.findById(id);
+    if (!existing) {
       throw new NotFoundException('Time slot not found');
     }
 
+    const hasActiveReservation = this.reservationRepository
+      .findBySlotId(id)
+      .some((reservation) =>
+        reservation.reservation_status === 'reserved' ||
+        reservation.reservation_status === 'checked_in',
+      );
+    if (hasActiveReservation) {
+      throw new BadRequestException('Cannot delete a time slot with an active reservation');
+    }
+
+    this.timeslotRepository.remove(id);
     this.tableSlotRepository.removeBySlotId(id);
     return { deleted: true };
   }

@@ -37,25 +37,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         return "₹" + number.toString();
     }
 
-    // ---- Past Date Check Helper ----
-    function isPastDate(dateStr) {
-        if (!dateStr) return false;
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const selected = new Date(dateStr);
-        selected.setHours(0, 0, 0, 0);
-        return selected < today;
-    }
-
     // ---- Render Core ----
     function renderMenu() {
         const items = StorageManager.getMenu();
-        const currentDate = document.getElementById('menu-date-picker').value;
-        const pastDate = isPastDate(currentDate);
 
-        // Hide/Show Add button based on date
         if (addBtn) {
-            addBtn.style.display = pastDate ? 'none' : 'flex';
+            addBtn.style.display = 'flex';
         }
 
         if (items.length === 0) {
@@ -96,12 +83,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </thead>
                         <tbody>
                             ${catItems.map(item => {
-                                const currentDate = document.getElementById('menu-date-picker').value;
-                                const isAvail = item.dateAvailability && item.dateAvailability[currentDate] !== undefined
-                                    ? item.dateAvailability[currentDate]
-                                    : (item.available !== undefined ? item.available : true);
+                                const isAvail = item.available !== false;
                                 return `
-                                <tr class="${pastDate ? 'past-date-row' : ''}">
+                                <tr>
                                     <td style="width: 70px;">
                                         <img src="${item.image}" alt="${item.name}" class="menu-item-img" onerror="this.onerror=null;this.src='images/dish-1.jpg';">
                                     </td>
@@ -115,16 +99,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                                         <div class="item-price">${formatPrice(item.price)}</div>
                                     </td>
                                     <td>
-                                        <span class="avail-badge toggle-avail-btn ${isAvail ? 'avail-true' : 'avail-false'} ${pastDate ? 'read-only-badge' : ''}" data-id="${item.id}">
+                                        <span class="avail-badge toggle-avail-btn ${isAvail ? 'avail-true' : 'avail-false'}" data-id="${item.id}">
                                             ${isAvail ? 'Available' : 'Unavailable'}
                                         </span>
                                     </td>
                                     <td style="text-align: right;">
                                         <div class="menu-actions" style="justify-content: flex-end;">
-                                            ${!pastDate ? `
                                             <i class="ph ph-pencil-simple action-icon edit edit-icon" data-id="${item.id}"></i>
                                             <i class="ph ph-trash action-icon delete delete-icon" data-id="${item.id}"></i>
-                                            ` : '<span style="font-size: 11px; color: var(--text-muted);">View Only</span>'}
                                         </div>
                                     </td>
                                 </tr>
@@ -143,15 +125,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Toggle Availability
         document.querySelectorAll('.toggle-avail-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const currentDate = document.getElementById('menu-date-picker').value;
-                if (isPastDate(currentDate)) {
-                    showToast('Cannot toggle availability for past dates.', 'info');
-                    return;
-                }
                 const id = e.target.getAttribute('data-id');
-                StorageManager.toggleMenuAvailability(id, currentDate);
+                StorageManager.toggleMenuAvailability(id);
                 renderMenu();
-                showToast(`Item availability updated for selected date.`, 'info');
+                showToast(`Item availability updated.`, 'info');
             });
         });
 
@@ -202,12 +179,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     form.addEventListener('submit', (e) => {
         e.preventDefault();
-        const currentDate = document.getElementById('menu-date-picker').value;
-        if (isPastDate(currentDate)) {
-            showToast('Changes cannot be saved for past dates.', 'error');
-            modal.style.display = 'none';
-            return;
-        }
         const editingId = document.getElementById('edit-item-id').value;
         const newName = document.getElementById('new-item-name').value;
         const newCat = document.getElementById('new-item-cat').value;
@@ -264,28 +235,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     modal.addEventListener('click', (e) => {
         if(e.target === modal) modal.style.display = 'none';
     });
-
-    // ---- Date Picker Logic ----
-    const datePicker = document.getElementById('menu-date-picker');
-    const dateDisplay = document.getElementById('menu-date-display');
-    if (datePicker && dateDisplay) {
-        // Init to today
-        const today = new Date();
-        const yyyy = today.getFullYear();
-        const mm = String(today.getMonth() + 1).padStart(2, '0');
-        const dd = String(today.getDate()).padStart(2, '0');
-        datePicker.value = `${yyyy}-${mm}-${dd}`;
-        dateDisplay.innerText = today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-
-        datePicker.addEventListener('change', (e) => {
-            const dateObj = new Date(e.target.value);
-            if (!isNaN(dateObj.getTime())) {
-                dateDisplay.innerText = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-                showToast(`Viewing Menu for: ${dateDisplay.innerText}`, 'info');
-                renderMenu();
-            }
-        });
-    }
 
     // Initial render
     renderMenu();

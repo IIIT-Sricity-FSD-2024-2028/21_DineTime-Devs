@@ -1,11 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const API_BASE = (window.DINETIME_CONFIG && window.DINETIME_CONFIG.API_BASE) || 'http://localhost:3000';
+
     // DOM Elements - Steps
     const steps = [
         document.getElementById('step-1'),
         document.getElementById('step-2'),
         document.getElementById('step-3')
     ];
-    
+
     // Left Panel Elements
     const leftTitle = document.getElementById('left-panel-title');
     const leftDesc = document.getElementById('left-panel-desc');
@@ -13,30 +15,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const feat3Text = document.getElementById('feat-3-text');
 
     // Forms
-    const form1 = document.getElementById('form-step-1');
-    const form2 = document.getElementById('form-step-2');
     const form3 = document.getElementById('form-step-3');
 
     // Navigation Buttons
     const backToStep1 = document.getElementById('back-to-step-1');
     const backToStep2 = document.getElementById('back-to-step-2');
-    const mapCoordsDisplay = document.getElementById('map-coords');
-    const mapZoomDisplay = document.getElementById('map-zoom');
     const toStep2Btn = document.getElementById('btn-to-step-2');
     const toStep3Btn = document.getElementById('btn-to-step-3');
-
-
-    // Map Variables
-    let map = null;
-    let marker = null;
-    const defaultCoords = [12.9716, 77.5946]; // Bengaluru default
-
 
     // Data object to collect all registration info
     let registrationData = {
         account: {},
         restaurant: {},
-        location: {}
+        locationId: '',
+        documentFile: null,
     };
 
     // --- Utility: Show Toast ---
@@ -45,12 +37,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const toast = document.createElement('div');
         toast.className = 'toast';
         if (type === 'error') toast.style.borderLeftColor = '#DC2626';
-        
+
         toast.innerHTML = `
             <i class="ph ${type === 'error' ? 'ph-warning' : 'ph-check-circle'} toast-icon" style="color: ${type === 'error' ? '#DC2626' : 'var(--primary-green)'}"></i>
             <span class="toast-message">${message}</span>
         `;
-        
+
         container.appendChild(toast);
         setTimeout(() => toast.classList.add('hiding'), 3000);
         setTimeout(() => toast.remove(), 3350);
@@ -62,7 +54,6 @@ document.addEventListener('DOMContentLoaded', () => {
             s.classList.toggle('active', idx === stepNumber - 1);
         });
 
-        // Update Left Panel Content
         if (stepNumber === 1) {
             leftTitle.innerHTML = 'Register Your<br>Restaurant on<br>DineTime';
             leftDesc.innerText = 'Create a manager account to manage your restaurant, track reservations, and optimize seating capacity.';
@@ -75,77 +66,51 @@ document.addEventListener('DOMContentLoaded', () => {
             feat3Text.innerText = 'Grow your restaurant visibility';
         } else if (stepNumber === 3) {
             leftTitle.innerHTML = 'Set Your Restaurant<br>Location';
-            leftDesc.innerText = 'Provide your restaurant address so diners can easily discover and navigate to your location.';
-            feat2Text.innerText = 'Improve reservation accuracy';
-            feat3Text.innerText = 'Support GPS-based restaurant search';
-            
-            // Initialize Map on step 3
-            setTimeout(initRegistrationMap, 100);
+            leftDesc.innerText = 'Tell us which DineTime location your restaurant belongs to.';
+            feat2Text.innerText = 'Reach diners in your area';
+            feat3Text.innerText = 'Get reviewed by our Verification Team';
+            loadLocations();
         }
 
-        // Scroll to top of card
         document.querySelector('.login-right').scrollTop = 0;
     }
 
-    // --- MAP LOGIC ---
-    function initRegistrationMap() {
-        if (map) {
-            map.invalidateSize();
-            return;
+    async function loadLocations() {
+        const select = document.getElementById('loc-select');
+        if (select.dataset.loaded === 'true') return;
+
+        try {
+            const response = await fetch(`${API_BASE}/restaurants/locations`);
+            const payload = await response.json();
+            const locations = payload?.data || [];
+
+            select.innerHTML = '<option value="" disabled selected>Select a location</option>' +
+                locations.map((loc) => `<option value="${loc.id}">${loc.address}</option>`).join('');
+            select.dataset.loaded = 'true';
+        } catch (_e) {
+            select.innerHTML = '<option value="" disabled selected>Unable to load locations — please retry</option>';
         }
-
-        // Initialize map
-        map = L.map('reg-map-ui').setView(defaultCoords, 13);
-
-        // Add OSM Tiles
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
-
-        // Add Draggable Marker
-        const greenIcon = new L.Icon({
-            iconUrl: '../images/map-marker-green.png',
-            shadowUrl: '../images/map-marker-shadow.png',
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowSize: [41, 41]
-        });
-
-        marker = L.marker(defaultCoords, {
-            draggable: true,
-            icon: greenIcon
-        }).addTo(map);
-
-        // Update coords on drag
-        marker.on('dragend', function(e) {
-            const position = marker.getLatLng();
-            updateCoords(position.lat, position.lng);
-        });
-
-        // Update coords on map click
-        map.on('click', function(e) {
-            marker.setLatLng(e.latlng);
-            updateCoords(e.latlng.lat, e.latlng.lng);
-        });
-
-        // Initial coord set
-        updateCoords(defaultCoords[0], defaultCoords[1]);
-        
-        map.on('zoomend', () => {
-            if (mapZoomDisplay) mapZoomDisplay.innerText = `Zoom ${map.getZoom()}`;
-        });
     }
 
-    function updateCoords(lat, lng) {
-        const latFixed = lat.toFixed(6);
-        const lngFixed = lng.toFixed(6);
-        if (mapCoordsDisplay) mapCoordsDisplay.innerText = `${latFixed}, ${lngFixed}`;
-        registrationData.location.coords = [lat, lng];
-    }
+    // --- STEP 1: Verification document upload ---
+    const docDropzone = document.getElementById('doc-dropzone');
+    const docInput = document.getElementById('reg-document');
+    const docUploadTitle = document.getElementById('doc-upload-title');
 
+    docDropzone.addEventListener('click', () => docInput.click());
+    document.getElementById('doc-upload-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        docInput.click();
+    });
 
-
+    docInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            registrationData.documentFile = file;
+            docUploadTitle.textContent = file.name;
+            document.getElementById('err-document').classList.remove('show');
+        }
+    });
 
     // --- STEP 1 LOGIC ---
     if (toStep2Btn) {
@@ -156,124 +121,58 @@ document.addEventListener('DOMContentLoaded', () => {
             const password = document.getElementById('reg-password').value;
             const confirm = document.getElementById('reg-confirm').value;
             const license = document.getElementById('reg-license').value;
-            const govId = document.getElementById('reg-gov-id').value;
             const authorized = document.getElementById('reg-auth').checked;
 
-            // Email format validation
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email.toLowerCase())) {
                 document.getElementById('err-email').classList.add('show');
                 return;
-            } else {
-                document.getElementById('err-email').classList.remove('show');
             }
+            document.getElementById('err-email').classList.remove('show');
 
             if (password.length < 8) {
                 document.getElementById('err-pass').classList.add('show');
                 return;
-            } else {
-                document.getElementById('err-pass').classList.remove('show');
             }
+            document.getElementById('err-pass').classList.remove('show');
 
             if (password !== confirm) {
                 document.getElementById('err-confirm').classList.add('show');
                 return;
-            } else {
-                document.getElementById('err-confirm').classList.remove('show');
             }
+            document.getElementById('err-confirm').classList.remove('show');
 
-            if (!license || !govId || !authorized || !name || !phone) {
+            if (!license || !authorized || !name || !phone) {
                 showToast('Please fill all required fields and authorize.', 'error');
                 return;
             }
 
-            // Regex for License (BL-XX-XXXX)
             const licenseRegex = /^BL-[A-Z]{2}-\d{4}$/;
             if (!licenseRegex.test(license.toUpperCase())) {
-                const errLicense = document.getElementById('err-license');
-                if(errLicense) errLicense.classList.add('show');
+                document.getElementById('err-license')?.classList.add('show');
                 showToast('Invalid Business License format (BL-XX-XXXX).', 'error');
                 return;
-            } else {
-                if(document.getElementById('err-license')) document.getElementById('err-license').classList.remove('show');
             }
-
-            // Regex for Gov ID (GOV-ID-XXXXXXXX)
-            const govIdRegex = /^GOV-ID-\d{8}$/;
-            if (!govIdRegex.test(govId.toUpperCase())) {
-                const errGov = document.getElementById('err-gov-id');
-                if(errGov) errGov.classList.add('show');
-                showToast('Invalid Government ID format (GOV-ID-XXXXXXXX).', 'error');
-                return;
-            } else {
-                if(document.getElementById('err-gov-id')) document.getElementById('err-gov-id').classList.remove('show');
-            }
+            document.getElementById('err-license')?.classList.remove('show');
 
             if (!/^\d{10}$/.test(phone)) {
                 document.getElementById('err-phone').classList.add('show');
                 return;
-            } else {
-                if(document.getElementById('err-phone')) document.getElementById('err-phone').classList.remove('show');
+            }
+            document.getElementById('err-phone')?.classList.remove('show');
+
+            if (!registrationData.documentFile) {
+                document.getElementById('err-document').classList.add('show');
+                showToast('Please attach a verification document.', 'error');
+                return;
             }
 
-            // Verify email doesn't already exist
-            try {
-                const existingData = StorageManager.getRawData();
-                if (existingData.users && existingData.users[email.toLowerCase()]) {
-                    const errEmailExist = document.getElementById('err-email-exist');
-                    if (errEmailExist) {
-                        errEmailExist.classList.add('show');
-                        document.getElementById('reg-email').addEventListener('input', () => {
-                            errEmailExist.classList.remove('show');
-                        }, {once: true});
-                    } else {
-                        showToast('This email is already registered. Please log in.', 'error');
-                    }
-                    return;
-                } else {
-                    const errEmailExist = document.getElementById('err-email-exist');
-                    if (errEmailExist) errEmailExist.classList.remove('show');
-                }
-            } catch(e) {
-                console.warn(e);
-            }
-
-            // Save data and move to step 2
-            registrationData.account = { name, phone, email, password, license, govId };
+            registrationData.account = { name, phone, email, password, license };
             goToStep(2);
         });
     }
 
-
     // --- STEP 2 LOGIC ---
-    // Image Upload Simulation
-    const dropzone = document.getElementById('dropzone');
-    const fileInput = document.getElementById('res-image-input');
-    const imgPreview = document.getElementById('img-preview');
-    const removeImgBtn = document.getElementById('remove-img');
-
-    dropzone.addEventListener('click', () => fileInput.click());
-    
-    fileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                imgPreview.style.backgroundImage = `url(${event.target.result})`;
-                imgPreview.classList.add('active');
-                registrationData.restaurant.image = event.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-
-    removeImgBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        imgPreview.classList.remove('active');
-        fileInput.value = '';
-        delete registrationData.restaurant.image;
-    });
-
     if (toStep3Btn) {
         toStep3Btn.addEventListener('click', () => {
             const name = document.getElementById('res-name').value;
@@ -291,67 +190,71 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Save data and move to step 3
-            registrationData.restaurant = { 
-                ...registrationData.restaurant,
-                name, cuisine, desc, phone 
-            };
+            registrationData.restaurant = { name, cuisine, desc, phone };
             goToStep(3);
         });
     }
-
 
     backToStep1.addEventListener('click', () => goToStep(1));
 
     // --- STEP 3 LOGIC ---
     form3.addEventListener('submit', (e) => {
         e.preventDefault();
-        
-        const address = document.getElementById('loc-address').value;
-        const city = document.getElementById('loc-city').value;
-        const zip = document.getElementById('loc-zip').value;
-        const country = document.getElementById('loc-country').value;
 
-        if (!address || !city || !zip || !country) {
-            showToast('Please fill all required fields.', 'error');
+        const locationId = document.getElementById('loc-select').value;
+        if (!locationId) {
+            document.getElementById('err-location').classList.add('show');
             return;
         }
+        document.getElementById('err-location').classList.remove('show');
 
-        if (!/^\d{6}$/.test(zip)) {
-            showToast('Pincode must be exactly 6 digits.', 'error');
-            return;
-        }
-
-        // Save location data
-        registrationData.location = { 
-            ...registrationData.location,
-            address, city, zip, country 
-        };
-
-
-        // --- FINAL SUBMISSION ---
+        registrationData.locationId = locationId;
         finishRegistration();
     });
 
     backToStep2.addEventListener('click', () => goToStep(2));
 
-    function finishRegistration() {
-        showToast('Registering your restaurant...');
-        
-        // Use the new isolated registration method in StorageManager
-        StorageManager.register(
-            registrationData.account.email,
-            registrationData.account,
-            registrationData.restaurant,
-            registrationData.location
-        );
+    async function finishRegistration() {
+        const finishBtn = document.getElementById('btn-finish');
+        finishBtn.disabled = true;
+        showToast('Submitting your application...');
 
-        // Redirect after delay
-        setTimeout(() => {
-            window.location.href = 'index.html'; // Redirect to dashboard
-        }, 1500);
+        const cuisineLabel = registrationData.restaurant.cuisine
+            ? registrationData.restaurant.cuisine.charAt(0).toUpperCase() + registrationData.restaurant.cuisine.slice(1)
+            : '';
+
+        const formData = new FormData();
+        formData.append('name', registrationData.account.name);
+        formData.append('email', registrationData.account.email);
+        formData.append('phone', registrationData.account.phone);
+        formData.append('password', registrationData.account.password);
+        formData.append('business_license_number', registrationData.account.license);
+        formData.append('location_id', registrationData.locationId);
+        formData.append('restaurant_name', registrationData.restaurant.name);
+        formData.append('cuisine_type', cuisineLabel);
+        formData.append('description', registrationData.restaurant.desc || `${registrationData.restaurant.name} - ${cuisineLabel} restaurant.`);
+        formData.append('document', registrationData.documentFile);
+
+        try {
+            const response = await fetch(`${API_BASE}/managers/register`, {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.ok) {
+                const body = await response.json().catch(() => ({}));
+                throw new Error(Array.isArray(body.message) ? body.message.join(', ') : (body.message || 'Registration failed.'));
+            }
+
+            showToast('Application submitted! You will be able to log in once it is verified.');
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 2000);
+        } catch (error) {
+            showToast(error.message, 'error');
+            finishBtn.disabled = false;
+        }
     }
-
 
     // Password Toggle Utility
     document.querySelectorAll('.toggle-eye-btn').forEach(btn => {
@@ -367,13 +270,4 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
-
-    // Social Login Simulation
-    document.querySelectorAll('.btn-social').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const provider = btn.innerText.includes('Google') ? 'Google' : 'Apple';
-            showToast(`<i class="ph ph-circle-notch ph-spin" style="margin-right: 8px;"></i> Establishing secure connection with ${provider}...`, 'info');
-        });
-    });
 });
-

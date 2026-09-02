@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsNumber, IsString, Min } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 import { PaymentStatus } from 'src/common/types/schema.types';
 
 export class CreatePaymentDto {
@@ -8,10 +8,11 @@ export class CreatePaymentDto {
   @IsNotEmpty()
   reservation_id: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional({ description: 'Ignored — the server computes the canonical amount from the reservation' })
+  @IsOptional()
   @IsNumber()
   @Min(0)
-  amount: number;
+  amount?: number;
 
   @ApiProperty()
   @IsString()

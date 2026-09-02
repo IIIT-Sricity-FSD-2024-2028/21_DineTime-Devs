@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DineTime - Customer Support</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/settings.css">
+    <link rel="stylesheet" href="../css/support.css">
+
+    <script src="../../js/data.js"></script>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <img src="../images/logo.png" alt="DineTime Logo" />
+            <h2>DineTime</h2>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item nav-link" data-href="profile.html">
+                <i class="fa-regular fa-user"></i>
+                Profile
+            </a>
+            <a href="#" class="nav-item nav-link" data-href="reservations.html">
+                <i class="fa-regular fa-calendar-check"></i>
+                My Reservations
+            </a>
+            <a href="#" class="nav-item nav-link" data-href="browse.html">
+                <i class="fa-solid fa-utensils"></i>
+                Browse Restaurants
+            </a>
+            <a href="#" class="nav-item nav-link" data-href="settings.html">
+                <i class="fa-solid fa-gear"></i>
+                Settings
+            </a>
+            <a href="#" class="nav-item active">
+                <i class="fa-solid fa-headset"></i>
+                Customer Support
+            </a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <div class="settings-hero">
+            <div class="hero-overlay"></div>
+            <div class="hero-content">
+                <h1>Customer Support</h1>
+                <p>Report a refund issue, a problem with a restaurant, or a technical issue with the app.</p>
+            </div>
+            <div class="user-action">
+                <i class="fa-regular fa-user user-icon" onclick="window.location.href='profile.html'"></i>
+            </div>
+        </div>
+
+        <div class="settings-container">
+            <div class="settings-card">
+                <div class="card-header">
+                    <i class="fa-solid fa-headset"></i>
+                    <h3>Raise a New Issue</h3>
+                </div>
+                <p class="card-subtitle">Our support team reviews every ticket and will get back to you.</p>
+
+                <div class="support-helper">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span>Please describe your issue in detail — if it's about a specific booking, mention the <strong>Reservation ID</strong> and/or the <strong>restaurant's name</strong> so our team can look it up quickly.</span>
+                </div>
+
+                <form id="supportForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Issue Type</label>
+                            <select id="iptCategory" class="form-control" required>
+                                <option value="refund">Refund Issue</option>
+                                <option value="technical">Technical Issue</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Subject</label>
+                            <input type="text" id="iptSubject" class="form-control" placeholder="Short summary of the issue" maxlength="120" required>
+                        </div>
+                        <div class="form-group span-2">
+                            <label>Description</label>
+                            <textarea id="iptDescription" class="form-control" rows="5" placeholder="Describe what happened, including any Reservation ID or restaurant name..." required></textarea>
+                        </div>
+                        <div class="form-group span-2">
+                            <label>Attach Photos or Documents (optional)</label>
+                            <label class="file-input-wrap" for="iptAttachments">
+                                <i class="fa-solid fa-paperclip"></i> Click to attach up to 5 files (images or PDF, 5MB each)
+                                <input type="file" id="iptAttachments" multiple accept="image/jpeg,image/png,image/webp,application/pdf">
+                            </label>
+                            <div class="file-chip-list" id="fileChipList"></div>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="btnSubmitTicket" style="background: var(--primary); color: white;">
+                            <i class="fa-solid fa-paper-plane"></i> Submit Issue
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="settings-card">
+                <div class="card-header">
+                    <i class="fa-solid fa-ticket"></i>
+                    <h3>My Tickets</h3>
+                </div>
+                <p class="card-subtitle">Track the status of the issues you've raised.</p>
+                <div class="ticket-list" id="ticketList">
+                    <p class="empty-state">Loading your tickets...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="toast-container"></div>
+
+    <div id="modal-overlay" class="modal-overlay">
+        <div class="modal-card">
+            <h3 id="modal-title" class="modal-title">Confirm Action</h3>
+            <p id="modal-message" class="modal-message">Are you sure you want to proceed?</p>
+            <div class="modal-actions">
+                <button id="btnModalCancel" class="btn btn-outline" style="min-width: 100px;">Cancel</button>
+                <button id="btnModalConfirm" class="btn btn-primary" style="min-width: 100px;">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/store.js"></script>
+    <script src="../js/support.js"></script>
+</body>
+</html>

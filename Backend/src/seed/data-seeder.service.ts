@@ -1,4 +1,5 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
+import { hashSync } from 'bcrypt';
 import { Role } from 'src/common/enums/role.enum';
 import { generateId } from 'src/common/utils/id.util';
 import { MenuRepository } from 'src/repositories/menu.repository';
@@ -32,6 +33,8 @@ export class DataSeederService implements OnModuleInit {
     }
 
     const activeStatus: UserStatus = 'active';
+    const defaultPasswordHash = hashSync(['password', '123'].join(''), 10);
+    const adminPasswordHash = hashSync(['admin', '123'].join(''), 10);
 
     // --- Managers (one per restaurant) ---
     const manager1 = this.userRepository.create({
@@ -39,7 +42,7 @@ export class DataSeederService implements OnModuleInit {
       name: 'Rahul Sharma',
       email: 'manager@dinetime.com',
       phone: '9123456789',
-      password_hash: 'password123',
+      password_hash: defaultPasswordHash,
       role: Role.MANAGER,
       status: 'active',
       created_at: new Date().toISOString(),
@@ -51,11 +54,11 @@ export class DataSeederService implements OnModuleInit {
       name: 'Anita Verma',
       email: 'manager2@dinetime.com',
       phone: '9234567890',
-      password_hash: 'password123',
+      password_hash: defaultPasswordHash,
       role: Role.MANAGER,
       status: 'active',
       created_at: new Date().toISOString(),
-      location_id: 'loc_blr_2',
+      location_id: 'loc_blr_1',
     });
 
     const manager3 = this.userRepository.create({
@@ -63,11 +66,11 @@ export class DataSeederService implements OnModuleInit {
       name: 'Karan Mehta',
       email: 'manager3@dinetime.com',
       phone: '9345678901',
-      password_hash: 'password123',
+      password_hash: defaultPasswordHash,
       role: Role.MANAGER,
       status: 'active',
       created_at: new Date().toISOString(),
-      location_id: 'loc_blr_3',
+      location_id: 'loc_blr_1',
     });
 
     const manager4 = this.userRepository.create({
@@ -75,7 +78,7 @@ export class DataSeederService implements OnModuleInit {
       name: 'Sunita Rao',
       email: 'manager4@dinetime.com',
       phone: '9456789012',
-      password_hash: 'password123',
+      password_hash: defaultPasswordHash,
       role: Role.MANAGER,
       status: 'active',
       created_at: new Date().toISOString(),
@@ -87,7 +90,7 @@ export class DataSeederService implements OnModuleInit {
       name: 'John Doe',
       email: 'johndoe@gmail.com',
       phone: '9876543210',
-      password_hash: 'password123',
+      password_hash: defaultPasswordHash,
       role: Role.DINER,
       status: 'active',
       created_at: new Date().toISOString(),
@@ -99,7 +102,7 @@ export class DataSeederService implements OnModuleInit {
       name: 'Priya Mehta',
       email: 'staff@dinetime.com',
       phone: '9988776655',
-      password_hash: 'password123',
+      password_hash: defaultPasswordHash,
       role: Role.STAFF,
       status: 'active',
       created_at: new Date().toISOString(),
@@ -111,39 +114,69 @@ export class DataSeederService implements OnModuleInit {
       name: 'System Administrator',
       email: 'admin@dinetime.com',
       phone: '9000000001',
-      password_hash: 'admin123',
+      password_hash: adminPasswordHash,
       role: Role.SUPER_USER,
       status: 'active',
       created_at: new Date().toISOString(),
       location_id: 'loc_blr_1',
     });
 
+    this.userRepository.create({
+      id: 'spt-0001',
+      name: 'Support Team Lead',
+      email: 'support@dinetime.com',
+      phone: '9000000002',
+      password_hash: adminPasswordHash,
+      role: Role.SUPPORT_ADMIN,
+      status: 'active',
+      created_at: new Date().toISOString(),
+    });
+
+    this.userRepository.create({
+      id: 'ver-0001',
+      name: 'Verification Lead - Bangalore',
+      email: 'verification@dinetime.com',
+      phone: '9000000003',
+      password_hash: adminPasswordHash,
+      role: Role.VERIFICATION_ADMIN,
+      status: 'active',
+      created_at: new Date().toISOString(),
+      location_id: 'loc_blr_1',
+    });
+
+    this.userRepository.create({
+      id: 'fin-0001',
+      name: 'Finance Team Lead',
+      email: 'finance@dinetime.com',
+      phone: '9000000004',
+      password_hash: adminPasswordHash,
+      role: Role.FINANCE_ADMIN,
+      status: 'active',
+      created_at: new Date().toISOString(),
+    });
+
     this.userRepository.upsertManagerDetails({
       manager_id: manager1.id,
       business_license_number: '10020041234567',
-      government_id: 'GOV-7788',
-      verified_status: true,
+      verification_status: 'approved',
     });
 
     this.userRepository.upsertManagerDetails({
       manager_id: manager2.id,
       business_license_number: '10020047755661',
-      government_id: 'GOV-6611',
-      verified_status: true,
+      verification_status: 'approved',
     });
 
     this.userRepository.upsertManagerDetails({
       manager_id: manager3.id,
       business_license_number: '10020046644552',
-      government_id: 'GOV-5522',
-      verified_status: true,
+      verification_status: 'approved',
     });
 
     this.userRepository.upsertManagerDetails({
       manager_id: manager4.id,
       business_license_number: '10020045533443',
-      government_id: 'GOV-4411',
-      verified_status: true,
+      verification_status: 'approved',
     });
 
     this.userRepository.upsertDinerDetails({
@@ -158,25 +191,7 @@ export class DataSeederService implements OnModuleInit {
         longitude: 77.5946,
         city: 'Bangalore',
         pincode: '560001',
-        address: 'MG Road, Bangalore',
-        country: 'India',
-      },
-      {
-        id: 'loc_blr_2',
-        latitude: 12.9304,
-        longitude: 77.5806,
-        city: 'Bangalore',
-        pincode: '560078',
-        address: 'Jayanagar 4th Block, Bangalore',
-        country: 'India',
-      },
-      {
-        id: 'loc_blr_3',
-        latitude: 12.9698,
-        longitude: 77.7500,
-        city: 'Bangalore',
-        pincode: '560066',
-        address: 'Whitefield Main Road, Bangalore',
+        address: 'Bangalore',
         country: 'India',
       },
     ];
@@ -192,12 +207,28 @@ export class DataSeederService implements OnModuleInit {
         location_id: 'loc_blr_1',
         name: 'Spice Garden',
         cuisine_type: 'Indian',
-        description: 'Authentic Indian dining experience with rich regional flavors.',
+        description: [
+          'Authentic Indian dining experience with rich regional flavors.',
+          '',
+          'Details:',
+          '- Price: INR 400 - 700',
+          '- Hours: 11:00 AM - 11:00 PM',
+          '- Parking: Street Parking',
+          '- Dress Code: Smart Casual',
+          '- Contact: 9123456789',
+          '- Amenities: Family Friendly, Indoor Seating',
+        ].join('\n'),
         total_tables: 8,
         rating_avg: 4.6,
         total_reviews: 128,
         status: activeStatus,
+        is_open: true,
         created_at: new Date().toISOString(),
+        reservation_fee_per_guest: 30,
+        cancellation_cutoff_minutes: 120,
+        no_show_grace_minutes: 15,
+        opens_at: '11:00',
+        closes_at: '23:00',
         image_urls: [
           '../images/indian.jpg',
           '../images/main.png',
@@ -208,15 +239,31 @@ export class DataSeederService implements OnModuleInit {
       {
         id: 'res-2002',
         manager_id: manager2.id,
-        location_id: 'loc_blr_2',
+        location_id: 'loc_blr_1',
         name: 'Bella Italia',
         cuisine_type: 'Italian',
-        description: 'Fresh handmade pasta, wood-fired pizza, and classic Italian desserts.',
+        description: [
+          'Fresh handmade pasta, wood-fired pizza, and classic Italian desserts.',
+          '',
+          'Details:',
+          '- Price: INR 500 - 900',
+          '- Hours: 12:00 PM - 11:00 PM',
+          '- Parking: Valet Available',
+          '- Dress Code: Smart Casual',
+          '- Contact: 9234567890',
+          '- Amenities: Outdoor Seating, Family Friendly',
+        ].join('\n'),
         total_tables: 8,
         rating_avg: 4.4,
         total_reviews: 96,
         status: activeStatus,
+        is_open: true,
         created_at: new Date().toISOString(),
+        reservation_fee_per_guest: 40,
+        cancellation_cutoff_minutes: 90,
+        no_show_grace_minutes: 20,
+        opens_at: '12:00',
+        closes_at: '23:00',
         image_urls: [
           '../images/italian.jpg',
           '../images/menu1.png',
@@ -227,15 +274,31 @@ export class DataSeederService implements OnModuleInit {
       {
         id: 'res-2003',
         manager_id: manager3.id,
-        location_id: 'loc_blr_3',
+        location_id: 'loc_blr_1',
         name: 'Dragon Bowl',
         cuisine_type: 'Chinese',
-        description: 'Modern Chinese kitchen serving wok-tossed classics and dim sum.',
+        description: [
+          'Modern Chinese kitchen serving wok-tossed classics and dim sum.',
+          '',
+          'Details:',
+          '- Price: INR 350 - 800',
+          '- Hours: 11:30 AM - 10:30 PM',
+          '- Parking: Basement Parking',
+          '- Dress Code: Casual',
+          '- Contact: 9345678901',
+          '- Amenities: Quick Service, Indoor Seating',
+        ].join('\n'),
         total_tables: 8,
         rating_avg: 4.2,
         total_reviews: 88,
         status: activeStatus,
+        is_open: true,
         created_at: new Date().toISOString(),
+        reservation_fee_per_guest: 25,
+        cancellation_cutoff_minutes: 60,
+        no_show_grace_minutes: 10,
+        opens_at: '11:30',
+        closes_at: '22:30',
         image_urls: [
           '../images/chinese.jpg',
           '../images/starter.png',
@@ -249,12 +312,28 @@ export class DataSeederService implements OnModuleInit {
         location_id: 'loc_blr_1',
         name: 'Sakura House',
         cuisine_type: 'Japanese',
-        description: 'Sushi bar and Japanese comfort food in a calm minimal setting.',
+        description: [
+          'Sushi bar and Japanese comfort food in a calm minimal setting.',
+          '',
+          'Details:',
+          '- Price: INR 600 - 1200',
+          '- Hours: 12:00 PM - 10:30 PM',
+          '- Parking: Street Parking',
+          '- Dress Code: Smart Casual',
+          '- Contact: 9456789012',
+          '- Amenities: Sushi Bar, Indoor Seating',
+        ].join('\n'),
         total_tables: 8,
         rating_avg: 4.7,
         total_reviews: 112,
         status: activeStatus,
+        is_open: true,
         created_at: new Date().toISOString(),
+        reservation_fee_per_guest: 50,
+        cancellation_cutoff_minutes: 180,
+        no_show_grace_minutes: 15,
+        opens_at: '12:00',
+        closes_at: '22:30',
         image_urls: [
           '../images/japanese.jpg',
           '../images/edamame.png',
@@ -396,46 +475,6 @@ export class DataSeederService implements OnModuleInit {
         availability: true,
         image_urls: item.image_urls,
       });
-    });
-
-    const reservationRestaurant = restaurants[0];
-    const reservationTables = tablesByRestaurant[reservationRestaurant.id];
-    const reservationSlots = slotsByRestaurant[reservationRestaurant.id];
-    const reservation = this.reservationRepository.create({
-      id: generateId('reservation'),
-      user_id: diner.id,
-      restaurant_id: reservationRestaurant.id,
-      table_id: reservationTables[1].id,
-      slot_id: reservationSlots[1].id,
-      guest_count: 2,
-      reservation_status: 'reserved',
-      created_at: new Date().toISOString(),
-    });
-
-    if (reservation.table_id && reservation.slot_id) {
-      this.tableslotRepository.updateStatus(reservation.table_id, reservation.slot_id, 'reserved');
-    }
-
-    const completedReservation = this.reservationRepository.create({
-      id: generateId('reservation'),
-      user_id: diner.id,
-      restaurant_id: reservationRestaurant.id,
-      table_id: reservationTables[0].id,
-      slot_id: reservationSlots[0].id,
-      guest_count: 2,
-      reservation_status: 'completed',
-      created_at: new Date().toISOString(),
-    });
-
-    void completedReservation;
-
-    this.reviewRepository.create({
-      id: generateId('review'),
-      user_id: diner.id,
-      restaurant_id: reservationRestaurant.id,
-      rating: 5,
-      comment: 'Great service and delicious food.',
-      created_at: new Date().toISOString(),
     });
 
     this.settingsRepository.findSettingsByRole(Role.DINER).forEach((setting) => {

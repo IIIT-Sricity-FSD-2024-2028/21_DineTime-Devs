@@ -58,6 +58,10 @@ export class RestaurantRepository {
     return this.locations.find((item) => item.id === id);
   }
 
+  findAllLocations(): Location[] {
+    return [...this.locations];
+  }
+
   findRestaurantsByCity(city: string): Restaurant[] {
     const locationIds = this.locations
       .filter((location) => location.city.toLowerCase() === city.toLowerCase())

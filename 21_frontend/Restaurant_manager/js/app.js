@@ -4,6 +4,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     const appData = StorageManager.getData();
     UIRenderer.renderAll(appData);
 
+    // ---- Serving status toggle (Open to Serve / Closed to Serve) ----
+    const servingToggle = document.getElementById('serving-status-toggle');
+    const servingLabel = document.getElementById('serving-status-label');
+    const servingSublabel = document.getElementById('serving-status-sublabel');
+    const servingWidget = document.getElementById('serving-status-widget');
+    const servingIconGlyph = document.getElementById('serving-status-icon-glyph');
+    if (servingToggle && servingLabel) {
+        const syncServingLabel = (isOpen) => {
+            servingToggle.checked = isOpen;
+            servingLabel.textContent = isOpen ? 'Open to Serve' : 'Closed to Serve';
+            if (servingSublabel) servingSublabel.textContent = isOpen ? 'Visible to diners right now' : "Diners can't find you yet";
+            if (servingWidget) servingWidget.classList.toggle('is-open', isOpen);
+            if (servingIconGlyph) servingIconGlyph.className = isOpen ? 'ph-fill ph-check-circle' : 'ph ph-storefront';
+        };
+        syncServingLabel(Boolean(appData.restaurant?.is_open));
+
+        servingToggle.addEventListener('change', async () => {
+            const nextState = servingToggle.checked;
+            servingToggle.disabled = true;
+            try {
+                await StorageManager.setServingStatus(nextState);
+                syncServingLabel(nextState);
+                window.showToast?.(nextState ? 'Your restaurant is now visible to diners.' : 'Your restaurant is now hidden from diners.');
+            } catch (error) {
+                syncServingLabel(!nextState);
+                window.showToast?.(error.message || 'Could not update serving status.', 'error');
+            } finally {
+                servingToggle.disabled = false;
+            }
+        });
+    }
+
     // ---- Toast Notification System ----
     const toastContainer = document.getElementById('toast-container');
     window.showToast = function(message, type = 'success') {
@@ -51,16 +83,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         }, "Remove Photo", "Remove");
     });
 
-    photoUploadInput?.addEventListener('change', (e) => {
+    photoUploadInput?.addEventListener('change', async (e) => {
         if (e.target.files.length > 0) {
             const file = e.target.files[0];
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                StorageManager.updateProfile({ avatar: event.target.result });
+            try {
+                await StorageManager.uploadProfilePhoto(file);
                 UIRenderer.renderProfile(StorageManager.getData().profile);
                 showToast('Profile photo updated successfully!');
-            };
-            reader.readAsDataURL(file);
+            } catch (error) {
+                showToast(error.message || 'Profile photo upload failed.', 'error');
+            } finally {
+                e.target.value = '';
+            }
         }
     });
 
@@ -68,21 +102,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     const restImgUploadInput = document.getElementById('rest-img-upload');
     const restImgRemoveBtn = document.getElementById('rest-img-remove');
     
-    restImgUploadInput?.addEventListener('change', (e) => {
+    restImgUploadInput?.addEventListener('change', async (e) => {
         if (e.target.files.length > 0) {
             const file = e.target.files[0];
-            const reader = new FileReader();
-            reader.onload = function(event) {
+            try {
+                await StorageManager.uploadRestaurantImage(file, true);
                 const data = StorageManager.getData();
-                data.restaurant.image = event.target.result;
-                data.gallery = [event.target.result, ...(data.gallery || []).filter((img) => img !== event.target.result)];
-                StorageManager.saveData(data);
-                StorageManager.updateRestaurantDetails({});
                 UIRenderer.renderRestaurantDetails(data.restaurant);
                 UIRenderer.renderGallery(data.gallery || []);
                 showToast('Restaurant profile photo updated!');
-            };
-            reader.readAsDataURL(file);
+            } catch (error) {
+                showToast(error.message || 'Restaurant photo upload failed.', 'error');
+            } finally {
+                e.target.value = '';
+            }
         }
     });
 
@@ -90,10 +123,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (window.showConfirm) {
             window.showConfirm("Are you sure you want to remove the restaurant photo?", () => {
                 const data = StorageManager.getData();
+                const removedImage = data.restaurant.image;
                 data.restaurant.image = null;
+                data.gallery = (data.gallery || []).filter((image) => image !== removedImage);
                 StorageManager.saveData(data);
                 StorageManager.updateRestaurantDetails({});
                 UIRenderer.renderRestaurantDetails(data.restaurant);
+                UIRenderer.renderGallery(data.gallery || []);
                 showToast('Restaurant photo removed.', 'info');
             }, "Remove Photo", "Remove");
         }
@@ -101,30 +137,24 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const galleryUploadInput = document.getElementById('gallery-upload-input');
     document.getElementById('upload-images-btn')?.addEventListener('click', () => galleryUploadInput?.click());
-    galleryUploadInput?.addEventListener('change', (e) => {
+    galleryUploadInput?.addEventListener('change', async (e) => {
         if (e.target.files.length > 0) {
             const files = Array.from(e.target.files);
-            let processed = 0;
-            const newImages = [];
-            files.forEach(file => {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    newImages.push(event.target.result);
-                    processed++;
-                    if (processed === files.length) {
-                        const allData = StorageManager.getData();
-                        const updatedGallery = [...allData.gallery, ...newImages];
-                        allData.gallery = updatedGallery;
-                        StorageManager.saveData(allData);
-                        StorageManager.updateRestaurantDetails({});
-                        if (document.querySelector('.gallery-grid')) {
-                            UIRenderer.renderGallery(updatedGallery);
-                        }
-                        showToast(`${files.length} images added to gallery.`);
-                    }
-                };
-                reader.readAsDataURL(file);
-            });
+            try {
+                for (const file of files) {
+                    await StorageManager.uploadRestaurantImage(file, false);
+                }
+                const data = StorageManager.getData();
+                if (document.querySelector('.gallery-grid')) {
+                    UIRenderer.renderGallery(data.gallery || []);
+                }
+                UIRenderer.renderRestaurantDetails(data.restaurant);
+                showToast(`${files.length} images added to gallery.`);
+            } catch (error) {
+                showToast(error.message || 'Gallery upload failed.', 'error');
+            } finally {
+                e.target.value = '';
+            }
         }
     });
 
@@ -278,15 +308,24 @@ document.addEventListener('DOMContentLoaded', async () => {
                 {id: 'rest-name'}, {id: 'rest-about-text', isTextArea: true},
                 {id: 'rest-cuisine'}, {id: 'rest-capacity'}, {id: 'rest-location'},
                 {id: 'rest-hours'}, {id: 'rest-parking'}, {id: 'rest-dress'},
-                {id: 'rest-contact'}
+                {id: 'rest-contact'}, {id: 'rest-fee-per-guest'},
+                {id: 'rest-cancellation-cutoff'}, {id: 'rest-no-show-grace'}
 
             ];
             
+            const numericValues = {
+                'rest-fee-per-guest': StorageManager.getData().restaurant.reservationFeePerGuest,
+                'rest-cancellation-cutoff': StorageManager.getData().restaurant.cancellationCutoffMinutes,
+                'rest-no-show-grace': StorageManager.getData().restaurant.noShowGraceMinutes,
+            };
+
             if (!isEditingRest) {
                 fields.forEach(field => {
                     const el = document.getElementById(field.id);
                     if (field.isTextArea) {
                         el.innerHTML = `<textarea class="editable-input" style="height: 80px; resize: vertical;">${el.innerText}</textarea>`;
+                    } else if (Object.prototype.hasOwnProperty.call(numericValues, field.id)) {
+                        el.innerHTML = `<input type="number" min="0" class="editable-input" value="${numericValues[field.id]}">`;
                     } else {
                         el.innerHTML = `<input type="text" class="editable-input" value="${el.innerText}">`;
                     }
@@ -314,6 +353,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const parkingInput = document.getElementById('rest-parking').querySelector('input');
                 const dressInput = document.getElementById('rest-dress').querySelector('input');
                 const contactInput = document.getElementById('rest-contact').querySelector('input');
+                const feePerGuestInput = document.getElementById('rest-fee-per-guest').querySelector('input');
+                const cutoffInput = document.getElementById('rest-cancellation-cutoff').querySelector('input');
+                const graceInput = document.getElementById('rest-no-show-grace').querySelector('input');
 
                 const name = nameInput.value.trim();
                 const about = aboutInput.value.trim();
@@ -324,6 +366,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const parking = parkingInput.value.trim();
                 const dressCode = dressInput.value.trim();
                 const contact = contactInput.value.trim();
+                const feePerGuest = feePerGuestInput.value.trim();
+                const cancellationCutoff = cutoffInput.value.trim();
+                const noShowGrace = graceInput.value.trim();
 
                 // Validation Rules
                 let isValid = true;
@@ -331,7 +376,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 let firstInvalidField = null;
 
                 // Reset highlights
-                [nameInput, aboutInput, cuisineInput, capacityInput, locationInput, hoursInput, parkingInput, dressInput, contactInput].forEach(inp => {
+                [nameInput, aboutInput, cuisineInput, capacityInput, locationInput, hoursInput, parkingInput, dressInput, contactInput, feePerGuestInput, cutoffInput, graceInput].forEach(inp => {
                     inp.classList.remove('input-error');
                 });
 
@@ -364,6 +409,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 } else if (!contact || !phoneRegex.test(contact.replace(/\D/g, ''))) {
                     errorMsg = 'Contact number must be exactly 10 digits.';
                     isValid = false; firstInvalidField = contactInput;
+                } else if (feePerGuest === '' || Number(feePerGuest) < 0) {
+                    errorMsg = 'Reservation deposit per guest must be a non-negative number.';
+                    isValid = false; firstInvalidField = feePerGuestInput;
+                } else if (cancellationCutoff === '' || Number(cancellationCutoff) < 0) {
+                    errorMsg = 'Cancellation cutoff must be a non-negative number of minutes.';
+                    isValid = false; firstInvalidField = cutoffInput;
+                } else if (noShowGrace === '' || Number(noShowGrace) < 0) {
+                    errorMsg = 'No-show grace period must be a non-negative number of minutes.';
+                    isValid = false; firstInvalidField = graceInput;
                 }
 
                 if (!isValid) {
@@ -381,7 +435,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // Collect updates
                 const updates = {
                     name, about, cuisine, capacity, location, hours, parking, dressCode,
-                    contact: contact.replace(/\D/g, '')
+                    contact: contact.replace(/\D/g, ''),
+                    reservationFeePerGuest: Number(feePerGuest),
+                    cancellationCutoffMinutes: Number(cancellationCutoff),
+                    noShowGraceMinutes: Number(noShowGrace),
                 };
                 
                 StorageManager.updateRestaurantDetails(updates);

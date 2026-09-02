@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        if (!JSON.parse(sessionStorage.getItem('manager_session_v1') || 'null')?.email) {
+            window.location.href = 'login.html';
+        }
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DineTime - Raise an Issue</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        .support-helper {
+            background: rgba(82, 122, 89, 0.08);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px 14px;
+            font-size: 13px;
+            color: var(--text-dark);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+        .support-helper i { color: var(--primary-green); margin-top: 2px; font-size: 16px; }
+        .form-group textarea {
+            padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 6px;
+            font-family: inherit; font-size: 14px; color: var(--text-dark); resize: vertical;
+        }
+        .file-input-wrap {
+            border: 1px dashed var(--border-color); border-radius: 8px; padding: 14px;
+            text-align: center; cursor: pointer; color: var(--text-muted); font-size: 13px;
+        }
+        .file-input-wrap input { display: none; }
+        .file-chip-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .file-chip {
+            background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px;
+            padding: 6px 10px; font-size: 12px; display: flex; align-items: center; gap: 6px;
+        }
+        .file-chip button { border: none; background: none; color: #DC2626; cursor: pointer; font-weight: 700; }
+        .ticket-list { display: flex; flex-direction: column; gap: 14px; }
+        .ticket-item { border: 1px solid var(--border-color); border-radius: 10px; padding: 16px 18px; }
+        .ticket-item-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 8px; }
+        .ticket-item-head h4 { margin: 0 0 4px; font-size: 15px; color: var(--text-dark); }
+        .ticket-meta { font-size: 12px; color: var(--text-muted); }
+        .ticket-desc { font-size: 13px; color: var(--text-dark); margin: 6px 0 0; white-space: pre-wrap; }
+        .ticket-resolution { margin-top: 10px; padding: 10px 12px; background: var(--bg-color); border-radius: 8px; font-size: 13px; border-left: 3px solid var(--primary-green); }
+        .status-pill { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+        .status-open { background: #FFF3E0; color: #E65100; }
+        .status-in_review { background: #E3F2FD; color: #1565C0; }
+        .status-escalated_finance_team { background: #F3E5F5; color: #6A1B9A; }
+        .status-escalated_super_admin { background: #FFEBEE; color: #C62828; }
+        .status-resolved { background: #E8F5E9; color: #2E7D32; }
+        .status-rejected { background: #ECEFF1; color: #455A64; }
+        .empty-state { color: var(--text-muted); font-size: 13px; text-align: center; padding: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="logo-container">
+                <img style="width: 38px; height: 38px; border-radius: 8px; object-fit: contain; margin-right: 4px;" src="images/logo.png" alt="DineTime Logo">
+                <div class="logo-text">
+                    <h1>DineTime</h1>
+                    <span>Manager Portal</span>
+                </div>
+            </div>
+
+            <nav class="main-nav">
+                <ul>
+                    <li>
+                        <a href="index.html">
+                            <i class="ph ph-user"></i>
+                            <span>Profile</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="reservations.html">
+                            <i class="ph ph-calendar-blank"></i>
+                            <span>Reservations</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="menu.html">
+                            <i class="ph ph-fork-knife"></i>
+                            <span>Menu Management</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="time-slots.html">
+                            <i class="ph ph-clock"></i>
+                            <span>Time Slot Management</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="tables.html">
+                            <i class="ph ph-squares-four"></i>
+                            <span>Table and Capacity<br>Management</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="revenue.html">
+                            <i class="ph ph-currency-circle-dollar"></i>
+                            <span>Revenue</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="reviews.html">
+                            <i class="ph ph-star"></i>
+                            <span>Customer Reviews</span>
+                        </a>
+                    </li>
+                    <li class="active">
+                        <a href="issues.html">
+                            <i class="ph ph-headset"></i>
+                            <span>Raise an Issue</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-header" style="height: 160px;">
+                <div class="header-overlay"></div>
+                <div class="header-content">
+                    <div class="header-title">
+                        <h2>Raise an Issue</h2>
+                        <p>Report a payment problem, a technical issue, or anything else that needs the platform team's attention.</p>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <div class="card">
+                    <h3 style="margin-top:0;">New Issue</h3>
+                    <div class="support-helper">
+                        <i class="ph ph-info"></i>
+                        <span>Please describe the issue in detail — for a payment dispute, mention the <strong>Reservation ID</strong> and the diner's name if known; for a display/technical issue, describe exactly what you see.</span>
+                    </div>
+
+                    <form id="issueForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Issue Type</label>
+                                <select id="iptCategory" required>
+                                    <option value="refund">Payment Not Received (Diner Cancellation/No-Show)</option>
+                                    <option value="technical">Technical Issue</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Subject</label>
+                                <input type="text" id="iptSubject" placeholder="Short summary of the issue" maxlength="120" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea id="iptDescription" rows="5" placeholder="Describe what happened, including any Reservation ID..." required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Attach Screenshots (optional)</label>
+                            <label class="file-input-wrap" for="iptAttachments">
+                                <i class="ph ph-paperclip"></i> Click to attach up to 5 files (images or PDF, 5MB each)
+                                <input type="file" id="iptAttachments" multiple accept="image/jpeg,image/png,image/webp,application/pdf">
+                            </label>
+                            <div class="file-chip-list" id="fileChipList"></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary-green" id="btnSubmitIssue">
+                            <i class="ph ph-paper-plane-tilt"></i> Submit Issue
+                        </button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-top:0;">My Issues</h3>
+                    <div class="ticket-list" id="ticketList">
+                        <p class="empty-state">Loading your issues...</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="../js/data.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/issues.js"></script>
+</body>
+</html>

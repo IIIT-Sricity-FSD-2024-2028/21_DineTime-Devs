@@ -7,5 +7,6 @@ import { RepositoriesModule } from 'src/repositories/repositories.module';
   imports: [RepositoriesModule],
   controllers: [ManagerController],
   providers: [ManagerService],
+  exports: [ManagerService],
 })
 export class ManagerModule {}
