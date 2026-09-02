@@ -1,15 +1,19 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { DEFAULT_RESERVATION_FEE_PER_GUEST } from 'src/common/config/billing.config';
+import { calculateReservationBill } from 'src/common/utils/billing.util';
 import { generateId } from 'src/common/utils/id.util';
 import { NotificationsService } from 'src/modules/notifications/notifications.service';
 import { CreatePaymentDto, UpdatePaymentDto } from 'src/modules/payments/dto/payments.dto';
 import { PaymentRepository } from 'src/repositories/payment.repository';
 import { ReservationRepository } from 'src/repositories/reservation.repository';
+import { RestaurantRepository } from 'src/repositories/restaurant.repository';
 
 @Injectable()
 export class PaymentsService {
   constructor(
     private readonly paymentRepository: PaymentRepository,
     private readonly reservationRepository: ReservationRepository,
+    private readonly restaurantRepository: RestaurantRepository,
     private readonly notificationsService: NotificationsService,
   ) {}
 
@@ -57,10 +61,19 @@ export class PaymentsService {
       };
     }
 
+    const restaurant = this.restaurantRepository.findById(reservation.restaurant_id);
+    const bill = calculateReservationBill(
+      reservation.guest_count,
+      restaurant?.reservation_fee_per_guest ?? DEFAULT_RESERVATION_FEE_PER_GUEST,
+    );
+
     const payment = this.paymentRepository.create({
       id: generateId('payment'),
       reservation_id: dto.reservation_id,
-      amount: dto.amount,
+      amount: bill.total_due,
+      deposit_amount: bill.deposit_amount,
+      diner_platform_fee: bill.diner_platform_fee,
+      restaurant_platform_fee: bill.restaurant_platform_fee,
       payment_method: dto.payment_method,
       transaction_ref: dto.transaction_ref,
       payment_status: dto.payment_status,

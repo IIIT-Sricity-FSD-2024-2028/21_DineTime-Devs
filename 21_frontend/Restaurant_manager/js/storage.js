@@ -15,24 +15,24 @@ class StorageManager {
             memberSince: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
         },
         restaurant: {
-            name: 'Spice Garden',
-            about: 'Restaurant profile',
-            cuisine: 'Indian',
-            capacity: '0 seats',
-            location: 'Bangalore',
-            hours: '11:00 AM - 11:00 PM',
-            parking: 'Street Parking',
-            rating: '4.5',
-            dressCode: 'Smart Casual',
-            price: '500',
-            contact: '9000000000',
-            amenities: 'Family Friendly, Indoor Seating',
-            image: 'images/restaurant.jpg',
+            name: '',
+            about: '',
+            cuisine: '',
+            capacity: '0 tables',
+            location: '',
+            hours: 'Not set yet',
+            parking: 'Not specified',
+            rating: 0,
+            dressCode: 'Not specified',
+            price: 'Not set',
+            contact: '',
+            amenities: 'Not specified',
+            image: '',
+            reservationFeePerGuest: 30,
+            cancellationCutoffMinutes: 120,
+            noShowGraceMinutes: 15,
         },
-        policies: [
-            { title: 'Cancellation Policy', desc: 'Cancellations must be made at least 2 hours in advance.' },
-            { title: 'Late Arrival', desc: 'We hold tables for 15 minutes past reservation time.' },
-        ],
+        policies: [],
         gallery: [],
         menu: [],
         reservations: [],
@@ -66,7 +66,7 @@ class StorageManager {
     static _session() {
         const saved = JSON.parse(sessionStorage.getItem(this.SESSION_KEY) || '{}');
         return {
-            email: saved.email || 'manager@dinetime.com',
+            email: saved.email || '',
             access_token: saved.access_token || '',
             role: 'manager',
         };
@@ -118,7 +118,13 @@ class StorageManager {
     static async _request(path, options = {}) {
         const res = await fetch(`${this.API_BASE}${path}`, options);
         if (!res.ok) {
-            throw new Error(`Request failed: ${res.status}`);
+            let message = `Request failed: ${res.status}`;
+            try {
+                const body = await res.json();
+                message = Array.isArray(body.message) ? body.message.join(', ') : (body.message || message);
+            } catch (_e) {
+            }
+            throw new Error(message);
         }
         const text = await res.text();
         return text ? JSON.parse(text) : null;
@@ -133,7 +139,14 @@ class StorageManager {
 
     static async _ensureManagerEntities() {
         const session = this._session();
-        const locationId = 'loc_blr_1';
+        if (!session.email) {
+            return;
+        }
+
+        const existingIds = this._getIds();
+        if (existingIds.managerId && existingIds.restaurantId) {
+            return;
+        }
 
         let managerId = null;
         try {
@@ -146,88 +159,17 @@ class StorageManager {
         } catch (_e) {}
 
         if (!managerId) {
-            try {
-            const createdUser = await this._request('/users', {
-                method: 'POST',
-                headers: this._headers('manager'),
-                body: JSON.stringify({
-                    name: 'Rahul Sharma',
-                    email: session.email,
-                    phone: this._cache.profile.phone,
-                    password_hash: 'password123',
-                    role: 'manager',
-                    status: 'active',
-                    location_id: locationId,
-                    business_license_number: 'BLN-9988',
-                    government_id: 'GOV-7788',
-                    verified_status: true,
-                }),
-            });
-            managerId = createdUser?.data?.id;
-            } catch (_e) {
-                const users = await this._request('/users', { headers: this._headers('manager') });
-                const match = (users?.data || []).find((u) =>
-                    u.role === 'manager' &&
-                    String(u.email || '').toLowerCase() === session.email.toLowerCase(),
-                );
-                managerId = match?.id;
-            }
+            return;
         }
-
-        try {
-            await this._request('/restaurants/locations', {
-                method: 'POST',
-                headers: this._headers('manager'),
-                body: JSON.stringify({
-                    id: locationId,
-                    latitude: 12.9716,
-                    longitude: 77.5946,
-                    city: 'Bangalore',
-                    pincode: '560001',
-                    address: 'MG Road, Bangalore',
-                    country: 'India',
-                }),
-            });
-        } catch (_e) {}
 
         let restaurantId = null;
-        const restaurants = await this._request('/restaurants', { headers: this._headers('manager') });
-        const all = restaurants?.data || [];
-        const normalizedName = 'spice garden';
-        const existingOwned = all.find((r) => r.manager_id === managerId && String(r.name || '').toLowerCase() === normalizedName)
-            || all.find((r) => r.manager_id === managerId);
-        const seededMatch = all.find((r) =>
-            String(r.name || '').toLowerCase() === normalizedName
-            && r.location_id === locationId,
-        );
-
-        if (existingOwned) {
-            restaurantId = existingOwned.id;
-        } else if (seededMatch) {
-            restaurantId = seededMatch.id;
-            try {
-                await this._request(`/restaurants/${restaurantId}`, {
-                    method: 'PATCH',
-                    headers: this._headers('manager'),
-                    body: JSON.stringify({
-                        manager_id: managerId,
-                    }),
-                });
-            } catch (_e) {}
-        } else {
-            const createdRestaurant = await this._request('/restaurants', {
-                method: 'POST',
-                headers: this._headers('manager'),
-                body: JSON.stringify({
-                    manager_id: managerId,
-                    location_id: locationId,
-                    name: 'Spice Garden',
-                    cuisine_type: 'Indian',
-                    description: 'Authentic Indian dining.',
-                }),
-            });
-            restaurantId = createdRestaurant?.data?.id;
-        }
+        let locationId = null;
+        try {
+            const restaurants = await this._request('/restaurants', { headers: this._headers('manager') });
+            const owned = (restaurants?.data || []).find((r) => r.manager_id === managerId);
+            restaurantId = owned?.id || null;
+            locationId = owned?.location_id || null;
+        } catch (_e) {}
 
         this._setIds({ managerId, restaurantId, locationId });
     }
@@ -258,14 +200,11 @@ class StorageManager {
         const reviews = reviewRes?.data || [];
         const notifications = notifRes?.data || [];
 
-        const manager = users.find((u) => u.id === ids.managerId) || users.find((u) => u.role === 'manager') || this._cache.profile;
+        const manager = users.find((u) => u.id === ids.managerId) || this._cache.profile;
         const managerRestaurants = restaurants.filter((r) => r.manager_id === ids.managerId);
-        const restaurant = managerRestaurants.find((r) => String(r.name || '').toLowerCase() === 'spice garden')
-            || managerRestaurants.find((r) => r.id === ids.restaurantId)
+        const restaurant = managerRestaurants.find((r) => r.id === ids.restaurantId)
             || managerRestaurants[0]
-            || restaurants.find((r) => String(r.name || '').toLowerCase() === 'spice garden')
-            || restaurants[0]
-            || this._cache.restaurant;
+            || {};
 
         if (restaurant?.id && restaurant.id !== ids.restaurantId) {
             this._setIds({ ...ids, restaurantId: restaurant.id });
@@ -274,12 +213,23 @@ class StorageManager {
         const userById = {};
         users.forEach((u) => { userById[u.id] = u; });
 
+        let location = null;
+        if (restaurant.location_id) {
+            try {
+                const locationRes = await this._request(`/restaurants/locations/${restaurant.location_id}`, {
+                    headers: this._headers('manager'),
+                });
+                location = locationRes?.data || null;
+            } catch (_e) {}
+        }
+        const city = location?.city || '';
+
         this._cache.profile = {
             ...this._cache.profile,
             name: manager.name || this._cache.profile.name,
             email: manager.email || this._cache.profile.email,
             phone: manager.phone || this._cache.profile.phone,
-            city: 'Bangalore',
+            city,
             restaurantName: restaurant.name || this._cache.profile.restaurantName,
             avatar: this._assetUrl(manager.photo_url || this._cache.profile.avatar),
         };
@@ -289,19 +239,24 @@ class StorageManager {
 
         this._cache.restaurant = {
             ...this._cache.restaurant,
+            id: restaurant.id,
+            is_open: Boolean(restaurant.is_open),
             name: restaurant.name,
             about: this._extractAbout(restaurant.description),
             cuisine: restaurant.cuisine_type,
             capacity: `${tables.length} tables`,
-            location: 'Bangalore',
+            location: city,
             hours: parsedDetails.hours || this._cache.restaurant.hours,
             parking: parsedDetails.parking || this._cache.restaurant.parking,
-            rating: restaurant.rating_avg || this._cache.restaurant.rating,
+            rating: restaurant.rating_avg ?? this._cache.restaurant.rating,
             dressCode: parsedDetails.dresscode || this._cache.restaurant.dressCode,
             price: parsedDetails.price || this._cache.restaurant.price,
             contact: parsedDetails.contact || restaurant.phone || this._cache.profile.phone,
-            amenities: parsedDetails.amenities || this._cache.restaurant.amenities || 'Family Friendly, Indoor Seating',
+            amenities: parsedDetails.amenities || this._cache.restaurant.amenities,
             image: gallery[0] || this._assetUrl(this._cache.restaurant.image),
+            reservationFeePerGuest: restaurant.reservation_fee_per_guest ?? this._cache.restaurant.reservationFeePerGuest,
+            cancellationCutoffMinutes: restaurant.cancellation_cutoff_minutes ?? this._cache.restaurant.cancellationCutoffMinutes,
+            noShowGraceMinutes: restaurant.no_show_grace_minutes ?? this._cache.restaurant.noShowGraceMinutes,
         };
 
         const parsedPolicies = this._extractPolicies(restaurant.description);
@@ -409,7 +364,10 @@ class StorageManager {
             });
         });
         this._cache.timeSlotsConfig = {
-            operatingHours: { open: '11:00', close: '23:00' },
+            operatingHours: {
+                open: restaurant.opens_at || '11:00',
+                close: restaurant.closes_at || '23:00',
+            },
             dates,
         };
 
@@ -437,13 +395,6 @@ class StorageManager {
         this._cache = { ...this._cache, ...activeUserData };
     }
 
-    static createEmptyDataSet(email, restaurantName = 'My Restaurant') {
-        return {
-            ...this._cache,
-            profile: { ...this._cache.profile, email, restaurantName },
-        };
-    }
-
     static login(email, accessToken = '') {
         const nextEmail = email.toLowerCase();
         const current = this._session();
@@ -454,22 +405,40 @@ class StorageManager {
         void this.ready();
     }
 
-    static register(email, accountData, restaurantData) {
-        this._setSession(email.toLowerCase());
-        this._cache.profile = {
-            ...this._cache.profile,
-            name: accountData.name || this._cache.profile.name,
-            email: email.toLowerCase(),
-            phone: accountData.phone || this._cache.profile.phone,
-            restaurantName: restaurantData.name || this._cache.profile.restaurantName,
-        };
-        void this._ensureManagerEntities().then(() => this.refreshFromBackend());
-    }
-
     static logout() {}
 
     static getCurrentUser() {
         return this._session().email;
+    }
+
+    static async updateOperatingHours(open, close) {
+        const ids = this._getIds();
+        if (!ids.restaurantId) {
+            throw new Error('Restaurant is not linked to the backend.');
+        }
+
+        await this._request(`/restaurants/${ids.restaurantId}`, {
+            method: 'PATCH',
+            headers: this._headers('manager'),
+            body: JSON.stringify({ opens_at: open, closes_at: close }),
+        });
+
+        await this.refreshFromBackend();
+    }
+
+    static async setServingStatus(isOpen) {
+        const ids = this._getIds();
+        if (!ids.managerId || !ids.restaurantId) {
+            throw new Error('Restaurant is not linked to this account.');
+        }
+
+        await this._request(`/restaurants/${ids.restaurantId}/serving-status`, {
+            method: 'PATCH',
+            headers: this._headers('manager'),
+            body: JSON.stringify({ manager_id: ids.managerId, is_open: isOpen }),
+        });
+
+        this._cache.restaurant = { ...this._cache.restaurant, is_open: isOpen };
     }
 
     static updateProfile(profileUpdates) {
@@ -618,6 +587,9 @@ class StorageManager {
                     cuisine_type: this._cache.restaurant.cuisine,
                     description: this._composeDescription(this._cache.restaurant.about, this._cache.policies, this._cache.restaurant),
                     image_urls: imageUrls,
+                    reservation_fee_per_guest: Number(this._cache.restaurant.reservationFeePerGuest) || 0,
+                    cancellation_cutoff_minutes: Number(this._cache.restaurant.cancellationCutoffMinutes) || 0,
+                    no_show_grace_minutes: Number(this._cache.restaurant.noShowGraceMinutes) || 0,
                 }),
             });
         }
@@ -688,21 +660,23 @@ class StorageManager {
     static getReservations() { return this._cache.reservations || []; }
 
     static updateReservationStatus(id, newStatus) {
-        const reservation = this._cache.reservations.find((r) => r.id === id);
-        if (reservation) {
-            reservation.status = newStatus;
-        }
         const statusMap = {
             Confirmed: 'checked_in',
             Pending: 'reserved',
             Complete: 'completed',
             Cancelled: 'cancelled',
         };
-        void this._request(`/reservations/${id}`, {
+        return this._request(`/reservations/${id}`, {
             method: 'PATCH',
             headers: this._headers('manager'),
             body: JSON.stringify({ reservation_status: statusMap[newStatus] || 'reserved' }),
-        }).then(() => this.refreshFromBackend());
+        }).then(() => {
+            const reservation = this._cache.reservations.find((r) => r.id === id);
+            if (reservation) {
+                reservation.status = newStatus;
+            }
+            return this.refreshFromBackend();
+        });
     }
 
     static getMenu() { return this._cache.menu || []; }

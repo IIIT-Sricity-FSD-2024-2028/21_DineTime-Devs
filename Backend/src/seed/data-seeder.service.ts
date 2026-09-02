@@ -58,7 +58,7 @@ export class DataSeederService implements OnModuleInit {
       role: Role.MANAGER,
       status: 'active',
       created_at: new Date().toISOString(),
-      location_id: 'loc_blr_2',
+      location_id: 'loc_blr_1',
     });
 
     const manager3 = this.userRepository.create({
@@ -70,7 +70,7 @@ export class DataSeederService implements OnModuleInit {
       role: Role.MANAGER,
       status: 'active',
       created_at: new Date().toISOString(),
-      location_id: 'loc_blr_3',
+      location_id: 'loc_blr_1',
     });
 
     const manager4 = this.userRepository.create({
@@ -121,32 +121,62 @@ export class DataSeederService implements OnModuleInit {
       location_id: 'loc_blr_1',
     });
 
+    this.userRepository.create({
+      id: 'spt-0001',
+      name: 'Support Team Lead',
+      email: 'support@dinetime.com',
+      phone: '9000000002',
+      password_hash: adminPasswordHash,
+      role: Role.SUPPORT_ADMIN,
+      status: 'active',
+      created_at: new Date().toISOString(),
+    });
+
+    this.userRepository.create({
+      id: 'ver-0001',
+      name: 'Verification Lead - Bangalore',
+      email: 'verification@dinetime.com',
+      phone: '9000000003',
+      password_hash: adminPasswordHash,
+      role: Role.VERIFICATION_ADMIN,
+      status: 'active',
+      created_at: new Date().toISOString(),
+      location_id: 'loc_blr_1',
+    });
+
+    this.userRepository.create({
+      id: 'fin-0001',
+      name: 'Finance Team Lead',
+      email: 'finance@dinetime.com',
+      phone: '9000000004',
+      password_hash: adminPasswordHash,
+      role: Role.FINANCE_ADMIN,
+      status: 'active',
+      created_at: new Date().toISOString(),
+    });
+
     this.userRepository.upsertManagerDetails({
       manager_id: manager1.id,
       business_license_number: '10020041234567',
-      government_id: 'GOV-7788',
-      verified_status: true,
+      verification_status: 'approved',
     });
 
     this.userRepository.upsertManagerDetails({
       manager_id: manager2.id,
       business_license_number: '10020047755661',
-      government_id: 'GOV-6611',
-      verified_status: true,
+      verification_status: 'approved',
     });
 
     this.userRepository.upsertManagerDetails({
       manager_id: manager3.id,
       business_license_number: '10020046644552',
-      government_id: 'GOV-5522',
-      verified_status: true,
+      verification_status: 'approved',
     });
 
     this.userRepository.upsertManagerDetails({
       manager_id: manager4.id,
       business_license_number: '10020045533443',
-      government_id: 'GOV-4411',
-      verified_status: true,
+      verification_status: 'approved',
     });
 
     this.userRepository.upsertDinerDetails({
@@ -161,25 +191,7 @@ export class DataSeederService implements OnModuleInit {
         longitude: 77.5946,
         city: 'Bangalore',
         pincode: '560001',
-        address: 'MG Road, Bangalore',
-        country: 'India',
-      },
-      {
-        id: 'loc_blr_2',
-        latitude: 12.9304,
-        longitude: 77.5806,
-        city: 'Bangalore',
-        pincode: '560078',
-        address: 'Jayanagar 4th Block, Bangalore',
-        country: 'India',
-      },
-      {
-        id: 'loc_blr_3',
-        latitude: 12.9698,
-        longitude: 77.7500,
-        city: 'Bangalore',
-        pincode: '560066',
-        address: 'Whitefield Main Road, Bangalore',
+        address: 'Bangalore',
         country: 'India',
       },
     ];
@@ -205,16 +217,18 @@ export class DataSeederService implements OnModuleInit {
           '- Dress Code: Smart Casual',
           '- Contact: 9123456789',
           '- Amenities: Family Friendly, Indoor Seating',
-          '',
-          'Policies:',
-          '- Cancellation Policy: Cancellations must be made at least 2 hours in advance.',
-          '- Late Arrival: Tables are held for 15 minutes after the reservation time.',
         ].join('\n'),
         total_tables: 8,
         rating_avg: 4.6,
         total_reviews: 128,
         status: activeStatus,
+        is_open: true,
         created_at: new Date().toISOString(),
+        reservation_fee_per_guest: 30,
+        cancellation_cutoff_minutes: 120,
+        no_show_grace_minutes: 15,
+        opens_at: '11:00',
+        closes_at: '23:00',
         image_urls: [
           '../images/indian.jpg',
           '../images/main.png',
@@ -225,7 +239,7 @@ export class DataSeederService implements OnModuleInit {
       {
         id: 'res-2002',
         manager_id: manager2.id,
-        location_id: 'loc_blr_2',
+        location_id: 'loc_blr_1',
         name: 'Bella Italia',
         cuisine_type: 'Italian',
         description: [
@@ -238,16 +252,18 @@ export class DataSeederService implements OnModuleInit {
           '- Dress Code: Smart Casual',
           '- Contact: 9234567890',
           '- Amenities: Outdoor Seating, Family Friendly',
-          '',
-          'Policies:',
-          '- Cancellation Policy: Cancellations must be made at least 2 hours in advance.',
-          '- Late Arrival: Tables are held for 15 minutes after the reservation time.',
         ].join('\n'),
         total_tables: 8,
         rating_avg: 4.4,
         total_reviews: 96,
         status: activeStatus,
+        is_open: true,
         created_at: new Date().toISOString(),
+        reservation_fee_per_guest: 40,
+        cancellation_cutoff_minutes: 90,
+        no_show_grace_minutes: 20,
+        opens_at: '12:00',
+        closes_at: '23:00',
         image_urls: [
           '../images/italian.jpg',
           '../images/menu1.png',
@@ -258,7 +274,7 @@ export class DataSeederService implements OnModuleInit {
       {
         id: 'res-2003',
         manager_id: manager3.id,
-        location_id: 'loc_blr_3',
+        location_id: 'loc_blr_1',
         name: 'Dragon Bowl',
         cuisine_type: 'Chinese',
         description: [
@@ -271,16 +287,18 @@ export class DataSeederService implements OnModuleInit {
           '- Dress Code: Casual',
           '- Contact: 9345678901',
           '- Amenities: Quick Service, Indoor Seating',
-          '',
-          'Policies:',
-          '- Cancellation Policy: Cancellations must be made at least 2 hours in advance.',
-          '- Late Arrival: Tables are held for 15 minutes after the reservation time.',
         ].join('\n'),
         total_tables: 8,
         rating_avg: 4.2,
         total_reviews: 88,
         status: activeStatus,
+        is_open: true,
         created_at: new Date().toISOString(),
+        reservation_fee_per_guest: 25,
+        cancellation_cutoff_minutes: 60,
+        no_show_grace_minutes: 10,
+        opens_at: '11:30',
+        closes_at: '22:30',
         image_urls: [
           '../images/chinese.jpg',
           '../images/starter.png',
@@ -304,16 +322,18 @@ export class DataSeederService implements OnModuleInit {
           '- Dress Code: Smart Casual',
           '- Contact: 9456789012',
           '- Amenities: Sushi Bar, Indoor Seating',
-          '',
-          'Policies:',
-          '- Cancellation Policy: Cancellations must be made at least 2 hours in advance.',
-          '- Late Arrival: Tables are held for 15 minutes after the reservation time.',
         ].join('\n'),
         total_tables: 8,
         rating_avg: 4.7,
         total_reviews: 112,
         status: activeStatus,
+        is_open: true,
         created_at: new Date().toISOString(),
+        reservation_fee_per_guest: 50,
+        cancellation_cutoff_minutes: 180,
+        no_show_grace_minutes: 15,
+        opens_at: '12:00',
+        closes_at: '22:30',
         image_urls: [
           '../images/japanese.jpg',
           '../images/edamame.png',
@@ -455,66 +475,6 @@ export class DataSeederService implements OnModuleInit {
         availability: true,
         image_urls: item.image_urls,
       });
-    });
-
-    const reservationRestaurant = restaurants[0];
-    const reservationTables = tablesByRestaurant[reservationRestaurant.id];
-    const reservationSlots = slotsByRestaurant[reservationRestaurant.id];
-    const reservation = this.reservationRepository.create({
-      id: 'resv-seed-upcoming',
-      user_id: diner.id,
-      restaurant_id: reservationRestaurant.id,
-      table_id: reservationTables[1].id,
-      slot_id: reservationSlots[1].id,
-      guest_count: 2,
-      reservation_status: 'reserved',
-      created_at: new Date().toISOString(),
-    });
-
-    if (reservation.table_id && reservation.slot_id) {
-      this.tableslotRepository.updateStatus(reservation.table_id, reservation.slot_id, 'reserved');
-    }
-
-    const completedSlotDate = new Date(today);
-    completedSlotDate.setDate(today.getDate() - 1);
-    const completedSlotIso = [
-      completedSlotDate.getFullYear(),
-      String(completedSlotDate.getMonth() + 1).padStart(2, '0'),
-      String(completedSlotDate.getDate()).padStart(2, '0'),
-    ].join('-');
-    const completedSlot = this.timeslotRepository.create({
-      id: 'slt-seed-completed',
-      restaurant_id: reservationRestaurant.id,
-      slot_date: completedSlotIso,
-      start_time: '18:00',
-      end_time: '20:00',
-    });
-    this.tableslotRepository.create({
-      id: 'table-slot-seed-completed',
-      table_id: reservationTables[0].id,
-      slot_id: completedSlot.id,
-      status: 'occupied',
-    });
-
-    const completedReservation = this.reservationRepository.create({
-      id: 'resv-seed-completed',
-      user_id: diner.id,
-      restaurant_id: reservationRestaurant.id,
-      table_id: reservationTables[0].id,
-      slot_id: completedSlot.id,
-      guest_count: 2,
-      reservation_status: 'completed',
-      created_at: new Date().toISOString(),
-    });
-
-    this.reviewRepository.create({
-      id: generateId('review'),
-      user_id: diner.id,
-      restaurant_id: reservationRestaurant.id,
-      reservation_id: completedReservation.id,
-      rating: 5,
-      comment: 'Great service and delicious food.',
-      created_at: new Date().toISOString(),
     });
 
     this.settingsRepository.findSettingsByRole(Role.DINER).forEach((setting) => {

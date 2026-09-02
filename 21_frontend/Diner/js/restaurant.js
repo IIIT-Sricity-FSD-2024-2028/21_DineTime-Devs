@@ -35,8 +35,13 @@ function updateCarouselCounter() {
 function renderInfo(restaurant) {
   document.querySelector('#restaurantName').textContent = restaurant.name;
   document.querySelector('#restaurantSubtitle').textContent = restaurant.subtitle;
-  document.querySelector('#restaurantRating').textContent = restaurant.rating;
-  document.querySelector('#restaurantReviews').textContent = `(${restaurant.reviewCount} reviews)`;
+  if (restaurant.reviewCount > 0) {
+    document.querySelector('#restaurantRating').textContent = restaurant.rating;
+    document.querySelector('#restaurantReviews').textContent = `(${restaurant.reviewCount} reviews)`;
+  } else {
+    document.querySelector('#restaurantRating').textContent = 'New';
+    document.querySelector('#restaurantReviews').textContent = 'No reviews yet';
+  }
   document.querySelector('#restaurantLocation').textContent = restaurant.location;
   document.querySelector('#restaurantPrice').textContent = restaurant.price;
 

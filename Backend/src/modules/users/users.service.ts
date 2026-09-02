@@ -13,37 +13,40 @@ export class UsersService {
     private readonly settingsRepository: SettingsRepository,
   ) {}
 
-  findAll() {
-    return this.userRepository.findAll().map((user) => this.enrichUser(user));
+  findAll(actingRole?: Role) {
+    return this.userRepository.findAll().map((user) => this.enrichUser(user, actingRole));
   }
 
-  findOne(id: string) {
+  findOne(id: string, actingRole?: Role) {
     const user = this.userRepository.findById(id);
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    return this.enrichUser(user);
+    return this.enrichUser(user, actingRole);
   }
 
-  private enrichUser(user: any) {
+  private enrichUser(user: any, actingRole?: Role) {
     if (!user) {
       return user;
     }
 
+    let enriched = user;
+
     if (user.role === Role.MANAGER) {
       const details = this.userRepository.getManagerDetails(user.id);
-      return {
+      enriched = {
         ...user,
         business_license_number: details?.business_license_number || '',
-        government_id: details?.government_id || '',
-        verified_status: details?.verified_status ?? false,
+        verification_status: details?.verification_status || 'pending',
+        verification_document_url: details?.verification_document_url || '',
+        rejection_reason: details?.rejection_reason || '',
       };
     }
 
     if (user.role === Role.STAFF) {
       const details = this.userRepository.getStaffDetails(user.id);
-      return {
+      enriched = {
         ...user,
         restaurant_id: details?.restaurant_id || '',
         employee_code: details?.employee_code || '',
@@ -51,7 +54,12 @@ export class UsersService {
       };
     }
 
-    return user;
+    if (actingRole === Role.SUPER_USER) {
+      const { phone, verification_document_url, ...redacted } = enriched;
+      return redacted;
+    }
+
+    return enriched;
   }
 
   private nextSequence(prefix: string) {
@@ -115,8 +123,7 @@ export class UsersService {
       this.userRepository.upsertManagerDetails({
         manager_id: user.id,
         business_license_number: dto.business_license_number ?? '',
-        government_id: dto.government_id ?? '',
-        verified_status: dto.verified_status ?? false,
+        verification_status: 'pending',
       });
     }
 
@@ -159,8 +166,11 @@ export class UsersService {
         manager_id: id,
         business_license_number:
           dto.business_license_number ?? current?.business_license_number ?? '',
-        government_id: dto.government_id ?? current?.government_id ?? '',
-        verified_status: dto.verified_status ?? current?.verified_status ?? false,
+        verification_status: current?.verification_status ?? 'pending',
+        verification_document_url: current?.verification_document_url,
+        rejection_reason: current?.rejection_reason,
+        reviewed_by: current?.reviewed_by,
+        reviewed_at: current?.reviewed_at,
       });
     }
 

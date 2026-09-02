@@ -8,6 +8,7 @@ import { ReservationRepository } from 'src/repositories/reservation.repository';
 import { RestaurantRepository } from 'src/repositories/restaurant.repository';
 import { ReviewRepository } from 'src/repositories/review.repository';
 import { SettingsRepository } from 'src/repositories/settings.repository';
+import { SupportTicketRepository } from 'src/repositories/support-ticket.repository';
 import { TableRepository } from 'src/repositories/table.repository';
 import { TableSlotRepository } from 'src/repositories/tableslot.repository';
 import { TimeSlotRepository } from 'src/repositories/timeslot.repository';
@@ -27,6 +28,7 @@ const repositories = [
   ReviewRepository,
   NotificationRepository,
   SettingsRepository,
+  SupportTicketRepository,
 ];
 
 @Global()

@@ -12,7 +12,7 @@ function createResultBar(r) {
       <div class="result-cuisine">${r.cuisine}</div>
     </div>
     <div class="result-meta">
-      <div class="result-rating"><i class="fa-solid fa-star"></i> ${r.rating}</div>
+      <div class="result-rating"><i class="fa-solid fa-star"></i> ${r.reviewCount > 0 ? r.rating : 'New'}</div>
       <div class="result-distance">${r.distance} km</div>
     </div>
   `;

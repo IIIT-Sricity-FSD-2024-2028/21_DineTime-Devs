@@ -27,6 +27,10 @@ export class ReservationRepository {
     );
   }
 
+  findBySlotId(slotId: string): Reservation[] {
+    return this.reservations.filter((item) => item.slot_id === slotId);
+  }
+
   create(reservation: Reservation): Reservation {
     this.reservations.push(reservation);
     return reservation;

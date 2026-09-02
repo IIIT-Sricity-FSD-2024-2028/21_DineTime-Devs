@@ -78,12 +78,23 @@ function bookingItem(iconClass, label, value, fullWidth) {
   '</div>';
 }
 
-function renderPaymentBox(total, method) {
+function renderPaymentBox(total, method, billing) {
   var iconClass = methodIcons[method] || 'fa-regular fa-credit-card';
   var methodLabel = methodLabels[method] || 'Card';
 
   var box = document.getElementById('paymentConfirmBox');
   if(!box) return;
+
+  var breakdown = '';
+  if (billing) {
+    breakdown =
+      '<div class="payment-breakdown">' +
+        '<div class="payment-breakdown-line"><span>Reservation Deposit</span><span>\u20B9' + billing.deposit_amount + '</span></div>' +
+        '<div class="payment-breakdown-line"><span>Platform Service Fee</span><span>\u20B9' + billing.diner_platform_fee + '</span></div>' +
+        '<div class="payment-breakdown-note">Your deposit is adjustable against your final bill at the restaurant.</div>' +
+      '</div>' +
+      '<div class="payment-divider"></div>';
+  }
 
   box.innerHTML =
     '<div class="payment-status-row">' +
@@ -101,6 +112,7 @@ function renderPaymentBox(total, method) {
       '</div>' +
     '</div>' +
     '<div class="payment-divider"></div>' +
+    breakdown +
     '<div class="secure-line">' +
       '<i class="fa-solid fa-lock"></i>' +
       '<span>Secure payment processed</span>' +
@@ -139,12 +151,16 @@ async function init() {
     reservationError = (e && e.message) ? e.message : 'Unable to create reservation.';
   }
 
+  var billing = createdReservation && createdReservation.billing;
+  if (billing) {
+    total = billing.total_due;
+  }
+
   if (createdReservation && createdReservation.id) {
     reservationId = createdReservation.id;
     try {
       await DinetimeStore.addPayment({
         reservation_id: createdReservation.id,
-        amount: Number(total),
         payment_method: method,
         transaction_ref: `txn_${Date.now()}`,
         payment_status: 'paid',
@@ -164,7 +180,7 @@ async function init() {
     location: 'Bangalore'
   });
   renderBookingGrid(reservationCreated ? reservationId : 'N/A', formattedDate, time, guests, displayTable);
-  renderPaymentBox(total, method);
+  renderPaymentBox(total, method, billing);
 
   if (!reservationCreated) {
     const titleEl = document.querySelector('.confirmed-title');

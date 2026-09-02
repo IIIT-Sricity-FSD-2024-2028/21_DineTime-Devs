@@ -1,5 +1,18 @@
 // reservations.js - connected to DinetimeStore
 
+if (typeof showToast !== 'function') {
+  var showToast = function (message, type) {
+    var container = document.getElementById('toast-container');
+    if (!container) return;
+    var toast = document.createElement('div');
+    toast.textContent = message;
+    toast.style.cssText = 'margin-top:8px;padding:10px 16px;border-radius:8px;font-weight:500;color:#fff;' +
+      (type === 'error' ? 'background:#DC2626;' : 'background:#16A34A;');
+    container.appendChild(toast);
+    setTimeout(function () { toast.remove(); }, 3500);
+  };
+}
+
 var activeFilters = {
   search: '',
   date: '',
@@ -58,9 +71,14 @@ function statusBadge(status) {
 
 function buildCard(r) {
   var cancelBtn = '';
+  var cancelNote = '';
   var reviewBtn = '';
   if (r.status === 'Confirmed') {
-    cancelBtn = '<button class="btn-cancel" data-id="' + r.id + '">Cancel</button>';
+    if (r.isCancellable) {
+      cancelBtn = '<button class="btn-cancel" data-id="' + r.id + '">Cancel</button>';
+    } else {
+      cancelNote = '<div class="res-cancel-note">Cancellation window has closed for this reservation.</div>';
+    }
   } else if (r.status === 'Completed') {
     reviewBtn = '<button class="btn-rate" data-id="' + r.id + '">' +
       '<i class="fa-regular fa-star"></i> ' + (r.hasRated ? 'View Rating' : 'Rate Experience') +
@@ -97,6 +115,7 @@ function buildCard(r) {
         reviewBtn +
         cancelBtn +
       '</div>' +
+      cancelNote +
     '</div>' +
   '</div>';
 }
@@ -174,9 +193,13 @@ function cancelReservation(id) {
       'Cancel Reservation',
       'Are you sure you want to cancel your reservation at ' + res.restaurant + '?',
       async () => {
-        await DinetimeStore.cancelReservation(id);
-        renderList();
-        showToast('Reservation cancelled. You will receive an email confirmation.');
+        try {
+          await DinetimeStore.cancelReservation(id);
+          renderList();
+          showToast('Reservation cancelled. You will receive an email confirmation.');
+        } catch (e) {
+          showToast((e && e.message) ? e.message : 'Unable to cancel this reservation.', 'error');
+        }
       }
     );
   }

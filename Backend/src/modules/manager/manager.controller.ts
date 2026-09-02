@@ -1,7 +1,19 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBadRequestResponse,
   ApiBody,
+  ApiConsumes,
   ApiCreatedResponse,
   ApiHeader,
   ApiNotFoundResponse,
@@ -13,7 +25,8 @@ import {
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from 'src/common/enums/role.enum';
 import { dataObjectSchema } from 'src/common/swagger/schemas';
-import { CreateManagerDetailsDto, UpdateManagerDetailsDto } from './dto/manager.dto';
+import { managerDocumentMulterConfig } from 'src/common/upload/multer.config';
+import { CreateManagerDetailsDto, RegisterManagerDto, UpdateManagerDetailsDto } from './dto/manager.dto';
 import { ManagerService } from './manager.service';
 
 @ApiTags('managers')
@@ -21,6 +34,26 @@ import { ManagerService } from './manager.service';
 @Controller('managers')
 export class ManagerController {
   constructor(private readonly managerService: ManagerService) {}
+
+  @Post('register')
+  @UseInterceptors(FileInterceptor('document', managerDocumentMulterConfig))
+  @ApiOperation({ summary: 'Register a new restaurant manager account (self-service, unauthenticated)' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ type: RegisterManagerDto })
+  @ApiCreatedResponse({ schema: dataObjectSchema })
+  @ApiBadRequestResponse({ description: 'Invalid registration payload' })
+  async register(
+    @Body() dto: RegisterManagerDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('A verification document (image or PDF) is required');
+    }
+
+    return {
+      data: await this.managerService.register(dto, `/uploads/managers/${file.filename}`),
+    };
+  }
 
   @Roles(Role.MANAGER)
   @Get(':id')

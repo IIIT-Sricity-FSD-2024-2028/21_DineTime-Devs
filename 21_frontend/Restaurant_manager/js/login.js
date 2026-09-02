@@ -12,7 +12,13 @@ async function apiRequest(path, options = {}, role = 'manager') {
     });
 
     if (!response.ok) {
-        throw new Error(`Request failed (${response.status})`);
+        let message = `Request failed (${response.status})`;
+        try {
+            const body = await response.json();
+            message = Array.isArray(body.message) ? body.message.join(', ') : (body.message || message);
+        } catch (_e) {
+        }
+        throw new Error(message);
     }
 
     const text = await response.text();
@@ -129,11 +135,18 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
             method: 'POST',
             body: JSON.stringify({ email: emailVal.toLowerCase(), password: passwordVal }),
         }, 'manager');
-    } catch (_err) {
-        pwInput.classList.add('input-error');
-        passwordErr.textContent = 'Invalid email or password. Please try again.';
-        passwordErr.classList.add('show');
-        showToast('Login failed. Check your credentials.', 'error');
+    } catch (err) {
+        const message = String(err?.message || '');
+        if (message.includes('pending verification')) {
+            showToast('Your restaurant application is still pending verification. Please check back once it has been reviewed.', 'error');
+        } else if (message.includes('was rejected')) {
+            showToast('Your restaurant application was rejected. Please register a new account to reapply.', 'error');
+        } else {
+            pwInput.classList.add('input-error');
+            passwordErr.textContent = 'Invalid email or password. Please try again.';
+            passwordErr.classList.add('show');
+            showToast('Login failed. Check your credentials.', 'error');
+        }
         return;
     }
 

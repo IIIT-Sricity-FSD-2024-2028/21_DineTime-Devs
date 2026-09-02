@@ -4,6 +4,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     const appData = StorageManager.getData();
     UIRenderer.renderAll(appData);
 
+    // ---- Serving status toggle (Open to Serve / Closed to Serve) ----
+    const servingToggle = document.getElementById('serving-status-toggle');
+    const servingLabel = document.getElementById('serving-status-label');
+    const servingSublabel = document.getElementById('serving-status-sublabel');
+    const servingWidget = document.getElementById('serving-status-widget');
+    const servingIconGlyph = document.getElementById('serving-status-icon-glyph');
+    if (servingToggle && servingLabel) {
+        const syncServingLabel = (isOpen) => {
+            servingToggle.checked = isOpen;
+            servingLabel.textContent = isOpen ? 'Open to Serve' : 'Closed to Serve';
+            if (servingSublabel) servingSublabel.textContent = isOpen ? 'Visible to diners right now' : "Diners can't find you yet";
+            if (servingWidget) servingWidget.classList.toggle('is-open', isOpen);
+            if (servingIconGlyph) servingIconGlyph.className = isOpen ? 'ph-fill ph-check-circle' : 'ph ph-storefront';
+        };
+        syncServingLabel(Boolean(appData.restaurant?.is_open));
+
+        servingToggle.addEventListener('change', async () => {
+            const nextState = servingToggle.checked;
+            servingToggle.disabled = true;
+            try {
+                await StorageManager.setServingStatus(nextState);
+                syncServingLabel(nextState);
+                window.showToast?.(nextState ? 'Your restaurant is now visible to diners.' : 'Your restaurant is now hidden from diners.');
+            } catch (error) {
+                syncServingLabel(!nextState);
+                window.showToast?.(error.message || 'Could not update serving status.', 'error');
+            } finally {
+                servingToggle.disabled = false;
+            }
+        });
+    }
+
     // ---- Toast Notification System ----
     const toastContainer = document.getElementById('toast-container');
     window.showToast = function(message, type = 'success') {
@@ -276,15 +308,24 @@ document.addEventListener('DOMContentLoaded', async () => {
                 {id: 'rest-name'}, {id: 'rest-about-text', isTextArea: true},
                 {id: 'rest-cuisine'}, {id: 'rest-capacity'}, {id: 'rest-location'},
                 {id: 'rest-hours'}, {id: 'rest-parking'}, {id: 'rest-dress'},
-                {id: 'rest-contact'}
+                {id: 'rest-contact'}, {id: 'rest-fee-per-guest'},
+                {id: 'rest-cancellation-cutoff'}, {id: 'rest-no-show-grace'}
 
             ];
             
+            const numericValues = {
+                'rest-fee-per-guest': StorageManager.getData().restaurant.reservationFeePerGuest,
+                'rest-cancellation-cutoff': StorageManager.getData().restaurant.cancellationCutoffMinutes,
+                'rest-no-show-grace': StorageManager.getData().restaurant.noShowGraceMinutes,
+            };
+
             if (!isEditingRest) {
                 fields.forEach(field => {
                     const el = document.getElementById(field.id);
                     if (field.isTextArea) {
                         el.innerHTML = `<textarea class="editable-input" style="height: 80px; resize: vertical;">${el.innerText}</textarea>`;
+                    } else if (Object.prototype.hasOwnProperty.call(numericValues, field.id)) {
+                        el.innerHTML = `<input type="number" min="0" class="editable-input" value="${numericValues[field.id]}">`;
                     } else {
                         el.innerHTML = `<input type="text" class="editable-input" value="${el.innerText}">`;
                     }
@@ -312,6 +353,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const parkingInput = document.getElementById('rest-parking').querySelector('input');
                 const dressInput = document.getElementById('rest-dress').querySelector('input');
                 const contactInput = document.getElementById('rest-contact').querySelector('input');
+                const feePerGuestInput = document.getElementById('rest-fee-per-guest').querySelector('input');
+                const cutoffInput = document.getElementById('rest-cancellation-cutoff').querySelector('input');
+                const graceInput = document.getElementById('rest-no-show-grace').querySelector('input');
 
                 const name = nameInput.value.trim();
                 const about = aboutInput.value.trim();
@@ -322,6 +366,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const parking = parkingInput.value.trim();
                 const dressCode = dressInput.value.trim();
                 const contact = contactInput.value.trim();
+                const feePerGuest = feePerGuestInput.value.trim();
+                const cancellationCutoff = cutoffInput.value.trim();
+                const noShowGrace = graceInput.value.trim();
 
                 // Validation Rules
                 let isValid = true;
@@ -329,7 +376,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 let firstInvalidField = null;
 
                 // Reset highlights
-                [nameInput, aboutInput, cuisineInput, capacityInput, locationInput, hoursInput, parkingInput, dressInput, contactInput].forEach(inp => {
+                [nameInput, aboutInput, cuisineInput, capacityInput, locationInput, hoursInput, parkingInput, dressInput, contactInput, feePerGuestInput, cutoffInput, graceInput].forEach(inp => {
                     inp.classList.remove('input-error');
                 });
 
@@ -362,6 +409,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 } else if (!contact || !phoneRegex.test(contact.replace(/\D/g, ''))) {
                     errorMsg = 'Contact number must be exactly 10 digits.';
                     isValid = false; firstInvalidField = contactInput;
+                } else if (feePerGuest === '' || Number(feePerGuest) < 0) {
+                    errorMsg = 'Reservation deposit per guest must be a non-negative number.';
+                    isValid = false; firstInvalidField = feePerGuestInput;
+                } else if (cancellationCutoff === '' || Number(cancellationCutoff) < 0) {
+                    errorMsg = 'Cancellation cutoff must be a non-negative number of minutes.';
+                    isValid = false; firstInvalidField = cutoffInput;
+                } else if (noShowGrace === '' || Number(noShowGrace) < 0) {
+                    errorMsg = 'No-show grace period must be a non-negative number of minutes.';
+                    isValid = false; firstInvalidField = graceInput;
                 }
 
                 if (!isValid) {
@@ -379,7 +435,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // Collect updates
                 const updates = {
                     name, about, cuisine, capacity, location, hours, parking, dressCode,
-                    contact: contact.replace(/\D/g, '')
+                    contact: contact.replace(/\D/g, ''),
+                    reservationFeePerGuest: Number(feePerGuest),
+                    cancellationCutoffMinutes: Number(cancellationCutoff),
+                    noShowGraceMinutes: Number(noShowGrace),
                 };
                 
                 StorageManager.updateRestaurantDetails(updates);

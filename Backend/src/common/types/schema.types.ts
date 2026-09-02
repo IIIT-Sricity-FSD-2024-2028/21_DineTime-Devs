@@ -8,7 +8,7 @@ export type ReservationStatus =
   | 'completed'
   | 'cancelled'
   | 'no_show';
-export type PaymentStatus = 'pending' | 'paid' | 'failed';
+export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
 export type OrderStatus = 'placed' | 'preparing' | 'served' | 'completed';
 
 export interface User {
@@ -29,11 +29,16 @@ export interface DinerDetails {
   loyalty_points: number;
 }
 
+export type ManagerVerificationStatus = 'pending' | 'approved' | 'rejected';
+
 export interface ManagerDetails {
   manager_id: string;
   business_license_number: string;
-  government_id: string;
-  verified_status: boolean;
+  verification_document_url?: string;
+  verification_status: ManagerVerificationStatus;
+  rejection_reason?: string;
+  reviewed_by?: string;
+  reviewed_at?: string;
 }
 
 export interface StaffDetails {
@@ -64,8 +69,15 @@ export interface Restaurant {
   rating_avg: number;
   total_reviews: number;
   status: UserStatus;
+  is_open: boolean;
   created_at: string;
   image_urls: string[];
+  reservation_fee_per_guest: number;
+  cancellation_cutoff_minutes: number;
+  no_show_grace_minutes: number;
+  opens_at: string;
+  closes_at: string;
+  payout_blocked?: boolean;
 }
 
 export interface Table {
@@ -112,6 +124,13 @@ export interface Payment {
   id: string;
   reservation_id: string;
   amount: number;
+  deposit_amount: number;
+  diner_platform_fee: number;
+  restaurant_platform_fee: number;
+  refunded_amount?: number;
+  settled_at?: string;
+  settled_by?: 'finance' | 'auto';
+  payout_blocked?: boolean;
   payment_method: string;
   transaction_ref: string;
   payment_status: PaymentStatus;
@@ -173,4 +192,37 @@ export interface UserSetting {
   user_id: string;
   setting_id: string;
   value: boolean;
+}
+
+export type TicketRaiserRole = 'diner' | 'manager';
+export type TicketCategory = 'refund' | 'technical' | 'other';
+export type TicketStatus =
+  | 'open'
+  | 'in_review'
+  | 'escalated_finance_team'
+  | 'escalated_super_admin'
+  | 'resolved'
+  | 'rejected';
+export type TicketDecision =
+  | 'refund_approved'
+  | 'refund_denied'
+  | 'escalated_technical';
+
+export interface SupportTicket {
+  id: string;
+  raised_by_user_id: string;
+  raised_by_role: TicketRaiserRole;
+  category: TicketCategory;
+  subject: string;
+  description: string;
+  attachments: string[];
+  status: TicketStatus;
+  decision?: TicketDecision;
+  assigned_admin_id?: string;
+  resolution_notes?: string;
+  linked_reservation_id?: string;
+  linked_restaurant_id?: string;
+  created_at: string;
+  updated_at: string;
+  resolved_at?: string;
 }

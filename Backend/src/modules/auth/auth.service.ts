@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { compare } from 'bcrypt';
+import { Role } from 'src/common/enums/role.enum';
 import { LoginDto } from 'src/modules/auth/dto/auth.dto';
 import { UserRepository } from 'src/repositories/user.repository';
 
@@ -24,6 +25,16 @@ export class AuthService {
 
     if (user.status !== 'active') {
       throw new UnauthorizedException('User account is inactive');
+    }
+
+    if (user.role === Role.MANAGER) {
+      const managerDetails = this.userRepository.getManagerDetails(user.id);
+      if (managerDetails?.verification_status === 'pending') {
+        throw new UnauthorizedException('Your restaurant application is still pending verification. You will be able to log in once it has been reviewed.');
+      }
+      if (managerDetails?.verification_status === 'rejected') {
+        throw new UnauthorizedException('Your restaurant application was rejected. Please register a new account to reapply.');
+      }
     }
 
     const payload = {

@@ -430,6 +430,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   init();
 
   document.addEventListener('dinetime:sync-complete', () => {
+    populateTimeOptions(getRestaurant(getUrlId()));
     // Only re-render if we haven't selected a table yet (to avoid interrupting the user)
     // or if the selected table is still valid.
     if (!selectedTable) {

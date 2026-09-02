@@ -202,7 +202,7 @@ const DinetimeStore = {
     const menuImages = this._uniqueAssetUrls((menuByRestaurant[raw.id] || []).map((item) => item.image));
 
     const reviews = reviewsByRestaurant[raw.id] || [];
-    const ratingFallback = raw.rating_avg || 4.5;
+    const ratingFallback = raw.rating_avg ?? 0;
     const reviewCountFallback = raw.total_reviews || reviews.length;
 
     const restaurantSlots = this._cache.timeslots
@@ -225,23 +225,41 @@ const DinetimeStore = {
       .filter(Boolean);
     const openingHours = sections.details.hours || sections.details.openinghours || 'Hours not provided';
 
+    const customPolicies = (sections.policies || []).filter((policy) => {
+      const title = String(policy.title || '').toLowerCase();
+      return !title.includes('cancellation') && !title.includes('no-show') && !title.includes('no show') && !title.includes('late arrival');
+    });
+    const dynamicPolicies = [
+      {
+        title: 'Cancellation Policy',
+        desc: `Cancellations must be made at least ${raw.cancellation_cutoff_minutes ?? 120} minutes before your reservation.`,
+      },
+      {
+        title: 'No-Show Policy',
+        desc: `Your table is held for ${raw.no_show_grace_minutes ?? 15} minutes past the reservation time.`,
+      },
+    ];
+
     return {
       id: index + 1,
       backend_id: raw.id,
       name: raw.name,
       cuisine: raw.cuisine_type,
       subtitle: `${raw.cuisine_type} - ${city}`,
+      reservationFeePerGuest: raw.reservation_fee_per_guest ?? 30,
+      cancellationCutoffMinutes: raw.cancellation_cutoff_minutes ?? 120,
+      noShowGraceMinutes: raw.no_show_grace_minutes ?? 15,
       rating: ratingFallback,
       reviewCount: reviewCountFallback,
       distance: Number((1.2 + index * 0.6).toFixed(1)),
-      location: `${address}, ${city}`,
+      location: address.toLowerCase().includes(city.toLowerCase()) ? address : `${address}, ${city}`,
       price: sections.details.price || 'Price not provided',
       availableSlots,
       amenities: amenities.length ? amenities : ['Amenities not provided'],
       image: images[0] || '../images/indian.jpg',
       images,
       description: sections.about || raw.description,
-      policies: sections.policies,
+      policies: [...dynamicPolicies, ...customPolicies],
       phone: sections.details.contact || sections.details.phone || 'Contact not provided',
       openingHours,
       parking: sections.details.parking || 'Parking not provided',
@@ -275,6 +293,14 @@ const DinetimeStore = {
   _normalizeReservation(raw, restaurantMap, review) {
     const restaurant = restaurantMap[raw.restaurant_id];
     const statusValue = raw.reservation_status || raw.status || 'reserved';
+
+    const slotDateIso = raw.slot_date || new Date().toISOString().split('T')[0];
+    const slotTime24 = /^\d{2}:\d{2}$/.test(String(raw.slot_time || '')) ? raw.slot_time : '19:00';
+    const slotStart = new Date(`${slotDateIso}T${slotTime24}:00`);
+    const cutoffMinutes = restaurant?.cancellationCutoffMinutes ?? 120;
+    const cancelDeadline = new Date(slotStart.getTime() - cutoffMinutes * 60000);
+    const isCancellable = statusValue === 'reserved' && Date.now() < cancelDeadline.getTime();
+
     return {
       id: raw.id,
       backend_id: raw.id,
@@ -304,6 +330,8 @@ const DinetimeStore = {
       hasRated: Boolean(review),
       rating: review?.rating,
       reviewText: review?.comment,
+      isCancellable,
+      cancelDeadline: cancelDeadline.toISOString(),
     };
   },
 

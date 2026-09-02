@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBody,
@@ -13,6 +13,7 @@ import {
 } from '@nestjs/swagger';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from 'src/common/enums/role.enum';
+import { DenySuperUserGuard } from 'src/common/guards/deny-super-user.guard';
 import {
   dataArraySchema,
   dataObjectSchema,
@@ -23,11 +24,12 @@ import { PaymentsService } from 'src/modules/payments/payments.service';
 
 @ApiTags('payments')
 @ApiHeader({ name: 'role', required: true, description: 'diner | manager | staff' })
+@UseGuards(DenySuperUserGuard)
 @Controller('payments')
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
-  @Roles(Role.DINER, Role.STAFF, Role.SUPER_USER)
+  @Roles(Role.DINER, Role.STAFF)
   @Get()
   @ApiOperation({ summary: 'List payments' })
   @ApiQuery({ name: 'reservation_id', required: false })
@@ -36,7 +38,7 @@ export class PaymentsController {
     return { data: this.paymentsService.findAll(reservationId) };
   }
 
-  @Roles(Role.DINER, Role.STAFF, Role.SUPER_USER)
+  @Roles(Role.DINER, Role.STAFF)
   @Get(':id')
   @ApiOperation({ summary: 'Get payment by id' })
   @ApiParam({ name: 'id' })

@@ -29,8 +29,8 @@ export class SuperAdminController {
   @ApiBody({ type: SuperAdminLoginDto })
   @ApiOkResponse({ schema: dataObjectSchema })
   @ApiUnauthorizedResponse({ description: 'Invalid credentials' })
-  login(@Body() dto: SuperAdminLoginDto) {
-    return { data: this.superAdminService.login(dto) };
+  async login(@Body() dto: SuperAdminLoginDto) {
+    return { data: await this.superAdminService.login(dto) };
   }
 
   @Roles(Role.SUPER_USER)
@@ -60,7 +60,7 @@ export class SuperAdminController {
   @ApiBody({ type: ChangeSuperAdminPasswordDto })
   @ApiOkResponse({ schema: dataObjectSchema })
   @ApiBadRequestResponse({ description: 'Invalid password change payload' })
-  changePassword(@Body() dto: ChangeSuperAdminPasswordDto) {
-    return { data: this.superAdminService.changePassword(dto) };
+  async changePassword(@Body() dto: ChangeSuperAdminPasswordDto) {
+    return { data: await this.superAdminService.changePassword(dto) };
   }
 }

@@ -134,7 +134,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </div>
                         <div class="res-actions">
                             <button class="btn btn-primary-green btn-small mark-complete-btn" data-id="${r.id}" ${r.status !== 'Confirmed' ? 'disabled style="opacity:0.5"' : ''}>Mark Complete</button>
-                            <button class="btn btn-small cancel-btn" data-id="${r.id}" style="background-color: var(--white); border: 1px solid var(--border-color); color: #EF4444;" ${r.status === 'Cancelled' || r.status === 'No-show' ? 'disabled style="opacity:0.5"' : ''}>Cancel</button>
                         </div>
                     </div>
                 </div>
@@ -168,19 +167,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.querySelectorAll('.mark-complete-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const id = e.target.getAttribute('data-id');
-                StorageManager.updateReservationStatus(id, 'Complete');
-                showToast(`Reservation #${id} marked as complete.`);
-                renderReservations(); // Re-render instantly
-            });
-        });
-
-        // "Cancel" CRUD Operation
-        document.querySelectorAll('.cancel-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const id = e.target.getAttribute('data-id');
-                StorageManager.updateReservationStatus(id, 'Cancelled');
-                showToast(`Reservation #${id} has been cancelled.`, 'error');
-                renderReservations(); // Re-render instantly
+                StorageManager.updateReservationStatus(id, 'Complete').then(() => {
+                    showToast(`Reservation #${id} marked as complete.`);
+                    renderReservations();
+                }).catch((err) => {
+                    showToast((err && err.message) ? err.message : 'Unable to update reservation.', 'error');
+                });
             });
         });
     }

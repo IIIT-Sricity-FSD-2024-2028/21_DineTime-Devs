@@ -48,14 +48,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return `${formatTime12h(start)} - ${formatTime12h(end)}`;
     }
 
-    function defaultSlots() {
-        return [
-            { id: 'def-1', start: '18:00', end: '20:00', text: '6:00 PM - 8:00 PM', maxTables: 6 },
-            { id: 'def-2', start: '20:00', end: '22:00', text: '8:00 PM - 10:00 PM', maxTables: 6 },
-            { id: 'def-3', start: '22:00', end: '00:00', text: '10:00 PM - 12:00 AM', maxTables: 6 },
-        ];
-    }
-
     function normalizeSlot(slot, fallbackIndex) {
         const start = slot.start || slot.start_time || '18:00';
         const end = slot.end || slot.end_time || '20:00';
@@ -86,7 +78,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             data.timeSlotsConfig = {
                 operatingHours: { open: '11:00', close: '23:00' },
                 dates: {},
-                slots: defaultSlots(),
+                slots: [],
             };
             changed = true;
         }
@@ -97,8 +89,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (!Array.isArray(data.timeSlotsConfig.slots)) {
-            const existingSlots = getTemplateSlotsFromExistingDates(data);
-            data.timeSlotsConfig.slots = existingSlots.length ? existingSlots : defaultSlots();
+            data.timeSlotsConfig.slots = getTemplateSlotsFromExistingDates(data);
             changed = true;
         }
 
@@ -122,7 +113,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function syncScheduleToBackend(slots) {
         const ids = StorageManager._getIds();
-        if (!ids.restaurantId) return;
+        if (!ids.restaurantId) return { skippedCount: 0 };
 
         const targetDates = new Set(getBookingDates());
         const slotsRes = await StorageManager._request(`/timeslots?restaurant_id=${ids.restaurantId}`, {
@@ -133,16 +124,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             targetDates.has(slot.slot_date || slot.date),
         );
 
+        // A slot with an active reservation on it can't be deleted (backend guard) —
+        // track those so we skip recreating a conflicting slot at the same date/time.
+        const keptDateTimes = new Set();
         await Promise.all(existingInWindow.map((slot) =>
             StorageManager._request(`/timeslots/${slot.id}`, {
                 method: 'DELETE',
                 headers: StorageManager._headers('manager'),
+            }).catch(() => {
+                keptDateTimes.add(`${slot.slot_date || slot.date}|${slot.start_time}`);
             }),
         ));
 
         const createRequests = [];
         targetDates.forEach((date) => {
             slots.forEach((slot) => {
+                if (keptDateTimes.has(`${date}|${slot.start}`)) return;
                 createRequests.push(
                     StorageManager._request('/timeslots', {
                         method: 'POST',
@@ -153,7 +150,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             start_time: slot.start,
                             end_time: slot.end,
                         }),
-                    }),
+                    }).catch(() => {}),
                 );
             });
         });
@@ -165,6 +162,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             body: JSON.stringify({ restaurant_id: ids.restaurantId }),
         });
         await StorageManager.refreshFromBackend();
+
+        return { skippedCount: keptDateTimes.size };
     }
 
     async function saveScheduleConfig(slots) {
@@ -176,20 +175,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         StorageManager.saveData(data);
 
         try {
-            await syncScheduleToBackend(data.timeSlotsConfig.slots);
-            showToast('Time slots synced to upcoming booking dates.');
+            const result = await syncScheduleToBackend(data.timeSlotsConfig.slots);
+            if (result && result.skippedCount) {
+                showToast(`Time slots synced. ${result.skippedCount} slot(s) with active reservations were kept as-is.`, 'error');
+            } else {
+                showToast('Time slots synced to upcoming booking dates.');
+            }
         } catch (error) {
             console.error('Time slot backend sync failed:', error);
             showToast('Saved locally, backend sync failed.');
         }
     }
 
-    function saveOperatingHours(open, close) {
+    async function saveOperatingHours(open, close) {
         const data = StorageManager.getData();
         if (!data.timeSlotsConfig) initTimeSlotData();
         data.timeSlotsConfig.operatingHours = { open, close };
         StorageManager.saveData(data);
-        showToast('Operating hours updated.');
+
+        try {
+            await StorageManager.updateOperatingHours(open, close);
+            showToast('Operating hours updated.');
+        } catch (error) {
+            console.error('Operating hours backend sync failed:', error);
+            showToast('Saved locally, backend sync failed.');
+        }
     }
 
     function renderPage() {

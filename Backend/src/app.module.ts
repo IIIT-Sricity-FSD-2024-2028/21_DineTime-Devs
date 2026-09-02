@@ -12,6 +12,7 @@ import { RoleCheckMiddleware } from 'src/common/middleware/role-check.middleware
 import { AuthModule } from 'src/modules/auth/auth.module';
 import { CheckinModule } from 'src/modules/checkin/checkin.module';
 import { DinerModule } from 'src/modules/diner/diner.module';
+import { FinanceModule } from 'src/modules/finance/finance.module';
 import { MenuModule } from 'src/modules/menu/menu.module';
 import { ManagerModule } from 'src/modules/manager/manager.module';
 import { NotificationsModule } from 'src/modules/notifications/notifications.module';
@@ -22,11 +23,14 @@ import { RestaurantsModule } from 'src/modules/restaurants/restaurants.module';
 import { ReviewsModule } from 'src/modules/reviews/reviews.module';
 import { SettingsModule } from 'src/modules/settings/settings.module';
 import { StaffModule } from 'src/modules/staff/staff.module';
+import { SubAdminModule } from 'src/modules/sub-admin/sub-admin.module';
 import { SuperAdminModule } from 'src/modules/super-admin/super-admin.module';
+import { SupportModule } from 'src/modules/support/support.module';
 import { TablesModule } from 'src/modules/tables/tables.module';
 import { TableslotsModule } from 'src/modules/tableslots/tableslots.module';
 import { TimeslotsModule } from 'src/modules/timeslots/timeslots.module';
 import { UsersModule } from 'src/modules/users/users.module';
+import { VerificationModule } from 'src/modules/verification/verification.module';
 import { RepositoriesModule } from 'src/repositories/repositories.module';
 import { DataSeederService } from 'src/seed/data-seeder.service';
 
@@ -63,6 +67,10 @@ import { DataSeederService } from 'src/seed/data-seeder.service';
     ReviewsModule,
     NotificationsModule,
     SettingsModule,
+    SupportModule,
+    SubAdminModule,
+    VerificationModule,
+    FinanceModule,
   ],
   providers: [
     DataSeederService,
@@ -89,6 +97,8 @@ export class AppModule implements NestModule {
         'payments/(.*)',
         'users',
         'users/(.*)',
+        'support',
+        'support/(.*)',
       );
   }
 }

@@ -130,7 +130,7 @@ function createCardElement(r, index) {
       <div class="card-meta-row">
         <div class="rating-badge">
           <img src="../images/icon-star.png" alt="Star" width="16" height="16" />
-          <span>${r.rating}</span>
+          <span>${r.reviewCount > 0 ? r.rating : 'New'}</span>
         </div>
         <div class="distance-badge">
           <img src="../images/icon-location.png" alt="Location" width="14" height="14" />

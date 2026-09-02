@@ -23,7 +23,6 @@ const state = {
   restaurants: [],
   users: [],
   reservations: [],
-  payments: [],
   notifications: [],
   tables: [],
   timeslots: [],
@@ -31,6 +30,8 @@ const state = {
   locations: {},
   auditLog: [],
   refreshTimer: null,
+  subAdmins: [],
+  tickets: [],
 };
 
 function escapeHtml(value) {
@@ -91,22 +92,12 @@ async function apiRequest(path, options = {}) {
   return text ? JSON.parse(text) : null;
 }
 
-function formatCurrency(amount) {
-  return `INR ${Number(amount || 0).toLocaleString('en-IN')}`;
-}
-
 function mapRestaurantStatus(status) {
   return status === 'active' ? 'Verified' : 'Pending';
 }
 
 function mapUserStatus(status) {
   return status === 'active' ? 'Active' : 'Suspended';
-}
-
-function mapPaymentStatus(status) {
-  if (status === 'paid') return 'Success';
-  if (status === 'failed') return 'Failed';
-  return 'Pending';
 }
 
 function mapReservationStatus(status) {
@@ -212,32 +203,17 @@ function getReservationDisplay(reservation) {
   };
 }
 
-function getPaymentDisplay(payment) {
-  const reservation = state.reservations.find((item) => item.id === payment.reservation_id);
-  const user = state.users.find((item) => item.id === reservation?.user_id);
-  const restaurant = state.restaurants.find((item) => item.id === reservation?.restaurant_id);
-  return {
-    id: payment.id,
-    user: user?.name || 'Guest',
-    userId: reservation?.user_id || 'N/A',
-    restaurant: restaurant?.name || 'Restaurant',
-    restaurantId: reservation?.restaurant_id || 'N/A',
-    amount: formatCurrency(payment.amount),
-    method: payment.payment_method,
-    status: mapPaymentStatus(payment.payment_status),
-  };
-}
-
 async function syncAdminState() {
   const endpoints = [
     '/restaurants',
     '/users',
     '/reservations',
-    '/payments',
     '/tables',
     '/timeslots',
     '/tableslots',
     '/notifications',
+    '/sub-admin',
+    '/support/tickets',
   ];
 
   const settled = await Promise.allSettled(endpoints.map((path) => apiRequest(path)));
@@ -246,21 +222,23 @@ async function syncAdminState() {
     restaurantsRes,
     usersRes,
     reservationsRes,
-    paymentsRes,
     tablesRes,
     timeslotsRes,
     tableSlotsRes,
     notificationsRes,
+    subAdminsRes,
+    ticketsRes,
   ] = payloads;
 
   state.restaurants = restaurantsRes?.data || state.restaurants;
   state.users = usersRes?.data || state.users;
   state.reservations = reservationsRes?.data || state.reservations;
-  state.payments = paymentsRes?.data || state.payments;
   state.tables = tablesRes?.data || state.tables;
   state.timeslots = timeslotsRes?.data || state.timeslots;
   state.tableSlots = tableSlotsRes?.data || state.tableSlots;
   state.notifications = notificationsRes?.data || state.notifications;
+  state.subAdmins = subAdminsRes?.data || state.subAdmins;
+  state.tickets = ticketsRes?.data || state.tickets;
 
   const locationIds = Array.from(new Set(state.restaurants.map((restaurant) => restaurant.location_id).filter(Boolean)));
   const locationEntries = await Promise.all(locationIds.map(async (locationId) => {
@@ -340,22 +318,13 @@ function showConfirmModal(title, message, onConfirm) {
 function updateAllKPIs() {
   const activeReservations = state.reservations.filter((reservation) =>
     !['cancelled', 'completed', 'no_show'].includes(reservation.reservation_status));
-  const totalRevenue = state.payments
-    .filter((payment) => payment.payment_status === 'paid')
-    .reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
   const pendingRestaurants = state.restaurants.filter((restaurant) => restaurant.status !== 'active').length;
   const dinerCount = state.users.filter((user) => user.role === 'diner').length;
-  const successCount = state.payments.filter((payment) => payment.payment_status === 'paid').length;
-  const failedCount = state.payments.filter((payment) => payment.payment_status === 'failed').length;
-  const refundTotal = state.payments
-    .filter((payment) => payment.payment_status === 'refunded')
-    .reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
 
   const byId = (id) => document.getElementById(id);
   if (byId('dashTotalBookings')) byId('dashTotalBookings').textContent = String(activeReservations.length);
   if (byId('dashTotalUsers')) byId('dashTotalUsers').textContent = String(dinerCount);
   if (byId('dashTotalRes')) byId('dashTotalRes').textContent = String(state.restaurants.length);
-  if (byId('dashTotalRev')) byId('dashTotalRev').textContent = formatCurrency(totalRevenue);
   if (byId('dashPendingApps')) byId('dashPendingApps').textContent = String(pendingRestaurants);
   if (byId('resTabTotalRes')) byId('resTabTotalRes').textContent = String(state.restaurants.length);
   if (byId('resTabActiveBooks')) byId('resTabActiveBooks').textContent = String(activeReservations.length);
@@ -364,9 +333,6 @@ function updateAllKPIs() {
       state.tables.length || state.restaurants.reduce((sum, restaurant) => sum + Number(restaurant.total_tables || 0), 0),
     );
   }
-  if (byId('paySuccessCount')) byId('paySuccessCount').textContent = String(successCount);
-  if (byId('payFailedCount')) byId('payFailedCount').textContent = String(failedCount);
-  if (byId('payRefundTotal')) byId('payRefundTotal').textContent = formatCurrency(refundTotal);
 }
 
 function renderGlobalTable() {
@@ -399,14 +365,8 @@ function renderGlobalTable() {
         <span style="font-size:0.75rem; color:var(--text-muted);">${escapeHtml(restaurant.cuisine)} • ${escapeHtml(restaurant.city)}</span>
       </td>
       <td>${escapeHtml(String(restaurant.tables))} tables<br><span style="font-size:0.75rem; color:var(--text-muted);">${escapeHtml(String(restaurant.activeReservations))} active bookings</span></td>
-      <td>${escapeHtml(restaurant.managerName)}<br><span style="font-size:0.75rem; color:var(--text-muted);">${escapeHtml(restaurant.managerEmail)}</span></td>
+      <td>${escapeHtml(restaurant.managerName)}</td>
       <td style="color:${statusColor}; font-weight:700;">${escapeHtml(restaurant.status)}</td>
-      <td style="text-align:right;">
-        <div style="display:flex; justify-content:flex-end; gap:0.5rem;">
-          <button class="btn-outline btn-sm" style="color:#E67E22; border-color:#E67E22; width:32px; height:32px; padding:0;" onclick="editRestaurant('${escapeHtml(restaurant.id)}')" title="View / Edit"><i class="fa-solid fa-eye"></i></button>
-          <button class="btn-outline btn-sm" style="color:#C62828; border-color:#ffcdd2; background:#FFEBEE; width:32px; height:32px; padding:0;" onclick="deleteRestaurant('${escapeHtml(restaurant.id)}', '${escapeHtml(restaurant.name)}')" title="Delete Restaurant"><i class="fa-solid fa-trash"></i></button>
-        </div>
-      </td>
     `;
     tbody.appendChild(tr);
   });
@@ -420,8 +380,9 @@ function renderUsersTable() {
   const roleFilter = document.getElementById('userRoleFilter')?.value || '';
   const statusFilter = document.getElementById('userStatusFilter')?.value || '';
 
+  const subAdminRoles = ['super_user', 'support_admin', 'finance_admin', 'verification_admin'];
   const rows = state.users
-    .filter((user) => user.role !== 'super_user')
+    .filter((user) => !subAdminRoles.includes(user.role))
     .map(getUserDisplay)
     .filter((user) => {
       const matchesQuery = !query
@@ -447,12 +408,6 @@ function renderUsersTable() {
       <td>${escapeHtml(user.role)}</td>
       <td>${escapeHtml(user.node)}</td>
       <td style="color:${statusColor}; font-weight:700;">${escapeHtml(user.status)}</td>
-      <td style="text-align:right;">
-        <div style="display:flex; justify-content:flex-end; gap:0.5rem;">
-          <button class="btn-outline btn-sm" style="color:#E67E22; border-color:#E67E22; width:32px; height:32px; padding:0;" onclick="editUser('${escapeHtml(user.id)}')" title="View / Edit"><i class="fa-solid fa-eye"></i></button>
-          <button class="btn-outline btn-sm" style="color:#C62828; border-color:#ffcdd2; background:#FFEBEE; width:32px; height:32px; padding:0;" onclick="deleteUser('${escapeHtml(user.id)}', '${escapeHtml(user.email)}')" title="Delete User"><i class="fa-solid fa-trash"></i></button>
-        </div>
-      </td>
     `;
     tbody.appendChild(tr);
   });
@@ -500,37 +455,6 @@ function renderReservationsTable() {
       <td><code style="background:#f0f0f0; padding:2px 4px; border-radius:4px; color:var(--text-muted); font-size:0.7rem;">${escapeHtml(reservation.restaurantId)}</code><br><b style="display:inline-block; margin-top:4px;">${escapeHtml(reservation.restaurantName)}</b></td>
       <td>${escapeHtml(String(reservation.party))}</td>
       <td>${badge}</td>
-      <td style="text-align:right;">
-        <div style="display:flex; justify-content:flex-end; gap:0.5rem;">
-          <button class="btn-outline btn-sm" style="color:#E67E22; border-color:#E67E22; width:32px; height:32px; padding:0;" onclick="editReservation('${escapeHtml(reservation.id)}')" title="View / Edit"><i class="fa-solid fa-eye"></i></button>
-          <button class="btn-outline btn-sm" style="color:#C62828; border-color:#ffcdd2; background:#FFEBEE; width:32px; height:32px; padding:0;" onclick="deleteReservation('${escapeHtml(reservation.id)}', '${escapeHtml(reservation.dinerName)}')" title="Cancel Reservation"><i class="fa-solid fa-trash"></i></button>
-        </div>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-function renderPaymentsTable() {
-  const tbody = document.getElementById('globalPaymentsBody');
-  if (!tbody) return;
-
-  const rows = state.payments.map(getPaymentDisplay);
-  tbody.innerHTML = '';
-  rows.forEach((payment) => {
-    const badgeClass = payment.status === 'Success'
-      ? 'badge-green'
-      : payment.status === 'Failed'
-        ? 'badge-red'
-        : 'badge-yellow';
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><code style="color:var(--text-muted)">${escapeHtml(payment.id)}</code></td>
-      <td><code style="background:#f0f0f0; padding:2px 4px; border-radius:4px; color:var(--text-muted); font-size:0.7rem;">${escapeHtml(payment.userId)}</code><br><b style="display:inline-block; margin-top:4px;">${escapeHtml(payment.user)}</b></td>
-      <td><code style="background:#f0f0f0; padding:2px 4px; border-radius:4px; color:var(--text-muted); font-size:0.7rem;">${escapeHtml(payment.restaurantId)}</code><br><b style="display:inline-block; margin-top:4px;">${escapeHtml(payment.restaurant)}</b></td>
-      <td style="font-weight:700;">${escapeHtml(payment.amount)}</td>
-      <td>${escapeHtml(payment.method)}</td>
-      <td><span class="badge ${badgeClass}">${escapeHtml(payment.status)}</span></td>
     `;
     tbody.appendChild(tr);
   });
@@ -551,95 +475,6 @@ function renderAuditLogs() {
       <div style="color:var(--text-dark); font-size:0.9rem;">${escapeHtml(log.message)}</div>
     `;
     container.appendChild(div);
-  }
-}
-
-function generateReport() {
-  const scope = document.getElementById('reportScope')?.value || 'platform';
-  const query = (document.getElementById('reportRestaurantSearch')?.value || '').trim().toLowerCase();
-
-  const restaurants = state.restaurants
-    .map(getRestaurantDisplay)
-    .filter((restaurant) => {
-      const matchesScope = scope === 'platform' || restaurant.city === scope;
-      const matchesQuery = !query || restaurant.name.toLowerCase().includes(query);
-      return matchesScope && matchesQuery;
-    });
-
-  if (document.getElementById('repNodes')) {
-    document.getElementById('repNodes').textContent = String(restaurants.length);
-  }
-
-  const restaurantIds = new Set(restaurants.map((restaurant) => restaurant.id));
-  const filteredReservations = state.reservations.filter((reservation) => restaurantIds.has(reservation.restaurant_id));
-  const filteredPayments = state.payments.filter((payment) => {
-    const reservation = state.reservations.find((item) => item.id === payment.reservation_id);
-    return reservation && restaurantIds.has(reservation.restaurant_id) && payment.payment_status === 'paid';
-  });
-  const filteredTables = state.tables.filter((table) => restaurantIds.has(table.restaurant_id));
-  const revenue = filteredPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
-  const bookings = filteredReservations.length;
-  const capacityPct = filteredTables.length
-    ? Math.min(Math.round((bookings / filteredTables.length) * 100), 100)
-    : 0;
-
-  if (document.getElementById('repBook')) document.getElementById('repBook').textContent = String(bookings);
-  if (document.getElementById('repRev')) document.getElementById('repRev').textContent = formatCurrency(revenue);
-  if (document.getElementById('repCap')) document.getElementById('repCap').textContent = `${capacityPct}%`;
-
-  const cuisineStats = {};
-  restaurants.forEach((restaurant) => {
-    cuisineStats[restaurant.cuisine] = (cuisineStats[restaurant.cuisine] || 0) + restaurant.activeReservations;
-  });
-
-  const cuisineBarsContainer = document.getElementById('cuisineBarsContainer');
-  if (cuisineBarsContainer) {
-    const colors = ['var(--primary-green)', '#1976D2', '#F57F17', '#C62828', '#00897B'];
-    const maxCount = Math.max(1, ...Object.values(cuisineStats), 1);
-    const rows = Object.entries(cuisineStats)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([name, count], index) => {
-        const pct = Math.round((count / maxCount) * 100);
-        return `
-          <div style="margin-bottom:0.75rem;">
-            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-              <span style="color:var(--text-dark); font-weight:600; font-size:0.85rem;">${escapeHtml(name)}</span>
-              <span style="color:var(--text-muted); font-size:0.8rem;">${escapeHtml(String(count))}</span>
-            </div>
-            <div style="width:100%; background:#F1F5F9; height:8px; border-radius:4px; overflow:hidden;">
-              <div style="width:${pct}%; background:${colors[index % colors.length]}; height:100%; border-radius:4px;"></div>
-            </div>
-          </div>
-        `;
-      });
-    cuisineBarsContainer.innerHTML = rows.join('') || '<p style="color:var(--text-muted); font-size:0.85rem;">No data available.</p>';
-  }
-
-  const revenueListContainer = document.getElementById('revenueListContainer');
-  if (revenueListContainer) {
-    const items = restaurants
-      .map((restaurant) => {
-        const total = filteredPayments
-          .filter((payment) => {
-            const reservation = state.reservations.find((item) => item.id === payment.reservation_id);
-            return reservation?.restaurant_id === restaurant.id;
-          })
-          .reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
-        return { restaurant, total };
-      })
-      .sort((a, b) => b.total - a.total)
-      .slice(0, 5)
-      .map(({ restaurant, total }) => `
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:1rem 0; border-bottom:1px solid var(--border-light);">
-          <div>
-            <div style="font-weight:700; color:var(--text-dark);">${escapeHtml(restaurant.name)}</div>
-            <div style="font-size:0.75rem; color:var(--text-muted);">${escapeHtml(restaurant.city)} • ${escapeHtml(String(restaurant.activeReservations))} active bookings</div>
-          </div>
-          <div style="color:#2E7D32; font-weight:800;">${escapeHtml(formatCurrency(total))}</div>
-        </div>
-      `);
-    revenueListContainer.innerHTML = items.join('') || '<p style="color:var(--text-muted); font-size:0.85rem;">No revenue generated yet.</p>';
   }
 }
 
@@ -669,23 +504,6 @@ function renderRecentActivity() {
     items.push({ icon, color, text: `${escapeHtml(label)}: ${escapeHtml(name)} at ${escapeHtml(rest)}`, id: reservation.id });
   });
 
-  // Pull most recent 2 payments
-  const sortedPayments = [...state.payments]
-    .filter((p) => p.payment_status === 'paid')
-    .sort((a, b) => new Date(b.payment_time || 0) - new Date(a.payment_time || 0))
-    .slice(0, 2);
-
-  sortedPayments.forEach((payment) => {
-    const reservation = state.reservations.find((r) => r.id === payment.reservation_id);
-    const restaurant = state.restaurants.find((r) => r.id === reservation?.restaurant_id);
-    items.push({
-      icon: 'fa-indian-rupee-sign',
-      color: '#2E7D32',
-      text: `Payment received: ${escapeHtml(formatCurrency(payment.amount))} for ${escapeHtml(restaurant?.name || 'a restaurant')}`,
-      id: payment.id,
-    });
-  });
-
   if (items.length === 0) {
     container.innerHTML = '<div style="padding: 1.25rem; color: var(--text-muted); font-size: 0.875rem;">No recent activity yet.</div>';
     return;
@@ -704,10 +522,10 @@ function renderAll() {
   renderGlobalTable();
   renderUsersTable();
   renderReservationsTable();
-  renderPaymentsTable();
   renderAuditLogs();
   renderRecentActivity();
-  generateReport();
+  renderSubAdminsTable();
+  renderTicketsTables();
 }
 
 function ensureRestaurantSelects() {
@@ -1308,6 +1126,259 @@ window.switchTab = function switchTab(tabName) {
   writeJson(STORAGE_KEYS.activeTab, tabName);
 };
 
+const TEAM_LABELS = {
+  support: 'Customer Support',
+  finance: 'Finance Team',
+  verification: 'Verification Team',
+};
+
+const TICKET_STATUS_LABELS = {
+  open: 'Open',
+  in_review: 'In Review',
+  escalated_finance_team: 'Escalated to Finance',
+  escalated_super_admin: 'Escalated to Super Admin',
+  resolved: 'Resolved',
+  rejected: 'Rejected',
+};
+
+function currentSuperAdminId() {
+  try {
+    const profile = JSON.parse(sessionStorage.getItem('super_admin_profile') || '{}');
+    return profile.id || '';
+  } catch (_error) {
+    return '';
+  }
+}
+
+function renderSubAdminsTable() {
+  const body = document.getElementById('subAdminsBody');
+  if (!body) return;
+
+  const counts = { support: 0, finance: 0, verification: 0 };
+  state.subAdmins.forEach((admin) => {
+    if (counts[admin.team] !== undefined) counts[admin.team] += 1;
+  });
+  if (document.getElementById('kpiSupportCount')) document.getElementById('kpiSupportCount').textContent = String(counts.support);
+  if (document.getElementById('kpiFinanceCount')) document.getElementById('kpiFinanceCount').textContent = String(counts.finance);
+  if (document.getElementById('kpiVerificationCount')) document.getElementById('kpiVerificationCount').textContent = String(counts.verification);
+
+  if (!state.subAdmins.length) {
+    body.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--text-muted); padding: 1.5rem;">No sub-admin accounts yet.</td></tr>';
+    return;
+  }
+
+  body.innerHTML = state.subAdmins.map((admin) => `
+    <tr>
+      <td><strong>${escapeHtml(admin.name)}</strong><br><span style="color: var(--text-muted); font-size: 0.8rem;">${escapeHtml(admin.email)}</span></td>
+      <td>${escapeHtml(TEAM_LABELS[admin.team] || admin.team)}${admin.team === 'verification' && admin.location_id ? `<br><span style="color: var(--text-muted); font-size: 0.75rem;">${escapeHtml(admin.location_id)}</span>` : ''}</td>
+      <td>${mapUserStatus(admin.status)}</td>
+      <td>${new Date(admin.created_at).toLocaleDateString('en-GB')}</td>
+      <td style="text-align: right;">
+        <button class="btn-sm btn-outline" onclick="toggleSubAdminStatus('${admin.id}', '${admin.status}')">${admin.status === 'active' ? 'Suspend' : 'Activate'}</button>
+        <button class="btn-sm btn-outline" style="color:#C1121F;" onclick="deleteSubAdmin('${admin.id}')"><i class="fa-solid fa-trash"></i></button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+let allLocationsCache = null;
+
+async function loadAllLocations(forceRefresh = false) {
+  if (allLocationsCache && !forceRefresh) return allLocationsCache;
+  const res = await apiRequest('/restaurants/locations');
+  allLocationsCache = res?.data || [];
+  return allLocationsCache;
+}
+
+async function populateLocationSelect(selectedId) {
+  const select = document.getElementById('subAdminLocation');
+  const locations = await loadAllLocations(true);
+  select.innerHTML = '<option value="">Select a location</option>' +
+    locations.map((loc) => `<option value="${loc.id}">${escapeHtml(loc.city)} - ${escapeHtml(loc.address)}</option>`).join('');
+  if (selectedId) select.value = selectedId;
+}
+
+window.toggleSubAdminLocationField = async function toggleSubAdminLocationField() {
+  const team = document.getElementById('subAdminTeam').value;
+  const group = document.getElementById('subAdminLocationGroup');
+  const select = document.getElementById('subAdminLocation');
+  if (team !== 'verification') {
+    group.style.display = 'none';
+    select.required = false;
+    return;
+  }
+
+  group.style.display = 'block';
+  select.required = true;
+  await populateLocationSelect();
+};
+
+window.toggleNewLocationForm = function toggleNewLocationForm() {
+  const form = document.getElementById('newLocationForm');
+  const label = document.getElementById('newLocationToggleLabel');
+  const isHidden = form.style.display === 'none';
+  form.style.display = isHidden ? 'block' : 'none';
+  label.textContent = isHidden ? 'Cancel' : 'Add a new location';
+};
+
+window.createNewLocation = async function createNewLocation() {
+  const city = document.getElementById('newLocCity').value.trim();
+  const address = document.getElementById('newLocAddress').value.trim();
+  const pincode = document.getElementById('newLocPincode').value.trim();
+  const country = document.getElementById('newLocCountry').value.trim() || 'India';
+
+  if (!city || !address || !pincode) {
+    showToast('Please fill in city, address, and pincode for the new location.', 'error');
+    return;
+  }
+
+  try {
+    const created = await apiRequest('/restaurants/locations', {
+      method: 'POST',
+      body: JSON.stringify({ city, address, pincode, country }),
+    });
+
+    await populateLocationSelect(created?.data?.id);
+    document.getElementById('newLocCity').value = '';
+    document.getElementById('newLocAddress').value = '';
+    document.getElementById('newLocPincode').value = '';
+    toggleNewLocationForm();
+    showToast(`Location "${city}" added.`);
+  } catch (error) {
+    showToast(error.message, 'error');
+  }
+};
+
+window.openSubAdminModal = function openSubAdminModal() {
+  document.getElementById('subAdminForm').reset();
+  document.getElementById('subAdminId').value = '';
+  document.getElementById('subAdminModalTitle').textContent = 'Add Sub-Admin';
+  document.getElementById('subAdminPassword').required = true;
+  document.getElementById('subAdminLocationGroup').style.display = 'none';
+  document.getElementById('newLocationForm').style.display = 'none';
+  document.getElementById('newLocationToggleLabel').textContent = 'Add a new location';
+  document.getElementById('subAdminModal').style.display = 'flex';
+};
+
+window.closeSubAdminModal = function closeSubAdminModal() {
+  document.getElementById('subAdminModal').style.display = 'none';
+};
+
+async function saveSubAdmin(event) {
+  event.preventDefault();
+
+  const name = document.getElementById('subAdminName').value.trim();
+  const email = document.getElementById('subAdminEmail').value.trim();
+  const password = document.getElementById('subAdminPassword').value;
+  const team = document.getElementById('subAdminTeam').value;
+  const locationId = document.getElementById('subAdminLocation').value;
+
+  if (!password) {
+    throw new Error('Please set a login password for this sub-admin.');
+  }
+
+  if (team === 'verification' && !locationId) {
+    throw new Error('Please select a location for this Verification Team account.');
+  }
+
+  await apiRequest('/sub-admin', {
+    method: 'POST',
+    body: JSON.stringify({ name, email, password, team, location_id: locationId || undefined }),
+  });
+
+  closeSubAdminModal();
+  showToast(`${TEAM_LABELS[team]} account created for ${name}.`);
+  addAuditLog(`Created ${TEAM_LABELS[team]} sub-admin: ${email}`);
+  await syncAdminState();
+}
+
+window.toggleSubAdminStatus = async function toggleSubAdminStatus(id, currentStatus) {
+  const nextStatus = currentStatus === 'active' ? 'inactive' : 'active';
+  try {
+    await apiRequest(`/sub-admin/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: nextStatus }),
+    });
+    showToast(`Sub-admin account ${nextStatus === 'active' ? 'activated' : 'suspended'}.`);
+    addAuditLog(`Set sub-admin ${id} to ${nextStatus}`);
+    await syncAdminState();
+  } catch (error) {
+    showToast(error.message, 'error');
+  }
+};
+
+window.deleteSubAdmin = function deleteSubAdmin(id) {
+  showConfirmModal('Delete Sub-Admin', 'This will permanently remove this sub-admin account. Continue?', async () => {
+    try {
+      await apiRequest(`/sub-admin/${id}`, { method: 'DELETE' });
+      showToast('Sub-admin account deleted.');
+      addAuditLog(`Deleted sub-admin ${id}`);
+      await syncAdminState();
+    } catch (error) {
+      showToast(error.message, 'error');
+    }
+  });
+};
+
+function renderTicketsTables() {
+  const escalatedBody = document.getElementById('escalatedTicketsBody');
+  const allBody = document.getElementById('allTicketsBody');
+  if (!escalatedBody || !allBody) return;
+
+  const escalated = state.tickets.filter((ticket) => ticket.status === 'escalated_super_admin');
+
+  escalatedBody.innerHTML = escalated.length
+    ? escalated.map((ticket) => `
+      <tr>
+        <td>${escapeHtml(ticket.id)}</td>
+        <td>${ticket.raised_by_role === 'diner' ? 'Diner' : 'Restaurant Manager'} (${escapeHtml(ticket.raised_by_user_id)})</td>
+        <td>${escapeHtml(ticket.subject)}<br><span style="color: var(--text-muted); font-size: 0.8rem;">${escapeHtml(ticket.description)}</span></td>
+        <td>${escapeHtml(ticket.resolution_notes || '-')}</td>
+        <td style="text-align: right;"><button class="btn-sm btn-outline" onclick="openResolveEscalatedModal('${ticket.id}')">Resolve</button></td>
+      </tr>
+    `).join('')
+    : '<tr><td colspan="5" style="text-align:center; color: var(--text-muted); padding: 1.5rem;">No issues currently escalated to you.</td></tr>';
+
+  allBody.innerHTML = state.tickets.length
+    ? state.tickets.map((ticket) => `
+      <tr>
+        <td>${escapeHtml(ticket.id)}</td>
+        <td>${ticket.raised_by_role === 'diner' ? 'Diner' : 'Restaurant Manager'}</td>
+        <td style="text-transform: capitalize;">${escapeHtml(ticket.category)}</td>
+        <td>${escapeHtml(ticket.subject)}</td>
+        <td>${escapeHtml(TICKET_STATUS_LABELS[ticket.status] || ticket.status)}</td>
+      </tr>
+    `).join('')
+    : '<tr><td colspan="5" style="text-align:center; color: var(--text-muted); padding: 1.5rem;">No support tickets yet.</td></tr>';
+}
+
+window.openResolveEscalatedModal = function openResolveEscalatedModal(ticketId) {
+  document.getElementById('resolveTicketId').value = ticketId;
+  document.getElementById('resolveTicketNotes').value = '';
+  document.getElementById('resolveEscalatedModal').style.display = 'flex';
+};
+
+window.closeResolveEscalatedModal = function closeResolveEscalatedModal() {
+  document.getElementById('resolveEscalatedModal').style.display = 'none';
+};
+
+async function resolveEscalatedTicket(event) {
+  event.preventDefault();
+
+  const id = document.getElementById('resolveTicketId').value;
+  const resolution_notes = document.getElementById('resolveTicketNotes').value.trim();
+
+  await apiRequest(`/support/tickets/${id}/resolve`, {
+    method: 'PATCH',
+    body: JSON.stringify({ resolution_notes, admin_id: currentSuperAdminId() }),
+  });
+
+  closeResolveEscalatedModal();
+  showToast('Ticket marked as resolved.');
+  addAuditLog(`Resolved escalated ticket ${id}`);
+  await syncAdminState();
+}
+
 function setupForms() {
   document.getElementById('superForm')?.addEventListener('submit', (event) => {
     saveRestaurant(event).catch((error) => showToast(error.message, 'error'));
@@ -1317,6 +1388,12 @@ function setupForms() {
   });
   document.getElementById('reservationForm')?.addEventListener('submit', (event) => {
     saveReservation(event).catch((error) => showToast(error.message, 'error'));
+  });
+  document.getElementById('subAdminForm')?.addEventListener('submit', (event) => {
+    saveSubAdmin(event).catch((error) => showToast(error.message, 'error'));
+  });
+  document.getElementById('resolveEscalatedForm')?.addEventListener('submit', (event) => {
+    resolveEscalatedTicket(event).catch((error) => showToast(error.message, 'error'));
   });
 }
 
