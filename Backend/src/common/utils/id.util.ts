@@ -36,6 +36,14 @@ export const generateId = (prefix: string): string => {
       return `res-${seq}`;
     case 'location':
       return `loc-${seq}`;
+    case 'ticket':
+      return `tkt-${seq}`;
+    case 'support_admin':
+      return `spt-${seq}`;
+    case 'finance_admin':
+      return `fin-${seq}`;
+    case 'verification_admin':
+      return `ver-${seq}`;
     default:
       return `${prefix}-${seq}`;
   }
