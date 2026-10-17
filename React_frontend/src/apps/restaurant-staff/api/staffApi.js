@@ -15,9 +15,7 @@ const readSession = () => {
 };
 
 class StaffApi {
-  baseUrl = (
-    import.meta.env.VITE_API_BASE_URL || "http://localhost:3000"
-  ).replace(/\/$/, "");
+  baseUrl = (import.meta.env.VITE_API_BASE_URL || "http://localhost:3000").replace(/\/$/, "");
 
   session = readSession();
   listeners = new Set();
@@ -65,14 +63,12 @@ class StaffApi {
     });
     const payload = await response.json().catch(() => null);
     if (!response.ok) {
-      if ((response.status === 401 || response.status === 403) && this.session) {
+      if (response.status === 401 && this.session) {
         this.logout();
       }
       const msg = payload?.message;
       throw new Error(
-        Array.isArray(msg)
-          ? msg.join(", ")
-          : msg || `Request failed (${response.status})`,
+        Array.isArray(msg) ? msg.join(", ") : msg || `Request failed (${response.status})`,
       );
     }
     return payload?.data ?? payload;
@@ -94,10 +90,8 @@ class StaffApi {
     });
 
     const user = auth?.user;
-    if (!user || user.role !== "staff")
-      throw new Error("Invalid Staff ID or Password.");
-    if (user.status !== "active")
-      throw new Error("Your account is pending manager approval.");
+    if (!user || user.role !== "staff") throw new Error("Invalid Staff ID or Password.");
+    if (user.status !== "active") throw new Error("Your account is pending manager approval.");
 
     // Login returns the base user. Staff assignment is stored in staff details.
     const profile = await this.request(`/users/${encodeURIComponent(user.id)}`, {
@@ -106,7 +100,10 @@ class StaffApi {
     });
     const restaurantId = profile?.restaurant_id;
     if (!restaurantId) throw new Error("This staff account is not assigned to a restaurant.");
-    const restaurants = await this.request("/restaurants", { role: "staff" });
+    const restaurants = await this.request("/restaurants", {
+      role: "staff",
+      headers: { Authorization: `Bearer ${auth.access_token}` },
+    });
     const restaurant = (restaurants || []).find((entry) => entry.id === restaurantId);
     if (!restaurant) throw new Error("The assigned restaurant could not be found.");
 
@@ -124,13 +121,20 @@ class StaffApi {
       this.request("/restaurants", { role: "staff" }),
       this.request("/users", { role: "staff" }).catch(() => []),
     ]);
-    const normalize = (value) => String(value || "").trim().toLowerCase().replace(/[^a-z0-9]/g, "");
-    const restaurant = (restaurants || []).find((entry) =>
-      normalize(entry.id) === normalize(restaurantId) ||
-      normalize(entry.name) === normalize(restaurantId),
+    const normalize = (value) =>
+      String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "");
+    const restaurant = (restaurants || []).find(
+      (entry) =>
+        normalize(entry.id) === normalize(restaurantId) ||
+        normalize(entry.name) === normalize(restaurantId),
     );
     if (!restaurant) {
-      throw new Error("Restaurant not found. Enter a valid restaurant ID or exact restaurant name.");
+      throw new Error(
+        "Restaurant not found. Enter a valid restaurant ID or exact restaurant name.",
+      );
     }
     if ((users || []).some((user) => user.email?.toLowerCase() === email.trim().toLowerCase())) {
       throw new Error("This email is already registered.");
@@ -169,7 +173,7 @@ class StaffApi {
   }
 
   // ─── Data refresh ─────────────────────────────────────────────────────────────
-  async refresh(date = toIsoDate()) {
+  async refresh(date = toIsoDate(), selectedSlotId = "") {
     const version = ++this.refreshVersion;
     const isCurrent = () => version === this.refreshVersion;
     this.publish({ loading: true, error: "" });
@@ -205,17 +209,16 @@ class StaffApi {
       const allUsers = usersRes || [];
 
       // Tables for this restaurant
-      const myTables = allTables.filter(
-        (t) => !restaurantId || t.restaurant_id === restaurantId,
-      );
+      const myTables = allTables.filter((t) => !restaurantId || t.restaurant_id === restaurantId);
 
       // Day slots for this restaurant
       const daySlots = allSlots.filter(
         (s) =>
-          (!restaurantId || s.restaurant_id === restaurantId) &&
-          (s.slot_date || s.date) === date,
+          (!restaurantId || s.restaurant_id === restaurantId) && (s.slot_date || s.date) === date,
       );
-      const daySlotIds = new Set(daySlots.map((s) => s.id));
+      daySlots.sort((a, b) => a.start_time.localeCompare(b.start_time));
+      const activeSlot = daySlots.find((s) => s.id === selectedSlotId) || daySlots[0];
+      const daySlotIds = new Set(activeSlot ? [activeSlot.id] : []);
 
       // Per-table status (highest rank wins)
       const statusRank = { occupied: 3, reserved: 2, available: 1 };
@@ -229,11 +232,21 @@ class StaffApi {
         }
       });
 
-      const enrichedTables = myTables.map((t) => ({
-        ...t,
-        slotIds: daySlots.map((s) => s.id),
-        computedStatus: statusByTable[t.id] || "available",
-      }));
+      const enrichedTables = myTables
+        .filter(
+          (t) =>
+            activeSlot &&
+            (!activeSlot.table_layout ||
+              activeSlot.table_layout.some((entry) => entry.table_id === t.id)),
+        )
+        .map((t) => ({
+          ...t,
+          capacity:
+            activeSlot.table_layout?.find((entry) => entry.table_id === t.id)?.capacity ??
+            t.capacity,
+          slotIds: [activeSlot.id],
+          computedStatus: statusByTable[t.id] || "available",
+        }));
 
       // Reservations
       const reservationPath = restaurantId
@@ -253,13 +266,14 @@ class StaffApi {
           const table = tableMap[r.table_id];
           const user = userMap[r.user_id];
           const reservationStatus = r.reservation_status || r.status;
-          const statusLabel = {
-            reserved: "Upcoming",
-            checked_in: "Checked-In",
-            completed: "Checked-In",
-            cancelled: "No-Show",
-            no_show: "No-Show",
-          }[reservationStatus] || "Upcoming";
+          const statusLabel =
+            {
+              reserved: "Upcoming",
+              checked_in: "Checked-In",
+              completed: "Completed",
+              cancelled: "Cancelled",
+              no_show: "No-Show",
+            }[reservationStatus] || "Upcoming";
           return {
             ...r,
             statusLabel,
@@ -268,7 +282,11 @@ class StaffApi {
             userEmail: user?.email || "",
             date: slot?.slot_date || slot?.date || date,
             time: slot?.start_time || "19:00",
-            tableLabel: table ? `Table ${table.table_number}` : "—",
+            tableLabel:
+              (r.table_details || (r.table_ids || [r.table_id]).map((id) => tableMap[id]))
+                .filter(Boolean)
+                .map((item) => `Table ${item.table_number}`)
+                .join(", ") || (table ? `Table ${table.table_number}` : "—"),
           };
         })
         .filter((reservation) => reservation.date === date);
@@ -277,6 +295,7 @@ class StaffApi {
         tables: enrichedTables,
         allTables,
         slots: allSlots,
+        activeSlotId: activeSlot?.id || "",
         reservations,
         loading: false,
         error: "",
@@ -288,7 +307,9 @@ class StaffApi {
 
   // ─── Table status update ──────────────────────────────────────────────────────
   async updateTableStatus(tableId, slotIds, newStatus) {
-    const apiStatus = { Available: "available", Reserved: "reserved", Occupied: "occupied" }[newStatus] || "available";
+    const apiStatus =
+      { Available: "available", Reserved: "reserved", Occupied: "occupied" }[newStatus] ||
+      "available";
     await Promise.all(
       slotIds.map((slotId) =>
         this.request("/tableslots/status", {
@@ -327,13 +348,10 @@ class StaffApi {
       this.request("/timeslots", { role: "staff" }),
       this.request("/tableslots", { role: "staff" }),
     ]);
-    const table = (allTables || []).find((entry) =>
-      entry.id === tableId && (!restaurantId || entry.restaurant_id === restaurantId),
+    const table = (allTables || []).find(
+      (entry) => entry.id === tableId && (!restaurantId || entry.restaurant_id === restaurantId),
     );
     if (!table) throw new Error("Selected table is not available at this restaurant.");
-    if (Number(table.capacity) < Number(guestCount)) {
-      throw new Error("Selected table does not have enough seats for this party.");
-    }
 
     const [requestedHour, requestedMinute] = (time || "12:00").split(":").map(Number);
     const requestedMinutes = requestedHour * 60 + requestedMinute;
@@ -347,64 +365,34 @@ class StaffApi {
         .map((slot) => slot.slot_id),
     );
     const bestSlot = (slots || [])
-      .filter((slot) =>
-        (!restaurantId || slot.restaurant_id === restaurantId) &&
-        (slot.slot_date || slot.date) === todayStr &&
-        tableSlotMap.has(slot.id),
+      .filter(
+        (slot) =>
+          (!restaurantId || slot.restaurant_id === restaurantId) &&
+          (slot.slot_date || slot.date) === todayStr &&
+          slot.published !== false &&
+          (!slot.table_layout ||
+            slot.table_layout.some(
+              (t) => t.table_id === table.id && t.capacity >= Number(guestCount),
+            )) &&
+          tableSlotMap.has(slot.id),
       )
-      .sort((left, right) =>
-        Math.abs(toMinutes(left.start_time) - requestedMinutes) -
-        Math.abs(toMinutes(right.start_time) - requestedMinutes),
+      .sort(
+        (left, right) =>
+          Math.abs(toMinutes(left.start_time) - requestedMinutes) -
+          Math.abs(toMinutes(right.start_time) - requestedMinutes),
       )[0];
     if (!bestSlot) throw new Error("The selected table has no available slot today.");
 
-    // 1) Find or create diner user
-    const walkinEmail = `walkin.${phone}@dinetime.local`;
-    let diner = (allUsers || []).find(
-      (u) =>
-        u.role === "diner" &&
-        (u.phone === phone || (u.email || "").toLowerCase() === walkinEmail),
-    );
-    if (!diner) {
-      const locationId =
-        ((allUsers || []).find((u) => u.location_id) || {}).location_id || "loc_blr_1";
-      diner = await this.request("/users", {
-        method: "POST",
-        role: "manager",
-        body: {
-          name,
-          email: walkinEmail,
-          phone,
-          password_hash: `walkin_${phone}`,
-          role: "diner",
-          status: "active",
-          location_id: locationId,
-        },
-        role: "manager",
-      });
-    }
-
-    // 2) Create a reserved booking as the diner, then verify it through staff check-in.
-    const reservation = await this.request("/reservations", {
+    return this.request("/checkin/walk-in", {
       method: "POST",
-      role: "diner",
       body: {
-        user_id: diner?.id,
-        restaurant_id: restaurantId,
+        name,
+        phone,
+        guest_count: Number(guestCount),
         table_id: table.id,
         slot_id: bestSlot.id,
-        guest_count: Number(guestCount),
       },
     });
-    await this.request("/checkin", {
-      method: "POST",
-      role: "staff",
-      body: {
-        reservation_id: reservation.id,
-        staff_id: this.session?.user?.id,
-      },
-    });
-    return reservation;
   }
 
   // ─── Profile / password ───────────────────────────────────────────────────────

@@ -1,3 +1,4 @@
+import { indiaToday } from "../../../app/indiaTime.js";
 /** Format a time string like "18:00:00" → "6:00 PM". Mirrors diner/utils/format.js. */
 export function timeLabel(time) {
   if (!time) return "—";
@@ -7,10 +8,7 @@ export function timeLabel(time) {
 
 /** Return today's date in YYYY-MM-DD format. */
 export function toIsoDate(date = new Date()) {
-  const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, "0");
-  const dd = String(date.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
+  return indiaToday(date);
 }
 
 /** Map API reservation_status → human-readable label. */

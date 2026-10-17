@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { useStaff } from "../hooks/useStaff.js";
+import { useEffect, useContext } from "react";
+import { StaffContext } from "../context/StaffContext.js";
 import { image } from "../utils/images.js";
 
 /** Icon wrapper — uses FontAwesome class names just like the original HTML. */
@@ -9,7 +9,7 @@ export function Icon({ name, className = "" }) {
 
 /** Top navigation bar used on dashboard, check-in, and profile pages. */
 export function TopNav({ subtitle, showNotifications, onNotifications, showLogout = true }) {
-  const { navigate, user, api } = useStaff();
+  const { navigate, user, api } = useContext(StaffContext);
   return (
     <header className="top-nav">
       <div className="nav-inner">
@@ -22,11 +22,7 @@ export function TopNav({ subtitle, showNotifications, onNotifications, showLogou
         </div>
         <div className="user-actions">
           {onNotifications && (
-            <button
-              className="icon-btn"
-              aria-label="Notifications"
-              onClick={onNotifications}
-            >
+            <button className="icon-btn" aria-label="Notifications" onClick={onNotifications}>
               <span className="bell-wrapper">
                 <i className="fa-regular fa-bell" />
               </span>
@@ -36,7 +32,12 @@ export function TopNav({ subtitle, showNotifications, onNotifications, showLogou
             className="user-profile"
             onClick={() => navigate("profile")}
             title="View Profile"
-            style={{ textDecoration: "none", border: "none", background: "none", cursor: "pointer" }}
+            style={{
+              textDecoration: "none",
+              border: "none",
+              background: "none",
+              cursor: "pointer",
+            }}
           >
             <div className="avatar">
               <Icon name="user" />
@@ -83,11 +84,7 @@ export function Modal({ title, onClose, children }) {
       <div className="modal-content">
         <div className="modal-header">
           <h3>{title}</h3>
-          <span
-            className="close-btn"
-            aria-label="Close"
-            onClick={onClose}
-          >
+          <span className="close-btn" aria-label="Close" onClick={onClose}>
             &times;
           </span>
         </div>
@@ -153,9 +150,19 @@ export function Toast({ message, type, onDismiss, duration = 4000 }) {
   }, [duration, onDismiss]);
 
   const msgLower = (message || "").toLowerCase();
-  const isError = type === "error" || msgLower.includes("unable") || msgLower.includes("failed") || msgLower.includes("error");
+  const isError =
+    type === "error" ||
+    msgLower.includes("unable") ||
+    msgLower.includes("failed") ||
+    msgLower.includes("error");
   const isWarning = type === "warning" || msgLower.includes("pending");
-  const toastType = isError ? "error" : isWarning ? "warning" : type === "info" ? "info" : "success";
+  const toastType = isError
+    ? "error"
+    : isWarning
+      ? "warning"
+      : type === "info"
+        ? "info"
+        : "success";
 
   const iconName =
     toastType === "error"

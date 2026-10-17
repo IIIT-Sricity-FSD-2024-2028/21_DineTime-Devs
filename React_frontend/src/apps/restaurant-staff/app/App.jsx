@@ -1,8 +1,8 @@
 // Restaurant-staff sub-router — mirrors diner/app/App.jsx structure.
 // Mounted under /restaurant-staff/* by the root src/app/App.jsx.
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import { staffApi } from "../api/staffApi.js";
-import { StaffContext } from "../hooks/useStaff.js";
+import { StaffContext } from "../context/StaffContext.js";
 import LoginPage from "../pages/LoginPage.jsx";
 import RegisterPage from "../pages/RegisterPage.jsx";
 import RequestPage from "../pages/RequestPage.jsx";
@@ -11,14 +11,7 @@ import CheckInPage from "../pages/CheckInPage.jsx";
 import ProfilePage from "../pages/ProfilePage.jsx";
 import StaffSurface from "../components/StaffSurface.jsx";
 
-const pages = new Set([
-  "login",
-  "register",
-  "request",
-  "dashboard",
-  "check-in",
-  "profile",
-]);
+const pages = new Set(["login", "register", "request", "dashboard", "check-in", "profile"]);
 
 const publicPages = new Set(["login", "register", "request"]);
 
@@ -36,20 +29,22 @@ function readRoute() {
 export default function App() {
   const [currentPage, setCurrentPage] = useState(() => readRoute().page);
   const [params, setParams] = useState(() => readRoute().params);
-  const { user } = useSyncExternalStore(staffApi.subscribe, staffApi.getSnapshot);
+  const [data, setData] = useState(staffApi.getSnapshot());
+  const user = data.user;
 
-  const navigate = useCallback((page, nextParams = {}) => {
+  function navigate(page, nextParams = {}) {
+    if (page === "login") {
+      window.history.pushState({}, "", "/login");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+      return;
+    }
     const nextPage = pages.has(page) ? page : "check-in";
     const query = new URLSearchParams(nextParams).toString();
-    window.history.pushState(
-      {},
-      "",
-      `/restaurant-staff/${nextPage}${query ? `?${query}` : ""}`,
-    );
+    window.history.pushState({}, "", `/restaurant-staff/${nextPage}${query ? `?${query}` : ""}`);
     setParams(nextParams);
     setCurrentPage(nextPage);
     window.scrollTo({ top: 0, behavior: "instant" });
-  }, []);
+  }
 
   // Sync state with browser back/forward
   useEffect(() => {
@@ -61,6 +56,14 @@ export default function App() {
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
   }, []);
+
+  useEffect(() => {
+    return staffApi.subscribe(() => setData(staffApi.getSnapshot()));
+  }, []);
+
+  useEffect(() => {
+    if (!user && !publicPages.has(currentPage)) navigate("login");
+  }, [user?.id, currentPage]);
 
   // Auth guard: redirect to login if not authenticated on a private page
   const page = !user && !publicPages.has(currentPage) ? "login" : currentPage;
@@ -97,7 +100,9 @@ export default function App() {
 
   return (
     <StaffSurface page={page}>
-      <StaffContext.Provider value={{ currentPage: page, params, navigate }}>
+      <StaffContext.Provider
+        value={{ currentPage: page, params, navigate, ...data, api: staffApi }}
+      >
         <div className={`staff-app staff-${page}`} key={page}>
           {content}
         </div>

@@ -1,9 +1,9 @@
-import { useState } from "react";
-import { useStaff } from "../hooks/useStaff.js";
+import { useState, useContext } from "react";
+import { StaffContext } from "../context/StaffContext.js";
 import { Icon, Toast } from "../components/StaffUI.jsx";
 
 export default function RequestPage() {
-  const { navigate } = useStaff();
+  const { navigate } = useContext(StaffContext);
   const [showToast, setShowToast] = useState(false);
 
   return (
@@ -11,8 +11,10 @@ export default function RequestPage() {
       {/* Left Section */}
       <div className="request-info-section">
         <h1 className="hero-title">Request Submitted</h1>
-        <p className="hero-desc">Your staff access request has been sent to the restaurant manager.</p>
-        
+        <p className="hero-desc">
+          Your staff access request has been sent to the restaurant manager.
+        </p>
+
         <ul className="status-steps">
           <li>
             <Icon name="circle-check" className="fa-regular step-icon" />
@@ -43,8 +45,11 @@ export default function RequestPage() {
           </div>
 
           <h2>Waiting for Manager Approval</h2>
-          <p>Your request has been successfully submitted. The restaurant manager must approve your staff access before you can log in.</p>
-          
+          <p>
+            Your request has been successfully submitted. The restaurant manager must approve your
+            staff access before you can log in.
+          </p>
+
           <div className="badge-container">
             <span className="badge-pending">Pending Approval</span>
           </div>
@@ -53,20 +58,24 @@ export default function RequestPage() {
             <button type="button" className="btn-primary" onClick={() => setShowToast(true)}>
               <Icon name="bell" className="fa-regular" /> Notify Me When Approved
             </button>
-            <a href="#" className="btn-outline" onClick={(e) => { e.preventDefault(); navigate("login"); }}>
+            <a
+              href="#"
+              className="btn-outline"
+              onClick={(e) => {
+                e.preventDefault();
+                navigate("login");
+              }}
+            >
               Back to Login
             </a>
           </div>
-          
+
           <p className="footer-note">Approval time depends on manager review.</p>
         </div>
       </div>
-      
+
       {showToast && (
-        <Toast 
-          message="We'll notify you when approved!" 
-          onDismiss={() => setShowToast(false)} 
-        />
+        <Toast message="We'll notify you when approved!" onDismiss={() => setShowToast(false)} />
       )}
     </div>
   );
