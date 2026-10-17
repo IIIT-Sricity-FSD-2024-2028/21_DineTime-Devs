@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import ManagerLayout from "../components/ManagerLayout";
-import { useManager } from "../hooks/useManager";
-import { useToast } from "../hooks/useToast";
+import { ManagerContext } from "../context/ManagerContext.jsx";
+import { ToastContext } from "../context/ToastContext.jsx";
 
 export default function ReviewsPage() {
-  const { data, storage, refresh } = useManager();
-  const { showToast } = useToast();
+  const { data, storage, refresh } = useContext(ManagerContext);
+  const { showToast } = useContext(ToastContext);
   const [filter, setFilter] = useState("all");
   const [sort, setSort] = useState("recent");
   const [editingId, setEditingId] = useState(null);
@@ -13,8 +13,7 @@ export default function ReviewsPage() {
   const reviews = data?.reviews || [];
   const average = reviews.length
     ? (
-        reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) /
-        reviews.length
+        reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) / reviews.length
       ).toFixed(1)
     : "0.0";
   const distribution = [5, 4, 3, 2, 1].map((rating) => ({
@@ -50,11 +49,7 @@ export default function ReviewsPage() {
   };
 
   const deleteReply = async (review) => {
-    if (
-      !window.confirm(
-        "Are you sure you want to delete your response? This cannot be undone.",
-      )
-    )
+    if (!window.confirm("Are you sure you want to delete your response? This cannot be undone."))
       return;
     try {
       await storage.deleteReviewReply(review.id);
@@ -94,10 +89,7 @@ export default function ReviewsPage() {
                 />
               </div>
               <span className="progress-pct">
-                {reviews.length
-                  ? Math.round((count / reviews.length) * 100)
-                  : 0}
-                %
+                {reviews.length ? Math.round((count / reviews.length) * 100) : 0}%
               </span>
             </div>
           ))}
@@ -141,9 +133,7 @@ export default function ReviewsPage() {
                   </div>
                 </div>
                 <div className="badges">
-                  <span
-                    className={`badge ${review.reply ? "badge-responded" : "badge-pending"}`}
-                  >
+                  <span className={`badge ${review.reply ? "badge-responded" : "badge-pending"}`}>
                     {review.reply ? "Responded" : "Pending Response"}
                   </span>
                 </div>
@@ -181,11 +171,7 @@ export default function ReviewsPage() {
               )}
               {!review.reply && editingId !== review.id && (
                 <div>
-                  <button
-                    className="btn-reply"
-                    type="button"
-                    onClick={() => openReply(review)}
-                  >
+                  <button className="btn-reply" type="button" onClick={() => openReply(review)}>
                     Reply
                   </button>
                 </div>
@@ -227,4 +213,3 @@ export default function ReviewsPage() {
     </ManagerLayout>
   );
 }
-

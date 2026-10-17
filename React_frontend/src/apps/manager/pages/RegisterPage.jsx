@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState, useContext, useEffect } from "react";
 import { requireApiBase } from "../api/config";
-import { useToast } from "../hooks/useToast";
+import { ToastContext } from "../context/ToastContext.jsx";
+import { INDIAN_CITIES, VERIFICATION_TEAM_BY_STATE } from "../data/indianCities.js";
 
 const initialForm = {
   name: "",
@@ -15,37 +16,105 @@ const initialForm = {
   cuisine: "",
   description: "",
   restaurantPhone: "",
-  locationId: "",
+  city: "",
+  address: "",
+  state: "",
+  pincode: "",
+  verificationLocationId: "",
 };
 
 export default function RegisterPage({ navigate }) {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState(initialForm);
-  const [locations, setLocations] = useState([]);
+  const [verificationTeams, setVerificationTeams] = useState([]);
   const [submitting, setSubmitting] = useState(false);
-  const { showToast } = useToast();
+  const { showToast } = useContext(ToastContext);
+  const states = [...new Set(INDIAN_CITIES.map(({ state }) => state))].sort((a, b) =>
+    a.localeCompare(b),
+  );
+  const cities = INDIAN_CITIES.filter(({ state }) => !form.state || state === form.state);
+  const mappedTeamId = VERIFICATION_TEAM_BY_STATE[form.state];
+  const nearestTeam =
+    verificationTeams.find(({ location_id }) => location_id === mappedTeamId) ||
+    verificationTeams[0];
 
   useEffect(() => {
-    if (step !== 3 || locations.length) return;
-    fetch(`${requireApiBase()}/restaurants/locations`)
-      .then((response) => response.json())
-      .then((payload) => setLocations(payload?.data || []))
-      .catch(() => showToast("Unable to load locations. Please retry.", "error"));
-  }, [step, locations.length, showToast]);
+    if (step !== 3 || verificationTeams.length) return;
+    fetch(`${requireApiBase()}/verification/teams`)
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Unable to load verification teams.");
+        return response.json();
+      })
+      .then((payload) => setVerificationTeams(payload?.data || []))
+      .catch((error) => showToast(error.message, "error"));
+  }, [step, verificationTeams.length, showToast]);
+
+  useEffect(() => {
+    if (step !== 3 || !verificationTeams.length || !form.state || form.verificationLocationId)
+      return;
+    const preferredTeamId = VERIFICATION_TEAM_BY_STATE[form.state];
+    const preferredTeam =
+      verificationTeams.find(({ location_id }) => location_id === preferredTeamId) ||
+      verificationTeams[0];
+    if (preferredTeam) {
+      setForm((current) => ({ ...current, verificationLocationId: preferredTeam.location_id }));
+    }
+  }, [step, verificationTeams, form.state, form.verificationLocationId]);
 
   const update = (event) => {
     const { name, value, type, checked, files } = event.target;
-    const nextValue =
-      type === "checkbox"
-        ? checked
-        : type === "file"
-          ? files?.[0] || null
-          : value;
+    const nextValue = type === "checkbox" ? checked : type === "file" ? files?.[0] || null : value;
     setForm((current) => ({ ...current, [name]: nextValue }));
   };
 
+  const updateCity = (event) => {
+    const city = event.target.value;
+    const selectedCity = INDIAN_CITIES.find((item) => item.city === city);
+    const state = selectedCity?.state || "";
+    const mappedTeam = verificationTeams.find(
+      ({ location_id }) => location_id === VERIFICATION_TEAM_BY_STATE[state],
+    );
+    setForm((current) => ({
+      ...current,
+      city,
+      state,
+      verificationLocationId: mappedTeam?.location_id || verificationTeams[0]?.location_id || "",
+    }));
+  };
+
+  const updateState = (event) => {
+    const state = event.target.value;
+    const mappedTeam = verificationTeams.find(
+      ({ location_id }) => location_id === VERIFICATION_TEAM_BY_STATE[state],
+    );
+    setForm((current) => ({
+      ...current,
+      state,
+      city:
+        current.city &&
+        INDIAN_CITIES.some((item) => item.city === current.city && item.state === state)
+          ? current.city
+          : "",
+      verificationLocationId: mappedTeam?.location_id || verificationTeams[0]?.location_id || "",
+    }));
+  };
+
+  const updateRestaurantPhone = (event) => {
+    const restaurantPhone = event.target.value.replace(/\D/g, "").slice(0, 10);
+    setForm((current) => ({ ...current, restaurantPhone }));
+  };
+
   const goToRestaurant = () => {
-    if (!form.name || !form.phone || !form.email || !form.password || !form.confirm || !form.license || !form.authorized || !form.document) {
+    if (
+      !form.name ||
+      !form.phone ||
+      !form.email ||
+      !form.password ||
+      !form.confirm ||
+      !form.license ||
+      !form.authorized ||
+      !form.document
+    ) {
       showToast("Please complete all required manager and verification fields.", "error");
       return;
     }
@@ -66,16 +135,23 @@ export default function RegisterPage({ navigate }) {
       return;
     }
     if (!/^BL-[A-Z]{2}-\d{4}$/i.test(form.license)) {
-      showToast("Invalid license format. Expected format: BL-AB-1234 (BL, two letters, four digits)", "error");
+      showToast(
+        "Invalid license format. Expected format: BL-AB-1234 (BL, two letters, four digits)",
+        "error",
+      );
       return;
     }
-    
+
     setStep(2);
   };
 
   const goToLocation = () => {
-    if (!form.restaurantName || !form.cuisine || !/^\d{10}$/.test(form.restaurantPhone)) {
+    if (!form.restaurantName.trim() || !form.cuisine) {
       showToast("Please complete the required restaurant details.", "error");
+      return;
+    }
+    if (!/^\d{10}$/.test(form.restaurantPhone)) {
+      showToast("Restaurant contact number must contain exactly 10 digits.", "error");
       return;
     }
     setStep(3);
@@ -83,23 +159,41 @@ export default function RegisterPage({ navigate }) {
 
   const submit = async (event) => {
     event.preventDefault();
-    if (!form.locationId) {
-      showToast("Please select a location.", "error");
+    const city = form.city.trim();
+    if (!/^[\p{L}]+(?:[-'][\p{L}]+)*$/u.test(city)) {
+      showToast("Enter the city as one word, without spaces.", "error");
       return;
     }
-    const body = new FormData();
-    body.append("name", form.name);
-    body.append("email", form.email.toLowerCase());
-    body.append("phone", form.phone);
-    body.append("password", form.password);
-    body.append("business_license_number", form.license.toUpperCase());
-    body.append("location_id", form.locationId);
-    body.append("restaurant_name", form.restaurantName);
-    body.append("cuisine_type", form.cuisine.charAt(0).toUpperCase() + form.cuisine.slice(1));
-    body.append("description", form.description || `${form.restaurantName} restaurant.`);
-    body.append("document", form.document);
+    if (
+      !form.address.trim() ||
+      !form.state.trim() ||
+      !/^\d{6}$/.test(form.pincode) ||
+      !form.verificationLocationId
+    ) {
+      showToast(
+        "Enter the address, state, pincode, and wait for the assigned Verification Team.",
+        "error",
+      );
+      return;
+    }
     setSubmitting(true);
     try {
+      const body = new FormData();
+      body.append("name", form.name);
+      body.append("email", form.email.toLowerCase());
+      body.append("phone", form.phone);
+      body.append("password", form.password);
+      body.append("business_license_number", form.license.toUpperCase());
+      body.append("city", city);
+      body.append("address", form.address.trim());
+      body.append("state", form.state.trim());
+      body.append("pincode", form.pincode);
+      body.append("verification_location_id", form.verificationLocationId);
+      body.append("restaurant_phone", form.restaurantPhone);
+      body.append("restaurant_name", form.restaurantName);
+      body.append("cuisine_type", form.cuisine.charAt(0).toUpperCase() + form.cuisine.slice(1));
+      body.append("description", form.description || `${form.restaurantName} restaurant.`);
+      body.append("document", form.document);
       const response = await fetch(`${requireApiBase()}/managers/register`, {
         method: "POST",
         body,
@@ -125,7 +219,10 @@ export default function RegisterPage({ navigate }) {
       <span className="login-label">{label}</span>
       {type === "file" ? (
         <div className="file-upload-container">
-          <label className="file-upload-box" style={{ padding: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <label
+            className="file-upload-box"
+            style={{ padding: "16px", display: "flex", alignItems: "center", gap: "12px" }}
+          >
             <input
               type="file"
               name={name}
@@ -133,11 +230,14 @@ export default function RegisterPage({ navigate }) {
               style={{ display: "none" }}
               {...extra}
             />
-            <div className="file-upload-icon" style={{ margin: 0, width: 36, height: 36, fontSize: 18 }}>
+            <div
+              className="file-upload-icon"
+              style={{ margin: 0, width: 36, height: 36, fontSize: 18 }}
+            >
               <i className="ph ph-upload-simple" />
             </div>
-            <div className="file-upload-text" style={{ textAlign: 'left' }}>
-              <h4 style={{ fontSize: 14, margin: 0, color: 'var(--text-dark)' }}>
+            <div className="file-upload-text" style={{ textAlign: "left" }}>
+              <h4 style={{ fontSize: 14, margin: 0, color: "var(--text-dark)" }}>
                 {form[name] ? form[name].name : "Click to choose a file"}
               </h4>
               {!form[name] && <p style={{ margin: 0, fontSize: 12 }}>Accepts images or PDF</p>}
@@ -161,14 +261,29 @@ export default function RegisterPage({ navigate }) {
     if (step === 1) {
       return (
         <>
-          {field("Manager Name *", "name", "text", { placeholder: "e.g. Jane Doe", required: true })}
+          {field("Manager Name *", "name", "text", {
+            placeholder: "e.g. Jane Doe",
+            required: true,
+          })}
           {field("Manager Phone *", "phone", "tel", { maxLength: 10, required: true })}
-          {field("Manager Email *", "email", "email", { placeholder: "manager@restaurant.com", required: true })}
-          {field("Password *", "password", "password", { placeholder: "Min. 8 characters", required: true })}
+          {field("Manager Email *", "email", "email", {
+            placeholder: "manager@restaurant.com",
+            required: true,
+          })}
+          {field("Password *", "password", "password", {
+            placeholder: "Min. 8 characters",
+            required: true,
+          })}
           {field("Confirm Password *", "confirm", "password", { required: true })}
           <div className="business-divider">Business Verification</div>
-          {field("Business License Number *", "license", "text", { placeholder: "e.g. BL-AB-1234", required: true })}
-          {field("Verification Document *", "document", "file", { accept: "image/jpeg,image/png,image/webp,application/pdf", required: true })}
+          {field("Business License Number *", "license", "text", {
+            placeholder: "e.g. BL-AB-1234",
+            required: true,
+          })}
+          {field("Verification Document *", "document", "file", {
+            accept: "image/jpeg,image/png,image/webp,application/pdf",
+            required: true,
+          })}
           <label className="auth-checkbox-group">
             <input type="checkbox" name="authorized" checked={form.authorized} onChange={update} />{" "}
             I confirm that I am authorized to manage this restaurant.
@@ -176,27 +291,6 @@ export default function RegisterPage({ navigate }) {
           <button className="btn-login" type="button" onClick={goToRestaurant}>
             Add Restaurant details <i className="ph ph-arrow-right" />
           </button>
-          <div className="divider">
-            <span>OR</span>
-          </div>
-          <div className="social-buttons-container">
-            <button
-              type="button"
-              className="btn-social-outline"
-              onClick={() => alert("Google sign-in is not connected yet.")}
-            >
-              <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" style={{ width: 20, height: 20 }} />
-              Continue with Google
-            </button>
-            <button
-              type="button"
-              className="btn-social-outline"
-              onClick={() => alert("Apple sign-in is not connected yet.")}
-            >
-              <i className="ph-fill ph-apple-logo" style={{ color: '#000', fontSize: 22 }} />
-              Continue with Apple
-            </button>
-          </div>
         </>
       );
     }
@@ -206,7 +300,13 @@ export default function RegisterPage({ navigate }) {
           {field("Restaurant Name *", "restaurantName", "text", { required: true })}
           <label className="login-form-group">
             <span className="login-label">Cuisine Type *</span>
-            <select className="login-input no-icon" name="cuisine" value={form.cuisine} onChange={update} required>
+            <select
+              className="login-input no-icon"
+              name="cuisine"
+              value={form.cuisine}
+              onChange={update}
+              required
+            >
               <option value="">Select cuisine type</option>
               <option value="italian">Italian</option>
               <option value="indian">Indian</option>
@@ -217,9 +317,29 @@ export default function RegisterPage({ navigate }) {
           </label>
           <label className="login-form-group">
             <span className="login-label">Restaurant Description</span>
-            <textarea className="login-input textarea-input no-icon" name="description" value={form.description} onChange={update} />
+            <textarea
+              className="login-input textarea-input no-icon"
+              name="description"
+              value={form.description}
+              onChange={update}
+            />
           </label>
-          {field("Restaurant Contact Number *", "restaurantPhone", "tel", { maxLength: 10, required: true })}
+          <label className="login-form-group">
+            <span className="login-label">Restaurant Contact Number *</span>
+            <input
+              className="login-input no-icon"
+              name="restaurantPhone"
+              type="tel"
+              inputMode="numeric"
+              autoComplete="tel"
+              value={form.restaurantPhone}
+              onChange={updateRestaurantPhone}
+              maxLength={10}
+              pattern="[0-9]{10}"
+              placeholder="10-digit phone number"
+              required
+            />
+          </label>
           <div className="step-actions">
             <button className="btn-login" type="button" onClick={goToLocation}>
               Set Restaurant location <i className="ph ph-arrow-right" />
@@ -234,18 +354,71 @@ export default function RegisterPage({ navigate }) {
     return (
       <>
         <label className="login-form-group">
-          <span className="login-label">Location *</span>
-          <select className="login-input no-icon" name="locationId" value={form.locationId} onChange={update} required>
-            <option value="">{locations.length ? "Select a location" : "Loading locations..."}</option>
-            {locations.map((location) => (
-              <option value={location.id} key={location.id}>{location.address}</option>
+          <span className="login-label">City *</span>
+          <select
+            className="login-input no-icon"
+            name="city"
+            value={form.city}
+            onChange={updateCity}
+            required
+          >
+            <option value="">Choose a city</option>
+            {cities.map(({ city }) => (
+              <option value={city} key={city}>
+                {city}
+              </option>
             ))}
           </select>
         </label>
+        {field("Street address / area *", "address", "text", {
+          placeholder: "Building, street, area",
+          required: true,
+        })}
+        <label className="login-form-group">
+          <span className="login-label">State *</span>
+          <select
+            className="login-input no-icon"
+            name="state"
+            value={form.state}
+            onChange={updateState}
+            required
+          >
+            <option value="">Choose a state or union territory</option>
+            {states.map((state) => (
+              <option value={state} key={state}>
+                {state}
+              </option>
+            ))}
+          </select>
+        </label>
+        {field("Pincode *", "pincode", "text", {
+          inputMode: "numeric",
+          maxLength: 6,
+          pattern: "[0-9]{6}",
+          required: true,
+        })}
+        <div className="login-form-group">
+          <span className="login-label">Verification Team</span>
+          <div
+            className="login-input no-icon"
+            aria-live="polite"
+            style={{ display: "flex", alignItems: "center" }}
+          >
+            {nearestTeam
+              ? `${nearestTeam.city} Verification Team (Nearest team)`
+              : verificationTeams.length
+                ? "Choose a city to assign a team"
+                : "Loading available teams..."}
+          </div>
+          <small>
+            {nearestTeam
+              ? `Your application will be reviewed by the ${nearestTeam.city} team.`
+              : "Verification team locations are managed by the platform administrator."}
+          </small>
+        </div>
         <div className="step-actions">
           <button className="btn-login" type="submit" disabled={submitting}>
-            {submitting ? "Submitting..." : "Submit for Verification"}{" "}
-            <i className="ph ph-check" />
+            {submitting ? "Submitting..." : "Submit for Verification"} <i className="ph ph-check" />
           </button>
           <button className="btn-back-step" type="button" onClick={() => setStep(2)}>
             <i className="ph ph-arrow-left" /> Back to Restaurant Details
@@ -263,7 +436,7 @@ export default function RegisterPage({ navigate }) {
   const descriptions = [
     "Create a manager account to manage your restaurant, track reservations, and optimize seating capacity.",
     "List your restaurant so diners can discover it, reserve tables, and enjoy a seamless dining experience.",
-    "Tell us which DineTime location your restaurant belongs to.",
+    "Add the restaurant's city and full address. These details will be shown to diners.",
   ];
 
   return (
@@ -272,7 +445,10 @@ export default function RegisterPage({ navigate }) {
         <div className="login-left-overlay" />
         <a
           href="#"
-          onClick={(e) => { e.preventDefault(); navigate("login"); }}
+          onClick={(e) => {
+            e.preventDefault();
+            navigate("login");
+          }}
           className="login-back-arrow"
         >
           <i className="ph ph-arrow-left" />
@@ -285,10 +461,16 @@ export default function RegisterPage({ navigate }) {
           <h1>{titles[step - 1]}</h1>
           <p>{descriptions[step - 1]}</p>
           <ul className="reg-feature-list">
-            <li><i className="ph ph-calendar-check" /> Manage reservations easily</li>
+            <li>
+              <i className="ph ph-calendar-check" /> Manage reservations easily
+            </li>
             <li>
               <i className="ph ph-users-four" />{" "}
-              {step === 1 ? "Monitor table availability" : step === 2 ? "Optimize seating capacity" : "Reach diners in your area"}
+              {step === 1
+                ? "Monitor table availability"
+                : step === 2
+                  ? "Optimize seating capacity"
+                  : "Reach diners in your area"}
             </li>
             <li>
               <i className="ph ph-chart-line-up" />{" "}
@@ -296,10 +478,15 @@ export default function RegisterPage({ navigate }) {
             </li>
           </ul>
           <div className="verified-badge-card">
-            <div className="verified-badge-icon"><i className="ph ph-shield-check" /></div>
+            <div className="verified-badge-icon">
+              <i className="ph ph-shield-check" />
+            </div>
             <div className="verified-badge-text">
               <h4>Verified Restaurant Partners</h4>
-              <p>All accounts go through our verification process to ensure trusted dining experiences.</p>
+              <p>
+                All accounts go through our verification process to ensure trusted dining
+                experiences.
+              </p>
             </div>
           </div>
         </div>
@@ -311,13 +498,24 @@ export default function RegisterPage({ navigate }) {
         </div>
         <form className="login-card" onSubmit={submit}>
           <h2>
-            {step === 1 ? "Create Manager Account" : step === 2 ? "Restaurant Details" : "Restaurant Location"}
+            {step === 1
+              ? "Create Manager Account"
+              : step === 2
+                ? "Restaurant Details"
+                : "Restaurant Location"}
           </h2>
           <p className="login-subtitle">
             {step === 1 ? (
               <>
                 Already have an account?{" "}
-                <a href="#" onClick={(e) => { e.preventDefault(); navigate("login"); }} className="forgot-link">
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate("login");
+                  }}
+                  className="forgot-link"
+                >
                   Sign in
                 </a>
               </>

@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import ManagerLayout from "../components/ManagerLayout";
-import { useManager } from "../hooks/useManager";
-import { useToast } from "../hooks/useToast";
+import { ManagerContext } from "../context/ManagerContext.jsx";
+import { ToastContext } from "../context/ToastContext.jsx";
 
 export default function ProfilePage() {
-  const { data, storage, refresh, navigate } = useManager();
+  const { data, storage, refresh, navigate } = useContext(ManagerContext);
   const profile = data?.profile || {};
   const restaurant = data?.restaurant || {};
   const [tab, setTab] = useState("profile-info");
@@ -12,6 +12,18 @@ export default function ProfilePage() {
   const [editingRestaurant, setEditingRestaurant] = useState(false);
   const [editingPolicies, setEditingPolicies] = useState(false);
   const [serving, setServing] = useState(Boolean(restaurant.is_open));
+  const canOpenRestaurant =
+    restaurant.verificationStatus === "approved" &&
+    restaurant.tableCount > 0 &&
+    restaurant.timeSlotCount > 0;
+  const openBlockReason =
+    restaurant.verificationStatus !== "approved"
+      ? "Opening is available after the restaurant is verified."
+      : restaurant.tableCount === 0
+        ? "Add at least one table before opening the restaurant."
+        : restaurant.timeSlotCount === 0
+          ? "Add at least one time slot before opening the restaurant."
+          : "";
   const [profileForm, setProfileForm] = useState({
     name: profile.name || "",
     email: profile.email || "",
@@ -25,6 +37,9 @@ export default function ProfilePage() {
     cuisine: restaurant.cuisine || "",
     capacity: restaurant.capacity || "",
     location: restaurant.location || "",
+    address: restaurant.address || "",
+    state: restaurant.state || "",
+    pincode: restaurant.pincode || "",
     hours: restaurant.hours || "",
     parking: restaurant.parking || "",
     dressCode: restaurant.dressCode || "",
@@ -52,6 +67,9 @@ export default function ProfilePage() {
       cuisine: restaurant.cuisine || "",
       capacity: restaurant.capacity || "",
       location: restaurant.location || "",
+      address: restaurant.address || "",
+      state: restaurant.state || "",
+      pincode: restaurant.pincode || "",
       hours: restaurant.hours || "",
       parking: restaurant.parking || "",
       dressCode: restaurant.dressCode || "",
@@ -111,19 +129,14 @@ export default function ProfilePage() {
       await storage.updateRestaurantDetails({
         ...restaurantForm,
         reservationFeePerGuest: Number(restaurantForm.reservationFeePerGuest),
-        cancellationCutoffMinutes: Number(
-          restaurantForm.cancellationCutoffMinutes,
-        ),
+        cancellationCutoffMinutes: Number(restaurantForm.cancellationCutoffMinutes),
         noShowGraceMinutes: Number(restaurantForm.noShowGraceMinutes),
       });
       refresh();
       setEditingRestaurant(false);
       showToast("Restaurant details saved.");
     } catch (error) {
-      showToast(
-        error.message || "Unable to update restaurant details.",
-        "error",
-      );
+      showToast(error.message || "Unable to update restaurant details.", "error");
     }
   };
   const toggleServing = async (event) => {
@@ -160,9 +173,7 @@ export default function ProfilePage() {
     setEditingPolicies(true);
   };
   const removePolicy = (index) =>
-    setPolicies((current) =>
-      current.filter((_policy, itemIndex) => itemIndex !== index),
-    );
+    setPolicies((current) => current.filter((_policy, itemIndex) => itemIndex !== index));
   const uploadProfilePhoto = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -190,9 +201,7 @@ export default function ProfilePage() {
       for (const file of files)
         await storage.uploadRestaurantImage(file, primary && file === files[0]);
       refresh();
-      showToast(
-        `${files.length} image${files.length === 1 ? "" : "s"} uploaded.`,
-      );
+      showToast(`${files.length} image${files.length === 1 ? "" : "s"} uploaded.`);
     } catch (error) {
       showToast(error.message || "Restaurant image upload failed.", "error");
     }
@@ -204,10 +213,7 @@ export default function ProfilePage() {
       refresh();
       showToast("Restaurant photo removed.", "info");
     } catch (error) {
-      showToast(
-        error.message || "Unable to remove the restaurant photo.",
-        "error",
-      );
+      showToast(error.message || "Unable to remove the restaurant photo.", "error");
     }
   };
 
@@ -217,11 +223,14 @@ export default function ProfilePage() {
     ["City", "city"],
     ["Restaurant Name", "restaurantName"],
     ["Member Since", "memberSince"],
+    ["Restaurant ID", "restaurantId"],
   ];
   const detailFields = [
     ["Cuisine Type", "cuisine"],
     ["Seating Capacity", "capacity"],
-    ["Location", "location"],
+    ["Address", "address"],
+    ["State", "state"],
+    ["Pincode", "pincode"],
     ["Opening Hours", "hours"],
     ["Parking", "parking"],
     ["Dress Code", "dressCode"],
@@ -248,12 +257,7 @@ export default function ProfilePage() {
           </div>
           <label className="btn btn-primary-green btn-small">
             <i className="ph ph-image" /> Upload Photo
-            <input
-              type="file"
-              accept="image/*"
-              hidden
-              onChange={uploadProfilePhoto}
-            />
+            <input type="file" accept="image/*" hidden onChange={uploadProfilePhoto} />
           </label>
           {profile.avatar && (
             <button
@@ -273,9 +277,7 @@ export default function ProfilePage() {
               type="button"
               onClick={() => setEditingProfile((value) => !value)}
             >
-              <i
-                className={`ph ${editingProfile ? "ph-x" : "ph-pencil-simple"}`}
-              />{" "}
+              <i className={`ph ${editingProfile ? "ph-x" : "ph-pencil-simple"}`} />{" "}
               {editingProfile ? "Cancel" : "Edit Profile"}
             </button>
           </div>
@@ -307,7 +309,9 @@ export default function ProfilePage() {
               {profileDetails.map(([label, key]) => (
                 <div className="detail-item" key={key}>
                   <span className="detail-label">{label}</span>
-                  <span className="detail-value">{profile[key] || "-"}</span>
+                  <span className="detail-value">
+                    {key === "restaurantId" ? restaurant.id || "-" : profile[key] || "-"}
+                  </span>
                 </div>
               ))}
             </div>
@@ -324,10 +328,15 @@ export default function ProfilePage() {
                 <input
                   type="checkbox"
                   checked={serving}
+                  disabled={!serving && !canOpenRestaurant}
+                  title={!serving ? openBlockReason : "Close the restaurant to new reservations"}
                   onChange={toggleServing}
                 />
                 <span className="slider" />
               </label>
+              {!serving && !canOpenRestaurant && (
+                <small className="serving-status-hint">{openBlockReason}</small>
+              )}
             </div>
             <button
               className="btn btn-primary-green btn-small"
@@ -384,9 +393,7 @@ export default function ProfilePage() {
               </div>
               <div className="rest-info-details">
                 <div className="rest-info-header">
-                  <h4>
-                    {restaurant.name || profile.restaurantName || "Restaurant"}
-                  </h4>
+                  <h4>{restaurant.name || profile.restaurantName || "Restaurant"}</h4>
                   <button
                     className="btn btn-primary-orange btn-small"
                     type="button"
@@ -403,8 +410,23 @@ export default function ProfilePage() {
                         <input
                           name={key}
                           value={restaurantForm[key]}
+                          readOnly={
+                            key === "hours" ||
+                            key === "address" ||
+                            key === "state" ||
+                            key === "pincode"
+                          }
                           onChange={update(setRestaurantForm)}
                         />
+                        {key === "hours" && (
+                          <button
+                            type="button"
+                            className="phase1-help-link"
+                            onClick={() => navigate("time-slots")}
+                          >
+                            Configure operating hours
+                          </button>
+                        )}
                       </label>
                     ))}
                     <label className="rest-about-editor">
@@ -424,15 +446,17 @@ export default function ProfilePage() {
                     <div className="rest-about">
                       <h5>About</h5>
                       <p>
-                        {restaurant.about ||
-                          "Restaurant details will appear here once configured."}
+                        {restaurant.about || "Restaurant details will appear here once configured."}
                       </p>
                     </div>
                     <div className="rest-details-grid">
                       {[
                         ["Cuisine Type", restaurant.cuisine],
                         ["Seating Capacity", restaurant.capacity],
-                        ["Location", restaurant.location],
+                        ["City", restaurant.location],
+                        ["Address", restaurant.address],
+                        ["State", restaurant.state],
+                        ["Pincode", restaurant.pincode],
                         ["Opening Hours", restaurant.hours],
                         ["Parking", restaurant.parking],
                         ["Dress Code", restaurant.dressCode],
@@ -469,11 +493,7 @@ export default function ProfilePage() {
                   <button
                     className="btn btn-primary-orange btn-small"
                     type="button"
-                    onClick={() =>
-                      editingPolicies
-                        ? savePolicies()
-                        : setEditingPolicies(true)
-                    }
+                    onClick={() => (editingPolicies ? savePolicies() : setEditingPolicies(true))}
                   >
                     {editingPolicies ? "Save Policies" : "Edit Policies"}
                   </button>
@@ -489,9 +509,7 @@ export default function ProfilePage() {
                           onChange={(event) =>
                             setPolicies((current) =>
                               current.map((item, itemIndex) =>
-                                itemIndex === index
-                                  ? { ...item, title: event.target.value }
-                                  : item,
+                                itemIndex === index ? { ...item, title: event.target.value } : item,
                               ),
                             )
                           }
@@ -501,9 +519,7 @@ export default function ProfilePage() {
                           onChange={(event) =>
                             setPolicies((current) =>
                               current.map((item, itemIndex) =>
-                                itemIndex === index
-                                  ? { ...item, desc: event.target.value }
-                                  : item,
+                                itemIndex === index ? { ...item, desc: event.target.value } : item,
                               ),
                             )
                           }
@@ -537,16 +553,16 @@ export default function ProfilePage() {
             <div className="gallery-panel">
               <div className="gallery-panel-head">
                 <h4>Restaurant Gallery</h4>
-              <label className="btn btn-primary-orange btn-small">
-                Upload Images
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  hidden
-                  onChange={(event) => uploadRestaurantImages(event)}
-                />
-              </label>
+                <label className="btn btn-primary-orange btn-small">
+                  Upload Images
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    hidden
+                    onChange={(event) => uploadRestaurantImages(event)}
+                  />
+                </label>
               </div>
               <div className="gallery-grid">
                 {(data?.gallery || []).map((image) => (
@@ -562,9 +578,7 @@ export default function ProfilePage() {
                     </button>
                   </div>
                 ))}
-                {!(data?.gallery || []).length && (
-                  <p>No restaurant images have been added yet.</p>
-                )}
+                {!(data?.gallery || []).length && <p>No restaurant images have been added yet.</p>}
               </div>
             </div>
           )}
@@ -578,18 +592,14 @@ export default function ProfilePage() {
               <i className="ph ph-calendar-blank" />
             </div>
             <span className="activity-label">Today&apos;s Reservations</span>
-            <span className="activity-value">
-              {data?.activity?.reservations || 0}
-            </span>
+            <span className="activity-value">{data?.activity?.reservations || 0}</span>
           </div>
           <div className="activity-card">
             <div className="activity-icon bg-green-light text-green">
               <i className="ph ph-squares-four" />
             </div>
             <span className="activity-label">Available Tables</span>
-            <span className="activity-value">
-              {data?.activity?.availableTables || 0}
-            </span>
+            <span className="activity-value">{data?.activity?.availableTables || 0}</span>
           </div>
           <div className="activity-card">
             <div className="activity-icon bg-green-light text-green">
@@ -597,8 +607,7 @@ export default function ProfilePage() {
             </div>
             <span className="activity-label">Average Rating</span>
             <span className="activity-value rating-inline">
-              {data?.activity?.avgRating || 0}{" "}
-              <i className="ph-fill ph-star text-orange" />
+              {data?.activity?.avgRating || 0} <i className="ph-fill ph-star text-orange" />
             </span>
           </div>
         </div>
@@ -606,5 +615,3 @@ export default function ProfilePage() {
     </ManagerLayout>
   );
 }
-
-

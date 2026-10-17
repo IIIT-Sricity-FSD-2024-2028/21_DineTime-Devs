@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { indiaToday } from "../../../app/indiaTime.js";
+import { createAction } from "../../../app/actions.js";
+import { useState, useContext } from "react";
 import ManagerLayout from "../components/ManagerLayout";
-import { useManager } from "../hooks/useManager";
-import { useToast } from "../hooks/useToast";
+import { ManagerContext } from "../context/ManagerContext.jsx";
+import { ToastContext } from "../context/ToastContext.jsx";
 
 function todayIso() {
-  const date = new Date();
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  return indiaToday();
 }
 
 const stats = [
@@ -17,31 +18,24 @@ const stats = [
 ];
 
 export default function ReservationsPage() {
-  const { data, storage, refresh } = useManager();
-  const { showToast } = useToast();
+  const { data, storage, refresh, navigate } = useContext(ManagerContext);
+  const { showToast } = useContext(ToastContext);
   const [query, setQuery] = useState("");
   const [date, setDate] = useState(todayIso());
   const [status, setStatus] = useState("");
   const [guests, setGuests] = useState("");
   const [expanded, setExpanded] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [run] = useState(() => createAction(setBusy, setError));
   const reservations = data?.reservations || [];
-  const todayReservations = reservations.filter(
-    (reservation) => reservation.date === todayIso(),
-  );
+  const todayReservations = reservations.filter((reservation) => reservation.date === todayIso());
   const counts = {
     total: todayReservations.length,
-    confirmed: todayReservations.filter(
-      (reservation) => reservation.status === "Confirmed",
-    ).length,
-    pending: todayReservations.filter(
-      (reservation) => reservation.status === "Pending",
-    ).length,
-    cancelled: todayReservations.filter(
-      (reservation) => reservation.status === "Cancelled",
-    ).length,
-    noshow: todayReservations.filter(
-      (reservation) => reservation.status === "No-show",
-    ).length,
+    confirmed: todayReservations.filter((reservation) => reservation.status === "Confirmed").length,
+    pending: todayReservations.filter((reservation) => reservation.status === "Pending").length,
+    cancelled: todayReservations.filter((reservation) => reservation.status === "Cancelled").length,
+    noshow: todayReservations.filter((reservation) => reservation.status === "No-show").length,
   };
   const filtered = reservations.filter((reservation) => {
     const needle = query.toLowerCase();
@@ -71,15 +65,12 @@ export default function ReservationsPage() {
     showToast("Filters cleared.");
   };
 
-  const markComplete = async (reservation) => {
-    try {
+  const markComplete = (reservation) =>
+    run(async () => {
       await storage.updateReservationStatus(reservation.id, "Complete");
       refresh();
       showToast(`Reservation #${reservation.id} marked as complete.`);
-    } catch (error) {
-      showToast(error.message || "Unable to update reservation.", "error");
-    }
-  };
+    });
 
   return (
     <ManagerLayout
@@ -112,18 +103,16 @@ export default function ReservationsPage() {
             <div className="premium-date-wrapper">
               <input
                 type="date"
+                aria-label="Reservation date"
                 value={date}
-                onChange={(event) => setDate(event.target.value)}
+                onInput={(event) => setDate(event.target.value)}
               />
               <i className="ph ph-calendar-blank" />
             </div>
           </div>
           <div className="dropdown-wrapper">
             <i className="ph ph-funnel" />
-            <select
-              value={status}
-              onChange={(event) => setStatus(event.target.value)}
-            >
+            <select value={status} onChange={(event) => setStatus(event.target.value)}>
               <option value="">All Statuses</option>
               <option>Confirmed</option>
               <option>Pending</option>
@@ -134,49 +123,57 @@ export default function ReservationsPage() {
           </div>
           <div className="dropdown-wrapper">
             <i className="ph ph-users" />
-            <select
-              value={guests}
-              onChange={(event) => setGuests(event.target.value)}
-            >
+            <select value={guests} onChange={(event) => setGuests(event.target.value)}>
               <option value="">Any Size</option>
               <option value="2">2 Guests</option>
               <option value="4">4 Guests</option>
               <option value="6+">6+ Guests</option>
             </select>
           </div>
-          <button
-            className="btn btn-small clear-filters-btn"
-            type="button"
-            onClick={clearFilters}
-          >
+          <button className="btn btn-small clear-filters-btn" type="button" onClick={clearFilters}>
             <i className="ph ph-x" /> Clear Filters
           </button>
         </div>
       </section>
       <div className="reservations-list">
+        <button
+          type="button"
+          className="btn btn-outline"
+          disabled={busy}
+          onClick={() =>
+            run(async () => {
+              await storage.refreshFromBackend();
+              refresh();
+            })
+          }
+        >
+          Refresh Reservations
+        </button>
+        {error && (
+          <p role="alert" className="phase1-error">
+            {error}
+          </p>
+        )}
         {filtered.length ? (
           filtered.map((reservation) => (
             <article className="res-card card" key={reservation.id}>
               <button
                 className="res-summary"
                 type="button"
-                onClick={() =>
-                  setExpanded(
-                    expanded === reservation.id ? null : reservation.id,
-                  )
-                }
+                onClick={() => setExpanded(expanded === reservation.id ? null : reservation.id)}
               >
                 <div className="res-primary">
                   <h4>
                     {reservation.name}{" "}
-                    <span className={`res-badge res-badge-${reservation.status.toLowerCase().replace(/\s+/g, "-")}`}>
+                    <span
+                      className={`res-badge res-badge-${reservation.status.toLowerCase().replace(/\s+/g, "-")}`}
+                    >
                       {reservation.status}
                     </span>
                   </h4>
                   <div className="res-meta">
                     <span>
-                      <i className="ph ph-calendar-blank" /> {reservation.date}{" "}
-                      | {reservation.time}
+                      <i className="ph ph-calendar-blank" /> {reservation.date} | {reservation.time}
                     </span>
                     <span>
                       <i className="ph ph-users" /> {reservation.guests} guests
@@ -184,6 +181,13 @@ export default function ReservationsPage() {
                     <span>
                       <i className="ph ph-armchair" /> {reservation.table}
                     </span>
+                    {reservation.diner_paid_excluding_platform_fee !== null &&
+                      reservation.diner_paid_excluding_platform_fee !== undefined && (
+                        <span className="res-paid-amount">
+                          <i className="ph ph-currency-inr" /> Paid ₹
+                          {reservation.diner_paid_excluding_platform_fee.toLocaleString("en-IN")}
+                        </span>
+                      )}
                   </div>
                 </div>
                 <span className="toggle-text">
@@ -204,14 +208,21 @@ export default function ReservationsPage() {
                       <span className="detail-label">Phone Number</span>
                       <span className="detail-value">{reservation.phone}</span>
                     </div>
-                    <div className="detail-item-small">
-                      <span className="detail-label">Special Request</span>
-                      <span className="detail-value">
-                        {reservation.request}
-                      </span>
-                    </div>
                   </div>
+
                   <div className="res-actions">
+                    <button
+                      type="button"
+                      className="btn btn-outline btn-small"
+                      onClick={() =>
+                        navigate("issues", {
+                          reservation: reservation.id,
+                          issue: "customer_dispute_no_show",
+                        })
+                      }
+                    >
+                      Get Help
+                    </button>
                     {reservation.status === "Complete" ? (
                       <button
                         className="btn btn-small"
@@ -235,7 +246,12 @@ export default function ReservationsPage() {
                       <button
                         className="btn btn-primary-green btn-small"
                         type="button"
-                        disabled={reservation.status !== "Confirmed"}
+                        disabled={busy || reservation.reservation_status !== "checked_in"}
+                        title={
+                          reservation.reservation_status === "reserved"
+                            ? "Restaurant staff must check in the diner before completion."
+                            : undefined
+                        }
                         onClick={() => markComplete(reservation)}
                       >
                         Mark Complete
@@ -256,4 +272,3 @@ export default function ReservationsPage() {
     </ManagerLayout>
   );
 }
-

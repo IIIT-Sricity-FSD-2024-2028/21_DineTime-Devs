@@ -1,4 +1,5 @@
-import { useManager } from "../hooks/useManager";
+import { useContext } from "react";
+import { ManagerContext } from "../context/ManagerContext.jsx";
 
 const links = [
   ["profile", "ph-user", "Profile"],
@@ -20,7 +21,7 @@ const links = [
 ];
 
 export default function ManagerSidebar() {
-  const { navigate, currentPage } = useManager();
+  const { navigate, currentPage } = useContext(ManagerContext);
 
   return (
     <aside className="sidebar">
@@ -38,7 +39,10 @@ export default function ManagerSidebar() {
               <a
                 href="#"
                 className={currentPage === page ? "active" : ""}
-                onClick={(e) => { e.preventDefault(); navigate(page); }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate(page);
+                }}
               >
                 <i className={`ph ${icon}`} />
                 <span>{label}</span>

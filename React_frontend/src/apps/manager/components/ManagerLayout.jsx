@@ -11,9 +11,7 @@ export default function ManagerLayout({
 }) {
   const pageClass = [
     "manager-page",
-    headerVariant === "profile"
-      ? "manager-page-profile"
-      : "manager-page-compact",
+    headerVariant === "profile" ? "manager-page-profile" : "manager-page-compact",
     pageClassName,
   ]
     .filter(Boolean)

@@ -1,19 +1,16 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import ManagerSidebar from "../components/ManagerSidebar";
-import { useManager } from "../hooks/useManager";
-import { useToast } from "../hooks/useToast";
+import { ManagerContext } from "../context/ManagerContext.jsx";
+import { ToastContext } from "../context/ToastContext.jsx";
 
 export default function StaffPage() {
-  const { data, storage, refresh, navigate } = useManager();
+  const { data, storage, refresh, navigate } = useContext(ManagerContext);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("");
   const staff = data?.staff || [];
   const filtered = staff.filter(
     (member) =>
-      (!query ||
-        `${member.name} ${member.email}`
-          .toLowerCase()
-          .includes(query.toLowerCase())) &&
+      (!query || `${member.name} ${member.email}`.toLowerCase().includes(query.toLowerCase())) &&
       (!status || member.status === status),
   );
   const updateStatus = async (member, nextStatus) => {
@@ -27,46 +24,32 @@ export default function StaffPage() {
       await storage.updateStaffStatus(member.id, nextStatus);
       refresh();
       showToast(
-        nextStatus === "Approved"
-          ? "Staff access approved!"
-          : "Action completed.",
+        nextStatus === "Approved" ? "Staff access approved!" : "Action completed.",
         nextStatus === "Approved" ? "success" : "info",
       );
     } catch (error) {
       showToast(error.message || "Unable to update staff access.", "error");
     }
   };
-  const count = (value) =>
-    staff.filter((member) => member.status === value).length;
+  const count = (value) => staff.filter((member) => member.status === value).length;
   return (
     <div className="app-container">
       <ManagerSidebar />
       <main className="main-content">
-        <header
-          className="top-header staff-header"
-          style={{ height: 200, overflow: "visible" }}
-        >
+        <header className="top-header staff-header" style={{ height: 200, overflow: "visible" }}>
           <div
             className="header-overlay"
             style={{
-              background:
-                "linear-gradient(to right,rgba(0,0,0,0.8),rgba(0,0,0,0.4))",
+              background: "linear-gradient(to right,rgba(0,0,0,0.8),rgba(0,0,0,0.4))",
             }}
           />
           <div className="header-content">
             <div className="header-title">
-              <button
-                className="back-btn"
-                type="button"
-                onClick={() => navigate("profile")}
-              >
+              <button className="back-btn" type="button" onClick={() => navigate("profile")}>
                 <i className="ph ph-arrow-left" /> Back
               </button>
               <h2>Staff Management</h2>
-              <p>
-                Manage staff access requests and control restaurant staff
-                permissions.
-              </p>
+              <p>Manage staff access requests and control restaurant staff permissions.</p>
             </div>
             <div className="header-actions">
               <div className="user-profile-widget">
@@ -126,10 +109,7 @@ export default function StaffPage() {
             </div>
             <div className="dropdown-wrapper">
               <i className="ph ph-funnel" />
-              <select
-                value={status}
-                onChange={(event) => setStatus(event.target.value)}
-              >
+              <select value={status} onChange={(event) => setStatus(event.target.value)}>
                 <option value="">All Statuses</option>
                 <option>Pending</option>
                 <option>Approved</option>
@@ -153,9 +133,7 @@ export default function StaffPage() {
                       </div>
                     </div>
                     <span className="staff-status-badge">
-                      {member.status === "Pending"
-                        ? "Pending Approval"
-                        : member.status}
+                      {member.status === "Pending" ? "Pending Approval" : member.status}
                     </span>
                   </div>
                   <div className="staff-card-meta">
@@ -221,5 +199,3 @@ export default function StaffPage() {
     </div>
   );
 }
-
-

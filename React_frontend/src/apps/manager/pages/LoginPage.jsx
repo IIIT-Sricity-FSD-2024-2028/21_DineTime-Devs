@@ -66,7 +66,10 @@ export default function LoginPage({ navigate }) {
         <div className="login-left-overlay" />
         <a
           href="#"
-          onClick={(e) => { e.preventDefault(); window.location.href = "/"; }}
+          onClick={(e) => {
+            e.preventDefault();
+            window.location.href = "/";
+          }}
           className="login-back-arrow"
         >
           <i className="ph ph-arrow-left" />
@@ -82,8 +85,8 @@ export default function LoginPage({ navigate }) {
             Operations
           </h1>
           <p>
-            Manage tables, track real-time reservations, and optimize your
-            restaurant&apos;s performance with ease.
+            Manage tables, track real-time reservations, and optimize your restaurant&apos;s
+            performance with ease.
           </p>
         </div>
       </div>
@@ -94,9 +97,7 @@ export default function LoginPage({ navigate }) {
         </div>
         <form className="login-card" onSubmit={submit} noValidate>
           <h2>Welcome Back</h2>
-          <p className="login-subtitle">
-            Login to manage your restaurant operations and seating
-          </p>
+          <p className="login-subtitle">Login to manage your restaurant operations and seating</p>
           <div className="login-form-group">
             <div className="login-label-row">
               <label className="login-label" htmlFor="email-input">
@@ -124,7 +125,10 @@ export default function LoginPage({ navigate }) {
               <button
                 className="forgot-link"
                 type="button"
-                onClick={() => { setForgotOpen(true); setResetSent(false); }}
+                onClick={() => {
+                  setForgotOpen(true);
+                  setResetSent(false);
+                }}
               >
                 Forgot Password?
               </button>
@@ -155,31 +159,16 @@ export default function LoginPage({ navigate }) {
           <button className="btn-login" type="submit">
             Login
           </button>
-          <div className="divider">
-            <span>OR</span>
-          </div>
-          <div className="social-buttons-container">
-            <button
-              type="button"
-              className="btn-social-outline"
-              onClick={() => alert("Google sign-in is not connected yet.")}
-            >
-              <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" style={{ width: 20, height: 20 }} />
-              Continue with Google
-            </button>
-            <button
-              type="button"
-              className="btn-social-outline"
-              onClick={() => alert("Apple sign-in is not connected yet.")}
-            >
-              <i className="ph-fill ph-apple-logo" style={{ color: '#000', fontSize: 22 }} />
-              Continue with Apple
-            </button>
-          </div>
         </form>
         <div className="login-register-row">
           Don&apos;t have an account?{" "}
-          <a href="#" onClick={(e) => { e.preventDefault(); navigate("register"); }}>
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("register");
+            }}
+          >
             Create Account
           </a>
         </div>
@@ -201,8 +190,8 @@ export default function LoginPage({ navigate }) {
             <h2>Reset Password</h2>
             {resetSent ? (
               <div className="reset-success-msg">
-                <i className="ph ph-check-circle" /> If an account exists, reset
-                instructions will be sent to your email.
+                <i className="ph ph-check-circle" /> If an account exists, reset instructions will
+                be sent to your email.
               </div>
             ) : (
               <form onSubmit={sendReset}>

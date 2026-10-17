@@ -1,13 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import ManagerLayout from "../components/ManagerLayout";
-import { useManager } from "../hooks/useManager";
+import { ManagerContext } from "../context/ManagerContext.jsx";
 
 export default function RevenuePage() {
-  const { storage } = useManager();
+  const { storage, navigate, data } = useContext(ManagerContext);
+  const [error, setError] = useState("");
   const [revenue, setRevenue] = useState({
     pending_payout: 0,
     paid_by_platform: 0,
-    settlement_history: [],
+    payments: [],
   });
   useEffect(() => {
     let active = true;
@@ -20,26 +21,41 @@ export default function RevenuePage() {
           { headers: storage._headers("manager") },
         );
         if (active) setRevenue(response?.data || {});
-      } catch {
-        if (active)
-          setRevenue({
-            pending_payout: 0,
-            paid_by_platform: 0,
-            settlement_history: [],
-          });
+      } catch (cause) {
+        if (active) setError(cause.message);
       }
     };
     load();
+    window.addEventListener("focus", load);
     return () => {
       active = false;
+      window.removeEventListener("focus", load);
     };
-  }, [storage]);
+  }, [storage, data.restaurant?.id]);
+  const settledPayments = (revenue.payments || []).filter(
+    (payment) => payment.settled_at && payment.status !== "pending_payout",
+  );
   return (
     <ManagerLayout
       title="Revenue"
-      description="What the platform still owes you, and what it has already paid you."
+      description="Track your restaurant revenue and payout history."
       pageClassName="manager-page-restaurant-header"
     >
+      {error && (
+        <p role="alert" className="phase1-error">
+          {error}
+        </p>
+      )}
+      <p className="phase1-lock-note">
+        Funds remain held until manager completion. No-shows require finance review.
+      </p>
+      <button
+        type="button"
+        className="btn btn-outline"
+        onClick={() => navigate("issues", { issue: "payout_missing" })}
+      >
+        Get Help with a Payout
+      </button>
       <div className="revenue-grid">
         <div className="revenue-card revenue-pending">
           <h4>Yet to be Paid</h4>
@@ -53,26 +69,34 @@ export default function RevenuePage() {
         </div>
       </div>
       <section className="revenue-table-container">
-        <h3>Payout History</h3>
+        <h3>Payment History</h3>
         <table className="revenue-table">
           <thead>
             <tr>
+              <th>Payment ID</th>
               <th>Date &amp; Time</th>
+              <th>Reservation ID</th>
               <th>Amount</th>
             </tr>
           </thead>
           <tbody>
-            {revenue.settlement_history?.length ? (
-              revenue.settlement_history.map((entry) => (
-                <tr key={`${entry.settled_at}-${entry.amount}`}>
-                  <td>{new Date(entry.settled_at).toLocaleString()}</td>
-                  <td>₹{entry.amount}</td>
+            {settledPayments.length ? (
+              settledPayments.map((payment) => (
+                <tr key={payment.id}>
+                  <td>{payment.payment_id || payment.id}</td>
+                  <td>
+                    {new Date(payment.settled_at).toLocaleString("en-IN", {
+                      timeZone: "Asia/Kolkata",
+                    })}
+                  </td>
+                  <td>{payment.reservation_id || "—"}</td>
+                  <td>₹{payment.amount}</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="2" className="empty-state">
-                  No payouts yet.
+                <td colSpan="4" className="empty-state">
+                  No payouts received yet.
                 </td>
               </tr>
             )}
@@ -82,4 +106,3 @@ export default function RevenuePage() {
     </ManagerLayout>
   );
 }
-

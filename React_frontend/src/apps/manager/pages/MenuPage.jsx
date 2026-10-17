@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import ManagerLayout from "../components/ManagerLayout";
-import { useManager } from "../hooks/useManager";
-import { useToast } from "../hooks/useToast";
+import { ManagerContext } from "../context/ManagerContext.jsx";
+import { ToastContext } from "../context/ToastContext.jsx";
 
 const categoryOrder = ["Starters", "Main Course", "Desserts", "Beverages"];
 const emptyForm = {
@@ -27,16 +27,14 @@ function readImage(file) {
 }
 
 export default function MenuPage() {
-  const { data, storage, refresh } = useManager();
-  const { showToast } = useToast();
+  const { data, storage, refresh } = useContext(ManagerContext);
+  const { showToast } = useContext(ToastContext);
   const [form, setForm] = useState(emptyForm);
   const [modalOpen, setModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const items = data?.menu || [];
   const grouped = (() => {
-    const result = Object.fromEntries(
-      categoryOrder.map((category) => [category, []]),
-    );
+    const result = Object.fromEntries(categoryOrder.map((category) => [category, []]));
     items.forEach((item) => {
       if (!result[item.category]) result[item.category] = [];
       result[item.category].push(item);
@@ -84,8 +82,7 @@ export default function MenuPage() {
   };
 
   const removeItem = async (item) => {
-    if (!window.confirm("Are you sure you want to delete this menu item?"))
-      return;
+    if (!window.confirm("Are you sure you want to delete this menu item?")) return;
     try {
       await storage.deleteMenuItem(item.id);
       refresh();
@@ -100,9 +97,7 @@ export default function MenuPage() {
     const price = Number(form.price);
     if (!form.name.trim() || !price || price > 300) {
       showToast(
-        price > 300
-          ? "Price must be Rs.300 or less."
-          : "Please complete all required fields.",
+        price > 300 ? "Price must be Rs.300 or less." : "Please complete all required fields.",
         "error",
       );
       return;
@@ -110,9 +105,7 @@ export default function MenuPage() {
 
     setSaving(true);
     try {
-      const image = form.imageFile
-        ? await storage.uploadMenuImage(form.imageFile)
-        : form.image;
+      const image = form.imageFile ? await storage.uploadMenuImage(form.imageFile) : form.image;
       if (form.id) {
         await storage.updateMenuItem(form.id, {
           name: form.name.trim(),
@@ -148,11 +141,7 @@ export default function MenuPage() {
       <section className="card menu-items-card">
         <div className="menu-card-header">
           <h4>Menu Items</h4>
-          <button
-            className="btn btn-primary-orange"
-            type="button"
-            onClick={openCreate}
-          >
+          <button className="btn btn-primary-orange" type="button" onClick={openCreate}>
             <i className="ph ph-plus" /> Add Menu Item
           </button>
         </div>
@@ -163,11 +152,7 @@ export default function MenuPage() {
           </div>
         ) : (
           categoryOrder
-            .concat(
-              Object.keys(grouped).filter(
-                (category) => !categoryOrder.includes(category),
-              ),
-            )
+            .concat(Object.keys(grouped).filter((category) => !categoryOrder.includes(category)))
             .map((category) =>
               grouped[category]?.length ? (
                 <div className="category-group" key={category}>
@@ -208,9 +193,7 @@ export default function MenuPage() {
                               type="button"
                               onClick={() => toggleAvailability(item)}
                             >
-                              {item.available !== false
-                                ? "Available"
-                                : "Unavailable"}
+                              {item.available !== false ? "Available" : "Unavailable"}
                             </button>
                           </td>
                           <td>
@@ -247,9 +230,7 @@ export default function MenuPage() {
         <div
           className="modal-overlay"
           style={{ display: "flex" }}
-          onMouseDown={(event) =>
-            event.target === event.currentTarget && setModalOpen(false)
-          }
+          onMouseDown={(event) => event.target === event.currentTarget && setModalOpen(false)}
         >
           <div className="modal-content">
             <div className="modal-header">
@@ -305,27 +286,14 @@ export default function MenuPage() {
                 </div>
                 <div className="form-group">
                   <label htmlFor="menu-image">Upload Product Image</label>
-                  <input
-                    id="menu-image"
-                    type="file"
-                    accept="image/*"
-                    onChange={selectImage}
-                  />
+                  <input id="menu-image" type="file" accept="image/*" onChange={selectImage} />
                   <small>Recommended: Square image, max 2MB.</small>
                 </div>
                 <div className="form-actions">
-                  <button
-                    className="btn"
-                    type="button"
-                    onClick={() => setModalOpen(false)}
-                  >
+                  <button className="btn" type="button" onClick={() => setModalOpen(false)}>
                     Cancel
                   </button>
-                  <button
-                    className="btn btn-primary-green"
-                    type="submit"
-                    disabled={saving}
-                  >
+                  <button className="btn btn-primary-green" type="submit" disabled={saving}>
                     {saving ? "Saving..." : "Save Item"}
                   </button>
                 </div>
