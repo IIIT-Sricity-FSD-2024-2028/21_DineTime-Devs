@@ -116,6 +116,11 @@ export default function BookPage() {
             <EmptyState title="Choose a restaurant first">
               <PageLink page="browse">Browse restaurants</PageLink>
             </EmptyState>
+          ) : restaurant.is_open === false || restaurant.is_closed ? (
+            <EmptyState title="New reservations are paused">
+              Existing bookings remain confirmed.{" "}
+              <PageLink page="reservations">View My Reservations</PageLink>
+            </EmptyState>
           ) : (
             <>
               <section className="restaurant-banner">

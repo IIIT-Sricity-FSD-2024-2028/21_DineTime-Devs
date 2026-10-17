@@ -43,6 +43,7 @@ export default function ReservationCard({
     if (result) setDineCompletedLocally(true);
   }
   const restaurant = restaurants.find((item) => item.id === reservation.restaurant_id);
+  const paused = restaurant?.is_open === false && reservation.reservation_status === "reserved";
   const slot = slots.find((item) => item.id === reservation.slot_id);
   const reservationTableIds = reservation.table_ids?.length
     ? reservation.table_ids
@@ -60,6 +61,7 @@ export default function ReservationCard({
         <img src={restaurant?.image} className="up-thumb" alt={restaurant?.name || "Restaurant"} />
         <div className="up-details">
           <div className="up-title">{restaurant?.name}</div>
+          {paused && <p role="status">New reservations paused. Your booking remains confirmed.</p>}
           <div className="up-meta">
             <Icon name="calendar" /> {slot?.slot_date || slot?.date}
           </div>
@@ -112,6 +114,7 @@ export default function ReservationCard({
           <span className="res-name">{restaurant?.name || "Restaurant"}</span>
           <StatusBadge status={reservation.reservation_status} />
         </div>
+        {paused && <p role="status">New reservations paused. Your booking remains confirmed.</p>}
         <div className="res-info-grid">
           <div className="res-info-item">
             <Icon name="calendar" />

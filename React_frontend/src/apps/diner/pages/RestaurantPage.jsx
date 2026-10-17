@@ -80,9 +80,19 @@ export default function RestaurantPage() {
                       </span>
                     ))}
                   </div>
-                  <PageLink page="book" params={{ id: restaurant.id }} className="btn-reserve-main">
-                    Reserve Table
-                  </PageLink>
+                  {restaurant.is_open === false || restaurant.is_closed ? (
+                    <p role="status">
+                      New reservations are paused. Existing bookings remain confirmed.
+                    </p>
+                  ) : (
+                    <PageLink
+                      page="book"
+                      params={{ id: restaurant.id }}
+                      className="btn-reserve-main"
+                    >
+                      Reserve Table
+                    </PageLink>
+                  )}
                 </div>
               </section>
               <section className="detail-card">

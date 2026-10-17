@@ -129,7 +129,9 @@ export default function App() {
     case "browse":
       content = (
         <BrowsePage
-          restaurants={data.restaurants}
+          restaurants={data.restaurants.filter(
+            (restaurant) => restaurant.is_open !== false && !restaurant.is_closed,
+          )}
           user={user}
           loading={data.loading}
           error={data.error}

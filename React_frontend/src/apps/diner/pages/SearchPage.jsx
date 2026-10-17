@@ -7,7 +7,10 @@ import { DinerContext } from "../context/DinerContext.js";
 import { image } from "../utils/images.js";
 
 export default function SearchPage() {
-  const { restaurants, params, user } = useContext(DinerContext);
+  const { restaurants: restaurantCatalog, params, user } = useContext(DinerContext);
+  const restaurants = restaurantCatalog.filter(
+    (restaurant) => restaurant.is_open !== false && !restaurant.is_closed,
+  );
   const [query, setQuery] = useState(params.q || "");
   const dinerCity = user?.city?.trim() || "";
   const cityRestaurants = dinerCity

@@ -76,6 +76,13 @@ export default function DetailsPage() {
                     <span className="detail-value">{restaurant?.location}</span>
                   </div>
                   <ReservationPayment reservation={reservation} />
+                  {restaurant?.is_open === false &&
+                    reservation.reservation_status === "reserved" && (
+                      <p role="status">
+                        New reservations are paused. Your booking remains confirmed and can still be
+                        checked in or rescheduled.
+                      </p>
+                    )}
                   <div className="reservation-extra-actions">
                     {canModify(reservation, slot) && (
                       <PageLink
