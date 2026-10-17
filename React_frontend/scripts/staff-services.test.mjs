@@ -61,7 +61,7 @@ function fixture() {
     }
     return values[path] || [];
   };
-  return { api, writes };
+  return { api, writes, values };
 }
 test("staff availability and capacity belong to the selected service", async () => {
   const { api } = fixture();
@@ -78,7 +78,49 @@ test("staff table updates target one service and do not alter the whole date", a
   const { api, writes } = fixture();
   await api.refresh("2030-01-01", "s1");
   const table = api.getSnapshot().tables[0];
-  await api.updateTableStatus(table.id, table.slotIds, "Occupied");
+  await api.updateTableStatus(table.id, table.slotIds, "Blocked");
   assert.equal(writes.length, 1);
   assert.equal(writes[0].slot_id, "s1");
+});
+
+test("manual holds and guest bookings are distinguished for the selected service", async () => {
+  const { api, values } = fixture();
+  values["/tableslots"][0].status = "reserved";
+  await api.refresh("2030-01-01", "s1");
+  assert.equal(api.getSnapshot().tables[0].bookingManaged, false);
+  values["/reservations?restaurant_id=r"] = [
+    {
+      id: "booking",
+      restaurant_id: "r",
+      table_ids: ["t1", "t2"],
+      slot_id: "s2",
+      reservation_status: "checked_in",
+    },
+  ];
+  await api.refresh("2030-01-01", "s1");
+  assert.equal(api.getSnapshot().tables[0].bookingManaged, false);
+  await api.refresh("2030-01-01", "s2");
+  assert.ok(api.getSnapshot().tables.every((table) => table.bookingManaged));
+  values["/reservations?restaurant_id=r"][0].reservation_status = "completed";
+  await api.refresh("2030-01-01", "s2");
+  assert.ok(api.getSnapshot().tables.every((table) => !table.bookingManaged));
+});
+
+test("staff blocked tables remain blocked in the selected service and send a block action", async () => {
+  const { api, writes, values } = fixture();
+  values["/tableslots"][0] = {
+    table_id: "t1",
+    slot_id: "s1",
+    status: "blocked",
+    schedule_block: true,
+  };
+  await api.refresh("2030-01-01", "s1");
+  const table = api.getSnapshot().tables[0];
+  assert.equal(table.computedStatus, "blocked");
+  assert.equal(table.scheduleBlocked, true);
+  await api.updateTableStatus("t2", ["s2"], "Blocked");
+  assert.equal(writes[0].status, "blocked");
+  assert.equal(writes[0].slot_id, "s2");
+  await assert.rejects(api.updateTableStatus("t1", ["s1"], "Occupied"), /Available or Blocked/);
+  assert.equal(writes.length, 1);
 });
