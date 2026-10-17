@@ -103,14 +103,32 @@ class DinerApi {
       method: "POST",
       body: { email: email.trim().toLowerCase(), password },
     });
-    if (session?.user?.role !== "diner" || session.user.status !== "active")
+    return this.acceptLogin(session);
+  }
+
+  // The shared sign-in page must update this cached client as well as storage.
+  // This also invalidates work started by a previous login in the same tab.
+  acceptLogin(session) {
+    if (
+      !session?.access_token ||
+      session.user?.role !== "diner" ||
+      session.user.status !== "active"
+    )
       throw new Error("Please sign in with an active diner account.");
     // Persist only public profile fields, never the backend password hash.
     const { password_hash, ...user } = session.user;
     this.authVersion += 1;
     this.refreshVersion += 1;
+    this.data = {
+      ...this.data,
+      reservations: [],
+      notifications: [],
+      reservationError: "",
+      notificationError: "",
+      loading: false,
+      error: "",
+    };
     this.saveSession({ access_token: session.access_token, user });
-    this.publish({ loading: false, error: "" });
     return user;
   }
 
@@ -236,7 +254,7 @@ class DinerApi {
         this.session = { ...this.session, user: hydratedUser };
         sessionStorage.setItem(SESSION_KEY, JSON.stringify(bindSession(this.session)));
       }
-      const normalized = restaurants.map((restaurant) => {
+      const normalizeRestaurant = (restaurant) => {
         const location = locations.find((item) => item.id === restaurant.location_id);
         const description = restaurant.description || "";
         const details = Object.fromEntries(
@@ -284,7 +302,7 @@ class DinerApi {
             ),
           ],
         };
-      });
+      };
       let reservations = [],
         notifications = [],
         reservationError = "",
@@ -300,6 +318,16 @@ class DinerApi {
         else notificationError = notificationResult.reason.message;
       }
       if (!isCurrent()) return;
+      const restaurantById = new Map(restaurants.map((restaurant) => [restaurant.id, restaurant]));
+      reservations.forEach((reservation) => {
+        const restaurant = reservation.restaurant_summary;
+        if (restaurant)
+          restaurantById.set(restaurant.id, {
+            ...restaurantById.get(restaurant.id),
+            ...restaurant,
+          });
+      });
+      const normalized = [...restaurantById.values()].map(normalizeRestaurant);
       this.publish({
         restaurants: normalized,
         menu: menu.map((item) => ({
