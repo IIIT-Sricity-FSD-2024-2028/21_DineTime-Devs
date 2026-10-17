@@ -18,11 +18,11 @@ const stats = [
 ];
 
 export default function ReservationsPage() {
-  const { data, storage, refresh, navigate } = useContext(ManagerContext);
+  const { data, storage, refresh, navigate, params } = useContext(ManagerContext);
   const { showToast } = useContext(ToastContext);
   const [query, setQuery] = useState("");
-  const [date, setDate] = useState(todayIso());
-  const [status, setStatus] = useState("");
+  const [date, setDate] = useState(params?.active === "true" ? "" : todayIso());
+  const [status, setStatus] = useState(params?.active === "true" ? "Active" : "");
   const [guests, setGuests] = useState("");
   const [expanded, setExpanded] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -47,7 +47,11 @@ export default function ReservationsPage() {
           .includes(needle),
       );
     const matchesDate = !date || reservation.date === date;
-    const matchesStatus = !status || reservation.status === status;
+    const matchesStatus =
+      !status ||
+      (status === "Active"
+        ? ["reserved", "checked_in"].includes(reservation.reservation_status)
+        : reservation.status === status);
     const count = Number(reservation.guests || 0);
     const matchesGuests =
       !guests ||
@@ -114,6 +118,7 @@ export default function ReservationsPage() {
             <i className="ph ph-funnel" />
             <select value={status} onChange={(event) => setStatus(event.target.value)}>
               <option value="">All Statuses</option>
+              <option>Active</option>
               <option>Confirmed</option>
               <option>Pending</option>
               <option>Cancelled</option>
@@ -200,10 +205,12 @@ export default function ReservationsPage() {
               {expanded === reservation.id && (
                 <div className="res-details">
                   <div className="details-grid">
-                    <div className="detail-item-small">
-                      <span className="detail-label">Email Address</span>
-                      <span className="detail-value">{reservation.email}</span>
-                    </div>
+                    {reservation.email && (
+                      <div className="detail-item-small">
+                        <span className="detail-label">Email Address</span>
+                        <span className="detail-value">{reservation.email}</span>
+                      </div>
+                    )}
                     <div className="detail-item-small">
                       <span className="detail-label">Phone Number</span>
                       <span className="detail-value">{reservation.phone}</span>

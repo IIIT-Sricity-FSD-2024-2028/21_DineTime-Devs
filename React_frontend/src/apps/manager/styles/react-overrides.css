@@ -26,14 +26,35 @@
 .stat-icon-cancelled { color: #64748B; background: #E2E8F0; }
 .stat-icon-noshow { color: #EF4444; background: #FEE2E2; }
 .clear-filters-btn { background: #F1F5F9; color: var(--text-dark); border: 1px solid var(--border-color); min-width: 100px; }
-.serving-status-widget { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 8px 16px; border: 1px solid var(--border-color); border-radius: 8px; }
+.restaurant-card {
+  padding: 26px 28px 24px;
+  border: 1px solid #e3ebe5;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #ffffff 0%, #fbfdfb 100%);
+  box-shadow: 0 8px 24px rgba(45, 77, 54, 0.06);
+}
+.restaurant-card-header { align-items: flex-start; gap: 24px; margin-bottom: 20px; }
+.restaurant-card-header h3 { padding-top: 10px; font-size: 21px; letter-spacing: -0.02em; color: #173b25; }
+.restaurant-actions { display: grid; grid-template-columns: minmax(260px, 1fr) auto auto; align-items: stretch; gap: 12px; margin-left: auto; }
+.restaurant-actions > .btn { min-height: 46px; white-space: nowrap; border-radius: 10px; padding-inline: 18px; }
+.restaurant-actions > .btn-secondary { background: #f5f7f6; border: 1px solid #e0e6e1; color: #17241b; }
+.restaurant-actions > .btn-secondary:hover { background: #edf2ee; border-color: #cbd9ce; color: #173b25; }
+.restaurant-actions > .btn-primary-green { box-shadow: 0 4px 10px rgba(82, 122, 89, 0.18); }
+.serving-status-widget { min-height: 46px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 9px 14px 9px 16px; border: 1px solid #dce7df; border-radius: 11px; background: #f8fbf9; color: #274d32; font-size: 14px; font-weight: 600; }
 .serving-status-hint { flex-basis: 100%; max-width: 280px; color: var(--text-muted); font-size: 12px; line-height: 1.4; }
-.switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+.switch { position: relative; display: inline-block; flex: 0 0 auto; width: 50px; height: 28px; }
 .switch input { opacity: 0; width: 0; height: 0; }
-.slider { position: absolute; inset: 0; cursor: pointer; background: #cbd5e1; border-radius: 24px; transition: background .3s; }
-.slider::before { content: ''; position: absolute; height: 18px; width: 18px; left: 3px; bottom: 3px; border-radius: 50%; background: #fff; transition: transform .3s; }
+.slider { position: absolute; inset: 0; cursor: pointer; background: #cbd5e1; border-radius: 24px; box-shadow: inset 0 0 0 1px rgba(30, 41, 35, 0.08); transition: background .3s; }
+.slider::before { content: ''; position: absolute; height: 22px; width: 22px; left: 3px; bottom: 3px; border-radius: 50%; background: #fff; box-shadow: 0 2px 5px rgba(15, 23, 42, 0.18); transition: transform .3s; }
 .switch input:checked + .slider { background: var(--primary-green); }
-.switch input:checked + .slider::before { transform: translateX(20px); }
+.switch input:checked + .slider::before { transform: translateX(22px); }
+.restaurant-status-area { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; padding-top: 18px; border-top: 1px solid #edf1ee; }
+.restaurant-status-message { display: inline-flex; align-items: flex-start; gap: 9px; flex: 1 1 520px; margin: 0; color: #355141; font-size: 14px; line-height: 1.45; }
+.restaurant-status-message i { flex: 0 0 auto; margin-top: 2px; color: var(--primary-green); font-size: 17px; }
+.restaurant-closure-error { flex-basis: 100%; margin: 0; padding: 10px 12px; border: 1px solid #fecaca; border-radius: 9px; background: #fff7f7; color: #b42318; font-size: 13px; }
+.active-reservations-btn { display: inline-flex; align-items: center; gap: 7px; }
+.res-details .details-grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.res-details .detail-value { overflow-wrap: anywhere; }
 .rest-info-image img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
 .rest-img-empty { height: 100%; min-height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #64748b; background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 8px; }
 .rest-img-empty i { font-size: 32px; margin-bottom: 8px; }
@@ -159,7 +180,7 @@ select.form-control:focus, input.form-control:focus { border-color: var(--primar
 .profile-left .avatar-circle img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
 .rest-info-image .btn { margin-top: 10px; }
 .rest-img-empty { cursor: pointer; }
-.restaurant-actions { display: flex; align-items: center; gap: 12px; }
+.restaurant-actions { display: grid; grid-template-columns: minmax(260px, 1fr) auto auto; align-items: stretch; gap: 12px; margin-left: auto; }
 .rest-edit-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .rest-edit-grid label { display: flex; flex-direction: column; gap: 6px; color: var(--text-muted); font-size: 12px; }
 .rest-edit-grid input, .rest-edit-grid textarea, .policies-panel input, .policies-panel textarea { width: 100%; padding: 9px 10px; border: 1px solid var(--border-color); border-radius: 6px; font: inherit; }
@@ -452,8 +473,18 @@ select.form-control:focus, input.form-control:focus { border-color: var(--primar
 .user-profile-widget .user-info small { color:#c4d2c8;font-size:10px;line-height:1.25; }
 .res-meta .res-paid-amount { color:#247344;font-weight:700; }
 @media(max-width:700px) {
+  .restaurant-card { padding: 22px 18px 20px; }
+  .restaurant-card-header { flex-direction: column; gap: 16px; }
+  .restaurant-card-header h3 { padding-top: 0; }
+  .restaurant-actions { width: 100%; margin-left: 0; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .serving-status-widget { grid-column: 1 / -1; }
+  .restaurant-actions > .btn { width: 100%; }
   .manager-support-card { padding:20px 16px; }
   .manager-support-heading h3 { font-size:19px; }
   .manager-support-heading p span { display:table;margin:8px 0 0; }
+}
+@media(max-width:420px) {
+  .restaurant-actions { grid-template-columns: 1fr; }
+  .serving-status-widget { grid-column: auto; }
 }
 @media(max-width:600px) { .phase1-section-title { align-items:flex-start;flex-direction:column; } .phase1-toolbar label { width:100%; } .phase1-toolbar select { max-width:100%; } }

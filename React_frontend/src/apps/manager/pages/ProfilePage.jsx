@@ -5,6 +5,7 @@ import { ToastContext } from "../context/ToastContext.jsx";
 
 export default function ProfilePage() {
   const { data, storage, refresh, navigate } = useContext(ManagerContext);
+  const { showToast } = useContext(ToastContext);
   const profile = data?.profile || {};
   const restaurant = data?.restaurant || {};
   const [tab, setTab] = useState("profile-info");
@@ -12,12 +13,19 @@ export default function ProfilePage() {
   const [editingRestaurant, setEditingRestaurant] = useState(false);
   const [editingPolicies, setEditingPolicies] = useState(false);
   const [serving, setServing] = useState(Boolean(restaurant.is_open));
+  const [servingBusy, setServingBusy] = useState(false);
+  const [closureError, setClosureError] = useState("");
+  const activeReservationCount = (data?.reservations || []).filter((booking) =>
+    ["reserved", "checked_in"].includes(booking.reservation_status),
+  ).length;
   const canOpenRestaurant =
+    !restaurant.is_closed &&
     restaurant.verificationStatus === "approved" &&
     restaurant.tableCount > 0 &&
     restaurant.timeSlotCount > 0;
-  const openBlockReason =
-    restaurant.verificationStatus !== "approved"
+  const openBlockReason = restaurant.is_closed
+    ? "Reopen the restaurant before accepting new reservations."
+    : restaurant.verificationStatus !== "approved"
       ? "Opening is available after the restaurant is verified."
       : restaurant.tableCount === 0
         ? "Add at least one table before opening the restaurant."
@@ -140,19 +148,42 @@ export default function ProfilePage() {
     }
   };
   const toggleServing = async (event) => {
+    if (servingBusy) return;
     const next = event.target.checked;
     setServing(next);
+    setServingBusy(true);
     try {
-      await storage.setServingStatus(next);
+      const result = await storage.setServingStatus(next);
       refresh();
       showToast(
         next
-          ? "Your restaurant is now visible to diners."
-          : "Your restaurant is now hidden from diners.",
+          ? "Your restaurant is accepting new reservations."
+          : `New reservations paused. ${result?.active_reservation_count ?? activeReservationCount} existing reservation(s) remain confirmed.`,
       );
     } catch (error) {
       setServing(!next);
       showToast(error.message || "Could not update serving status.", "error");
+    } finally {
+      setServingBusy(false);
+    }
+  };
+  const toggleClosure = async () => {
+    if (servingBusy) return;
+    setServingBusy(true);
+    setClosureError("");
+    try {
+      await storage.setClosureStatus(!restaurant.is_closed);
+      refresh();
+      setServing(false);
+      showToast(
+        restaurant.is_closed
+          ? "Restaurant reopened. New reservations remain paused."
+          : "Restaurant closed.",
+      );
+    } catch (error) {
+      setClosureError(error.message || "Unable to change restaurant closure status.");
+    } finally {
+      setServingBusy(false);
     }
   };
   const savePolicies = async () => {
@@ -323,13 +354,18 @@ export default function ProfilePage() {
           <h3>Restaurant Overview</h3>
           <div className="restaurant-actions">
             <div className="serving-status-widget">
-              <span>{serving ? "Open to Serve" : "Closed to Serve"}</span>
+              <span>{serving ? "Accepting new reservations" : "New reservations paused"}</span>
               <label className="switch">
                 <input
                   type="checkbox"
+                  aria-label="Accept new reservations"
                   checked={serving}
-                  disabled={!serving && !canOpenRestaurant}
-                  title={!serving ? openBlockReason : "Close the restaurant to new reservations"}
+                  disabled={servingBusy || (!serving && !canOpenRestaurant)}
+                  title={
+                    !serving
+                      ? openBlockReason
+                      : "Pause new reservations; existing bookings remain confirmed"
+                  }
                   onChange={toggleServing}
                 />
                 <span className="slider" />
@@ -339,6 +375,14 @@ export default function ProfilePage() {
               )}
             </div>
             <button
+              type="button"
+              className="btn btn-secondary btn-small"
+              disabled={servingBusy}
+              onClick={toggleClosure}
+            >
+              {restaurant.is_closed ? "Reopen restaurant" : "Close restaurant"}
+            </button>
+            <button
               className="btn btn-primary-green btn-small"
               type="button"
               onClick={() => navigate("staff")}
@@ -346,6 +390,30 @@ export default function ProfilePage() {
               Manage Staff Access
             </button>
           </div>
+        </div>
+        <div className="restaurant-status-area">
+          <p className="restaurant-status-message" role="status">
+            <i className={`ph ${restaurant.is_closed ? "ph-storefront" : "ph-check-circle"}`} />
+            <span>
+              {restaurant.is_closed
+                ? "Restaurant closed. Reopen it before serving diners."
+                : `${activeReservationCount} active reservation(s). ${serving ? "Existing bookings are confirmed." : "Existing bookings remain confirmed and can still be checked in or rescheduled."}`}
+            </span>
+          </p>
+          {closureError && (
+            <p className="restaurant-closure-error" role="alert">
+              <i className="ph ph-warning-circle" /> {closureError}
+            </p>
+          )}
+          {activeReservationCount > 0 && (
+            <button
+              type="button"
+              className="btn btn-outline btn-small active-reservations-btn"
+              onClick={() => navigate("reservations", { active: "true" })}
+            >
+              <i className="ph ph-calendar-check" /> View active reservations
+            </button>
+          )}
         </div>
         <div className="tabs">
           {[

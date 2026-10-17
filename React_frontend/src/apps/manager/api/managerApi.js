@@ -335,6 +335,7 @@ class ManagerApi {
       ...this._cache.restaurant,
       id: restaurant.id,
       is_open: Boolean(restaurant.is_open),
+      is_closed: Boolean(restaurant.is_closed),
       verificationStatus: managerDetails.verification_status || "pending",
       tableCount: tables.length,
       timeSlotCount: slots.length,
@@ -398,10 +399,11 @@ class ManagerApi {
         const table = this._cache.tables.find((t) => t.id === r.table_id);
         const slot = slots.find((s) => s.id === r.slot_id);
         const statusValue = r.reservation_status || r.status;
+        const isWalkIn = /^walkin\.[^@]+@dinetime\.local$/i.test(user.email || "");
         return {
           id: r.id,
           name: user.name || "Guest",
-          email: user.email || "guest@example.com",
+          email: isWalkIn ? "" : user.email || "guest@example.com",
           phone: user.phone || "-",
           date: slot?.slot_date || slot?.date || new Date().toISOString().split("T")[0],
           time: slot?.start_time || "19:00",
@@ -763,13 +765,24 @@ class ManagerApi {
   static async setServingStatus(isOpen) {
     const ids = await this._ensureLinkedRestaurant();
 
-    await this._request(`/restaurants/${ids.restaurantId}/serving-status`, {
+    const response = await this._request(`/restaurants/${ids.restaurantId}/serving-status`, {
       method: "PATCH",
       headers: this._headers("manager"),
       body: JSON.stringify({ manager_id: ids.managerId, is_open: isOpen }),
     });
 
     this._cache.restaurant = { ...this._cache.restaurant, is_open: isOpen };
+    await this.refreshFromBackend();
+    return response?.data ?? response;
+  }
+
+  static async setClosureStatus(isClosed) {
+    const ids = await this._ensureLinkedRestaurant();
+    await this._request(`/restaurants/${ids.restaurantId}/closure-status`, {
+      method: "PATCH",
+      headers: this._headers("manager"),
+      body: JSON.stringify({ manager_id: ids.managerId, is_closed: isClosed }),
+    });
     await this.refreshFromBackend();
   }
 
