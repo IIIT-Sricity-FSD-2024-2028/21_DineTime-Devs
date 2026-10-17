@@ -1,0 +1,71 @@
+.unified-auth-page {
+  --ua-green: #4f7054;
+  --ua-green-dark: #1d3327;
+  --ua-cream: #fff5eb;
+  --ua-ink: #26364a;
+  --ua-muted: #74839a;
+  display: grid;
+  grid-template-columns: minmax(360px, 1fr) minmax(450px, 0.92fr);
+  min-height: 100vh;
+  color: var(--ua-ink);
+  background: var(--ua-cream);
+  font-family: Inter, system-ui, sans-serif;
+}
+.unified-auth-brand {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 100vh;
+  padding: clamp(32px, 6vw, 84px);
+  overflow: hidden;
+  color: white;
+  background-position: center;
+  background-size: cover;
+}
+.unified-auth-brand::after { position: absolute; inset: auto -15% -35% 30%; width: 70%; aspect-ratio: 1; border: 1px solid rgba(255,255,255,.11); border-radius: 50%; content: ''; box-shadow: 0 0 0 42px rgba(255,255,255,.025), 0 0 0 90px rgba(255,255,255,.02); }
+.unified-auth-logo { z-index: 1; display: inline-flex; align-items: center; gap: 12px; width: fit-content; color: white; text-decoration: none; font-size: 22px; font-weight: 750; }
+.unified-auth-logo img { width: 44px; height: 44px; border-radius: 10px; background: white; object-fit: contain; }
+.unified-auth-brand-copy { z-index: 1; max-width: 620px; margin: auto 0; padding: 64px 0; }
+.unified-auth-eyebrow { color: #82a987; font-size: 12px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+.unified-auth-brand-copy h1 { margin: 16px 0; color: white; font-size: clamp(42px, 5.4vw, 76px); line-height: 1.03; letter-spacing: -.045em; }
+.unified-auth-brand-copy p { max-width: 460px; color: rgba(255,255,255,.78); font-size: 18px; line-height: 1.65; }
+.unified-auth-brand-footer { z-index: 1; color: rgba(255,255,255,.62); font-size: 13px; }
+.unified-auth-panel { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 28px 24px; }
+.unified-auth-back { position: absolute; top: 28px; left: 28px; display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid #e4e9e4; border-radius: 50%; background: white; color: var(--ua-green-dark); box-shadow: 0 5px 16px rgba(43,48,44,.08); cursor: pointer; font-size: 20px; transition: transform .18s ease, background .18s ease; }
+.unified-auth-back:hover { transform: translateX(-2px); background: #f3f7f3; }
+.unified-auth-card { width: min(100%, 470px); padding: clamp(30px, 4vw, 52px); border: 1px solid #eee5db; border-radius: 22px; background: white; box-shadow: 0 24px 70px rgba(43, 48, 44, .11); }
+.unified-auth-card-mark { display: grid; width: 48px; height: 48px; margin-bottom: 26px; place-items: center; border-radius: 14px; color: var(--ua-green); background: #edf5ee; font-size: 23px; }
+.unified-auth-card h2, .unified-auth-register-modal h2 { margin: 8px 0; color: var(--ua-ink); font-size: 29px; letter-spacing: -.025em; }
+.unified-auth-intro, .unified-auth-register-modal > p { margin: 0 0 28px; color: var(--ua-muted); font-size: 14px; line-height: 1.6; }
+.unified-auth-field { display: grid; gap: 8px; margin: 18px 0; color: #344258; font-size: 13px; font-weight: 700; }
+.unified-auth-field input { width: 100%; min-height: 50px; padding: 0 15px; border: 1px solid #dce3eb; border-radius: 10px; outline: none; background: #fffaf5; color: var(--ua-ink); font: inherit; font-weight: 450; }
+.unified-auth-field input:focus { border-color: var(--ua-green); box-shadow: 0 0 0 3px rgba(79,112,84,.12); }
+.unified-auth-error { margin: 12px 0; padding: 12px 14px; border: 1px solid #ffd1ce; border-radius: 9px; background: #fff1f0; color: #b42318; font-size: 13px; }
+.unified-auth-submit { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 52px; margin-top: 24px; border: 0; border-radius: 10px; background: var(--ua-green); color: white; cursor: pointer; font: inherit; font-weight: 750; }
+.unified-auth-submit:hover { background: #3f6045; }
+.unified-auth-submit:disabled { cursor: wait; opacity: .7; }
+.unified-auth-register-prompt { margin-top: 24px; color: var(--ua-muted); text-align: center; font-size: 14px; }
+.unified-auth-register-prompt button { padding: 0; border: 0; background: transparent; color: var(--ua-green); cursor: pointer; font: inherit; font-weight: 750; }
+.unified-auth-copyright { margin-top: 24px; color: #99a2af; font-size: 12px; }
+.unified-auth-backdrop { position: fixed; z-index: 1000; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(17, 27, 23, .58); backdrop-filter: blur(5px); }
+.unified-auth-register-modal { position: relative; width: min(100%, 510px); padding: 34px; border: 1px solid #eee5db; border-radius: 20px; background: white; box-shadow: 0 28px 90px rgba(0,0,0,.2); }
+.unified-auth-register-modal h2 { margin-top: 9px; }
+.unified-auth-register-modal > p { margin-bottom: 20px; }
+.unified-auth-close { position: absolute; top: 18px; right: 18px; display: grid; width: 34px; height: 34px; place-items: center; border: 0; border-radius: 50%; background: #f3f5f4; color: #586579; cursor: pointer; font-size: 17px; }
+.unified-auth-role { display: flex; align-items: center; gap: 14px; width: 100%; margin-top: 10px; padding: 14px; border: 1px solid #e2e8e3; border-radius: 12px; background: white; color: var(--ua-ink); cursor: pointer; text-align: left; }
+.unified-auth-role:hover { border-color: #9db5a0; background: #f8fbf8; }
+.unified-auth-role-icon { display: grid; flex: 0 0 42px; width: 42px; height: 42px; place-items: center; border-radius: 11px; background: #edf5ee; color: var(--ua-green); font-size: 20px; }
+.unified-auth-role > span:nth-child(2) { display: grid; flex: 1; gap: 4px; }
+.unified-auth-role b { font-size: 14px; }
+.unified-auth-role small { color: var(--ua-muted); font-size: 12px; }
+.unified-auth-role > i { color: #84917f; }
+@media (max-width: 760px) {
+  .unified-auth-page { display: block; }
+  .unified-auth-brand { display: none; }
+  .unified-auth-panel { min-height: 100vh; padding: 28px 18px; }
+  .unified-auth-back { top: 18px; left: 18px; }
+  .unified-auth-card { margin-top: 44px; }
+  .unified-auth-card { padding: 30px 24px; }
+  .unified-auth-register-modal { padding: 30px 22px 22px; }
+}
