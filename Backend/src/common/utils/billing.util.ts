@@ -17,15 +17,16 @@ export function calculateReservationBill(
   guestCount: number,
   ratePerGuest: number,
 ): ReservationBill {
-  const deposit_amount = ratePerGuest * guestCount;
+  const deposit_amount = Math.round(ratePerGuest * guestCount * 100) / 100;
+  const restaurant_platform_fee = Math.min(RESTAURANT_PLATFORM_FEE, deposit_amount);
 
   return {
     rate_per_guest: ratePerGuest,
     guest_count: guestCount,
     deposit_amount,
     diner_platform_fee: DINER_PLATFORM_FEE,
-    restaurant_platform_fee: RESTAURANT_PLATFORM_FEE,
-    total_due: deposit_amount + DINER_PLATFORM_FEE,
-    restaurant_payout: deposit_amount - RESTAURANT_PLATFORM_FEE,
+    restaurant_platform_fee,
+    total_due: Math.round((deposit_amount + DINER_PLATFORM_FEE) * 100) / 100,
+    restaurant_payout: Math.round((deposit_amount - restaurant_platform_fee) * 100) / 100,
   };
 }

@@ -23,6 +23,7 @@ import {
 import { getActingRole as actingRole } from 'src/common/utils/acting-role.util';
 import {
   CreateReservationDto,
+  ModifyReservationDto,
   UpdateReservationDto,
 } from 'src/modules/reservations/dto/reservations.dto';
 import { ReservationsService } from 'src/modules/reservations/reservations.service';
@@ -65,6 +66,31 @@ export class ReservationsController {
   @ApiBadRequestResponse({ description: 'Invalid reservation payload' })
   create(@Body() dto: CreateReservationDto) {
     return { data: this.reservationsService.create(dto) };
+  }
+
+  @Roles(Role.DINER)
+  @UseGuards(ReadOnlyForSuperUserGuard)
+  @Patch(':id/modify')
+  modify(@Param('id') id: string, @Body() dto: ModifyReservationDto, @Req() req: Request) {
+    const userId = (req as Request & { user?: { sub?: string } }).user?.sub;
+    return { data: this.reservationsService.modify(id, dto, userId) };
+  }
+
+  @Roles(Role.DINER)
+  @UseGuards(ReadOnlyForSuperUserGuard)
+  @Delete(':id/modify/pending')
+  discardPendingModification(@Param('id') id: string, @Req() req: Request) {
+    const userId = (req as Request & { user?: { sub?: string } }).user?.sub;
+    return { data: this.reservationsService.discardPendingModification(id, userId) };
+  }
+
+  @Roles(Role.DINER)
+  @UseGuards(ReadOnlyForSuperUserGuard)
+  @Patch(':id/dine-complete')
+  @ApiOperation({ summary: 'Complete a checked-in dining visit and release its payout immediately' })
+  completeByDiner(@Param('id') id: string, @Req() req: Request) {
+    const userId = (req as Request & { user?: { sub?: string } }).user?.sub;
+    return { data: this.reservationsService.completeByDiner(id, userId) };
   }
 
   @Roles(Role.DINER, Role.MANAGER, Role.STAFF, Role.SUPER_USER)

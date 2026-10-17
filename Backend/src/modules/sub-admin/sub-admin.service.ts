@@ -46,11 +46,11 @@ export class SubAdminService {
     const user = this.userRepository.findByEmail(dto.email.toLowerCase());
 
     if (!user || user.role !== expectedRole) {
-      throw new UnauthorizedException('Invalid sub-admin credentials');
+      throw new UnauthorizedException('Invalid credentials');
     }
 
     if (!(await compare(dto.password, user.password_hash))) {
-      throw new UnauthorizedException('Invalid sub-admin credentials');
+      throw new UnauthorizedException('Invalid credentials');
     }
 
     if (user.status !== 'active') {

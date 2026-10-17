@@ -1,9 +1,10 @@
+import { store } from 'src/common/storage/memory-store';
 import { Injectable } from '@nestjs/common';
 import { Payment } from 'src/common/types/schema.types';
 
 @Injectable()
 export class PaymentRepository {
-  private readonly payments: Payment[] = [];
+  private readonly payments: Payment[] = store.collection<Payment>('payments');
 
   findAll(): Payment[] {
     return [...this.payments];

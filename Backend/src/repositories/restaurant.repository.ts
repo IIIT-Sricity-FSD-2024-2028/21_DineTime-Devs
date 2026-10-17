@@ -1,10 +1,11 @@
+import { store } from 'src/common/storage/memory-store';
 import { Injectable } from '@nestjs/common';
 import { Location, Restaurant } from 'src/common/types/schema.types';
 
 @Injectable()
 export class RestaurantRepository {
-  private readonly restaurants: Restaurant[] = [];
-  private readonly locations: Location[] = [];
+  private readonly restaurants: Restaurant[] = store.collection<Restaurant>('restaurants');
+  private readonly locations: Location[] = store.collection<Location>('locations');
 
   findAll(): Restaurant[] {
     return [...this.restaurants];
@@ -60,6 +61,16 @@ export class RestaurantRepository {
 
   findAllLocations(): Location[] {
     return [...this.locations];
+  }
+
+  findRestaurantCities(): string[] {
+    const locationIds = new Set(this.restaurants.map((restaurant) => restaurant.location_id));
+    const cities = this.locations
+      .filter((location) => locationIds.has(location.id))
+      .map((location) => String(location.city || '').trim())
+      .filter(Boolean);
+    return [...new Map(cities.map((city) => [city.toLocaleLowerCase(), city])).values()]
+      .sort((a, b) => a.localeCompare(b));
   }
 
   findRestaurantsByCity(city: string): Restaurant[] {

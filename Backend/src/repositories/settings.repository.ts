@@ -1,10 +1,11 @@
+import { store } from 'src/common/storage/memory-store';
 import { Injectable } from '@nestjs/common';
 import { Role } from 'src/common/enums/role.enum';
 import { Setting, UserSetting } from 'src/common/types/schema.types';
 
 @Injectable()
 export class SettingsRepository {
-  private readonly settings: Setting[] = [
+  private readonly settings: Setting[] = store.collection<Setting>('settings', [
     {
       id: 'setting_diner_notifications',
       key: 'notifications',
@@ -23,9 +24,9 @@ export class SettingsRepository {
       description: 'Receive staff updates',
       role: Role.STAFF,
     },
-  ];
+  ]);
 
-  private readonly userSettings: UserSetting[] = [];
+  private readonly userSettings: UserSetting[] = store.collection<UserSetting>('userSettings');
 
   findAllSettings(): Setting[] {
     return [...this.settings];

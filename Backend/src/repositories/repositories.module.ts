@@ -13,6 +13,7 @@ import { TableRepository } from 'src/repositories/table.repository';
 import { TableSlotRepository } from 'src/repositories/tableslot.repository';
 import { TimeSlotRepository } from 'src/repositories/timeslot.repository';
 import { UserRepository } from 'src/repositories/user.repository';
+import { ScheduleRepository } from 'src/repositories/schedule.repository';
 
 const repositories = [
   UserRepository,
@@ -29,6 +30,7 @@ const repositories = [
   NotificationRepository,
   SettingsRepository,
   SupportTicketRepository,
+  ScheduleRepository,
 ];
 
 @Global()

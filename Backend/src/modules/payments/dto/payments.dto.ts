@@ -24,9 +24,27 @@ export class CreatePaymentDto {
   @IsNotEmpty()
   transaction_ref: string;
 
-  @ApiProperty({ enum: ['pending', 'paid', 'failed'] })
+  @ApiPropertyOptional({ enum: ['pending', 'paid', 'failed'] })
+  @IsOptional()
   @IsEnum(['pending', 'paid', 'failed'])
-  payment_status: PaymentStatus;
+  payment_status?: PaymentStatus;
+}
+
+export class CreateAdditionalPaymentDto {
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  reservation_id: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  payment_method: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  transaction_ref: string;
 }
 
 export class UpdatePaymentDto {

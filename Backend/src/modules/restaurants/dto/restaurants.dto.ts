@@ -95,11 +95,6 @@ export class UpdateRestaurantDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  location_id?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
   name?: string;
 
   @ApiPropertyOptional()
@@ -111,6 +106,11 @@ export class UpdateRestaurantDto {
   @IsOptional()
   @IsString()
   description?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  contact_number?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -181,6 +181,17 @@ export class ServingStatusDto {
   is_open: boolean;
 }
 
+export class ClosureStatusDto {
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  manager_id: string;
+
+  @ApiProperty()
+  @IsBoolean()
+  is_closed: boolean;
+}
+
 export class CreateLocationDto {
   @ApiPropertyOptional()
   @IsOptional()
@@ -201,6 +212,11 @@ export class CreateLocationDto {
   @IsString()
   @IsNotEmpty()
   city: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  state?: string;
 
   @ApiProperty()
   @IsString()

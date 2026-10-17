@@ -1,3 +1,4 @@
+import { indiaToday } from 'src/common/utils/india-time.util';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { hashSync } from 'bcrypt';
 import { Role } from 'src/common/enums/role.enum';
@@ -11,7 +12,8 @@ import { TableRepository } from 'src/repositories/table.repository';
 import { TableSlotRepository } from 'src/repositories/tableslot.repository';
 import { TimeSlotRepository } from 'src/repositories/timeslot.repository';
 import { UserRepository } from 'src/repositories/user.repository';
-import { UserStatus } from 'src/common/types/schema.types';
+import { ScheduleRepository } from 'src/repositories/schedule.repository';
+import { RestaurantSchedule, UserStatus } from 'src/common/types/schema.types';
 
 @Injectable()
 export class DataSeederService implements OnModuleInit {
@@ -25,10 +27,12 @@ export class DataSeederService implements OnModuleInit {
     private readonly menuRepository: MenuRepository,
     private readonly reviewRepository: ReviewRepository,
     private readonly settingsRepository: SettingsRepository,
+    private readonly scheduleRepository: ScheduleRepository,
   ) {}
 
   onModuleInit(): void {
     if (this.restaurantRepository.findAll().length > 0) {
+      this.ensureDefaultSuperAdmin();
       return;
     }
 
@@ -58,7 +62,7 @@ export class DataSeederService implements OnModuleInit {
       role: Role.MANAGER,
       status: 'active',
       created_at: new Date().toISOString(),
-      location_id: 'loc_blr_1',
+      location_id: 'loc_del_1',
     });
 
     const manager3 = this.userRepository.create({
@@ -70,7 +74,7 @@ export class DataSeederService implements OnModuleInit {
       role: Role.MANAGER,
       status: 'active',
       created_at: new Date().toISOString(),
-      location_id: 'loc_blr_1',
+      location_id: 'loc_che_1',
     });
 
     const manager4 = this.userRepository.create({
@@ -82,8 +86,28 @@ export class DataSeederService implements OnModuleInit {
       role: Role.MANAGER,
       status: 'active',
       created_at: new Date().toISOString(),
-      location_id: 'loc_blr_1',
+      location_id: 'loc_hyd_1',
     });
+
+    const additionalManagerSeeds = [
+      ['Meera Iyer', 'loc_blr_1'], ['Arjun Nair', 'loc_blr_1'], ['Kavya Rao', 'loc_blr_1'],
+      ['Rohit Khanna', 'loc_del_1'], ['Nisha Kapoor', 'loc_del_1'], ['Aman Sethi', 'loc_del_1'],
+      ['Priya Krishnan', 'loc_che_1'], ['Vijay Kumar', 'loc_che_1'], ['Ananya Das', 'loc_che_1'],
+      ['Sanjay Reddy', 'loc_hyd_1'], ['Divya Rao', 'loc_hyd_1'], ['Farhan Ali', 'loc_hyd_1'],
+    ];
+    const additionalManagers = additionalManagerSeeds.map(([name, location_id], index) =>
+      this.userRepository.create({
+        id: `rm-${1238 + index}`,
+        name,
+        email: `manager${index + 5}@dinetime.com`,
+        phone: String(9560000000 + index),
+        password_hash: defaultPasswordHash,
+        role: Role.MANAGER,
+        status: 'active',
+        created_at: new Date().toISOString(),
+        location_id,
+      }),
+    );
 
     const diner = this.userRepository.create({
       id: 'din-1234',
@@ -119,6 +143,22 @@ export class DataSeederService implements OnModuleInit {
       status: 'active',
       created_at: new Date().toISOString(),
       location_id: 'loc_blr_1',
+    });
+
+    this.userRepository.create({
+      id: 'ver-0002', name: 'Verification Lead - Delhi', email: 'verification.delhi@dinetime.com',
+      phone: '9000000013', password_hash: adminPasswordHash, role: Role.VERIFICATION_ADMIN,
+      status: 'active', created_at: new Date().toISOString(), location_id: 'loc_del_1',
+    });
+    this.userRepository.create({
+      id: 'ver-0003', name: 'Verification Lead - Chennai', email: 'verification.chennai@dinetime.com',
+      phone: '9000000014', password_hash: adminPasswordHash, role: Role.VERIFICATION_ADMIN,
+      status: 'active', created_at: new Date().toISOString(), location_id: 'loc_che_1',
+    });
+    this.userRepository.create({
+      id: 'ver-0004', name: 'Verification Lead - Hyderabad', email: 'verification.hyderabad@dinetime.com',
+      phone: '9000000015', password_hash: adminPasswordHash, role: Role.VERIFICATION_ADMIN,
+      status: 'active', created_at: new Date().toISOString(), location_id: 'loc_hyd_1',
     });
 
     this.userRepository.create({
@@ -178,6 +218,13 @@ export class DataSeederService implements OnModuleInit {
       business_license_number: '10020045533443',
       verification_status: 'approved',
     });
+    additionalManagers.forEach((manager, index) => {
+      this.userRepository.upsertManagerDetails({
+        manager_id: manager.id,
+        business_license_number: `1002004${String(9000 + index)}`,
+        verification_status: 'approved',
+      });
+    });
 
     this.userRepository.upsertDinerDetails({
       diner_id: diner.id,
@@ -192,6 +239,33 @@ export class DataSeederService implements OnModuleInit {
         city: 'Bangalore',
         pincode: '560001',
         address: 'Bangalore',
+        country: 'India',
+      },
+      {
+        id: 'loc_del_1',
+        latitude: 28.6139,
+        longitude: 77.209,
+        city: 'Delhi',
+        pincode: '110001',
+        address: 'Connaught Place, Delhi',
+        country: 'India',
+      },
+      {
+        id: 'loc_che_1',
+        latitude: 13.0827,
+        longitude: 80.2707,
+        city: 'Chennai',
+        pincode: '600001',
+        address: 'T. Nagar, Chennai',
+        country: 'India',
+      },
+      {
+        id: 'loc_hyd_1',
+        latitude: 17.385,
+        longitude: 78.4867,
+        city: 'Hyderabad',
+        pincode: '500001',
+        address: 'Banjara Hills, Hyderabad',
         country: 'India',
       },
     ];
@@ -218,7 +292,7 @@ export class DataSeederService implements OnModuleInit {
           '- Contact: 9123456789',
           '- Amenities: Family Friendly, Indoor Seating',
         ].join('\n'),
-        total_tables: 8,
+        total_tables: 6,
         rating_avg: 4.6,
         total_reviews: 128,
         status: activeStatus,
@@ -239,7 +313,7 @@ export class DataSeederService implements OnModuleInit {
       {
         id: 'res-2002',
         manager_id: manager2.id,
-        location_id: 'loc_blr_1',
+        location_id: 'loc_del_1',
         name: 'Bella Italia',
         cuisine_type: 'Italian',
         description: [
@@ -274,7 +348,7 @@ export class DataSeederService implements OnModuleInit {
       {
         id: 'res-2003',
         manager_id: manager3.id,
-        location_id: 'loc_blr_1',
+        location_id: 'loc_che_1',
         name: 'Dragon Bowl',
         cuisine_type: 'Chinese',
         description: [
@@ -309,7 +383,7 @@ export class DataSeederService implements OnModuleInit {
       {
         id: 'res-2004',
         manager_id: manager4.id,
-        location_id: 'loc_blr_1',
+        location_id: 'loc_hyd_1',
         name: 'Sakura House',
         cuisine_type: 'Japanese',
         description: [
@@ -341,6 +415,39 @@ export class DataSeederService implements OnModuleInit {
           '../images/dessert.png',
         ],
       },
+      ...[
+        ['Namma Oota', 'Indian', 'loc_blr_1', 'indian.jpg'],
+        ['Garden City Grill', 'American', 'loc_blr_1', 'american.jpg'],
+        ['Mysore Masala House', 'Indian', 'loc_blr_1', 'indian.jpg'],
+        ['Old Delhi Kitchen', 'Indian', 'loc_del_1', 'indian.jpg'],
+        ['Capital Tandoor', 'Indian', 'loc_del_1', 'indian.jpg'],
+        ['Lotus Courtyard', 'Thai', 'loc_del_1', 'thai.jpg'],
+        ['Marina Spice House', 'Indian', 'loc_che_1', 'indian.jpg'],
+        ['Coromandel Cafe', 'Healthy', 'loc_che_1', 'healthy.jpg'],
+        ['Bay Leaf Bistro', 'Thai', 'loc_che_1', 'thai.jpg'],
+        ['Deccan Biryani House', 'Indian', 'loc_hyd_1', 'indian.jpg'],
+        ['Charminar Table', 'Indian', 'loc_hyd_1', 'indian.jpg'],
+        ['Pearl City Bistro', 'Italian', 'loc_hyd_1', 'italian.jpg'],
+      ].map(([name, cuisine_type, location_id, image], index) => ({
+        id: `res-${2005 + index}`,
+        manager_id: additionalManagers[index].id,
+        location_id,
+        name,
+        cuisine_type,
+        description: `${name} serves popular ${cuisine_type.toLowerCase()} dishes in ${location_id === 'loc_blr_1' ? 'Bangalore' : location_id === 'loc_del_1' ? 'Delhi' : location_id === 'loc_che_1' ? 'Chennai' : 'Hyderabad'}.`,
+        total_tables: 8,
+        rating_avg: Number((4.1 + (name.length % 8) / 10).toFixed(1)),
+        total_reviews: 45 + name.length * 3,
+        status: activeStatus,
+        is_open: true,
+        created_at: new Date().toISOString(),
+        reservation_fee_per_guest: 30,
+        cancellation_cutoff_minutes: 120,
+        no_show_grace_minutes: 15,
+        opens_at: '11:00',
+        closes_at: '23:00',
+        image_urls: [`../images/${image}`],
+      })),
     ].map((restaurant) => this.restaurantRepository.create(restaurant));
 
     this.userRepository.upsertStaffDetails({
@@ -350,7 +457,7 @@ export class DataSeederService implements OnModuleInit {
       role_type: 'service',
     });
 
-    const today = new Date();
+    const today = new Date(indiaToday()+'T00:00:00Z');
 
     const tableTemplates = [
       { table_number: 1, capacity: 2 },
@@ -364,16 +471,17 @@ export class DataSeederService implements OnModuleInit {
     ];
 
     const slotTemplates = [
+      { start: '16:00', end: '18:00' },
       { start: '18:00', end: '20:00' },
       { start: '20:00', end: '22:00' },
-      { start: '22:00', end: '00:00' },
     ];
 
     const tablesByRestaurant: Record<string, { id: string; table_number: number; capacity: number }[]> = {};
     const slotsByRestaurant: Record<string, { id: string; start_time: string; end_time: string }[]> = {};
 
     restaurants.forEach((restaurant, restaurantIndex) => {
-      const tables = tableTemplates.map((tableTemplate, tableIndex) =>
+      const templates = restaurant.id === 'res-2001' ? tableTemplates.slice(0, 6) : tableTemplates;
+      const tables = templates.map((tableTemplate, tableIndex) =>
         this.tableRepository.create({
           id: `tbl-200${restaurantIndex + 1}-${String(tableIndex + 1).padStart(2, '0')}`,
           restaurant_id: restaurant.id,
@@ -385,10 +493,10 @@ export class DataSeederService implements OnModuleInit {
       const slots: { id: string; start_time: string; end_time: string }[] = [];
       for (let dayOffset = 0; dayOffset < 7; dayOffset += 1) {
         const date = new Date(today);
-        date.setDate(today.getDate() + dayOffset);
-        const yyyy = date.getFullYear();
-        const mm = String(date.getMonth() + 1).padStart(2, '0');
-        const dd = String(date.getDate()).padStart(2, '0');
+        date.setUTCDate(today.getUTCDate() + dayOffset);
+        const yyyy = date.getUTCFullYear();
+        const mm = String(date.getUTCMonth() + 1).padStart(2, '0');
+        const dd = String(date.getUTCDate()).padStart(2, '0');
         const slotDate = `${yyyy}-${mm}-${dd}`;
 
         slotTemplates.forEach((slotTemplate, slotIndex) => {
@@ -417,6 +525,38 @@ export class DataSeederService implements OnModuleInit {
 
       tablesByRestaurant[restaurant.id] = tables;
       slotsByRestaurant[restaurant.id] = slots;
+
+      if (restaurant.id === 'res-2001') {
+        const now = new Date().toISOString();
+        const weekly = Array.from({ length: 7 }, (_, weekday) => ({
+          weekday,
+          is_closed: false,
+          open_time: restaurant.opens_at,
+          close_time: restaurant.closes_at,
+          slot_duration_minutes: 120,
+          buffer_minutes: 0,
+          slots: slotTemplates.map((slot) => ({ start_time: slot.start, end_time: slot.end })),
+        }));
+        const default_table_layout = tables.map((table, index) => ({
+          table_id: table.id,
+          table_number: table.table_number,
+          capacity: table.capacity,
+          x: (index % 4) * 2,
+          y: Math.floor(index / 4) * 2,
+          shape: 'square' as const,
+        }));
+        const schedule: RestaurantSchedule = {
+          id: 'sch-2001',
+          restaurant_id: restaurant.id,
+          weekly,
+          default_table_layout,
+          rules: [],
+          created_at: now,
+          updated_at: now,
+          managed: true,
+        };
+        this.scheduleRepository.create(schedule);
+      }
     });
 
     const menuSeed = [
@@ -493,6 +633,16 @@ export class DataSeederService implements OnModuleInit {
         setting_id: setting.id,
         value: true,
       });
+    });
+  }
+
+  private ensureDefaultSuperAdmin(): void {
+    const email = 'admin@dinetime.com';
+    if (this.userRepository.findByEmail(email)) return;
+    this.userRepository.create({
+      id: 'sup-1234', name: 'System Administrator', email, phone: '9000000001',
+      password_hash: hashSync('admin123', 10), role: Role.SUPER_USER,
+      status: 'active', created_at: new Date().toISOString(), location_id: 'loc_blr_1',
     });
   }
 }

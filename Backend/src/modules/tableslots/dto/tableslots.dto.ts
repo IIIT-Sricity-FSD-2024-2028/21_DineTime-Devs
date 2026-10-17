@@ -20,7 +20,7 @@ export class UpdateTableSlotStatusDto {
   @IsNotEmpty()
   slot_id: string;
 
-  @ApiProperty({ enum: ['available', 'reserved', 'occupied'] })
-  @IsEnum(['available', 'reserved', 'occupied'])
+  @ApiProperty({ enum: ['available', 'reserved', 'occupied', 'blocked'] })
+  @IsEnum(['available', 'reserved', 'occupied', 'blocked'])
   status: TableSlotStatus;
 }

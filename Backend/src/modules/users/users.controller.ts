@@ -45,12 +45,14 @@ import { UsersService } from 'src/modules/users/users.service';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Roles(Role.MANAGER, Role.SUPER_USER)
+  @Roles(Role.MANAGER, Role.STAFF, Role.SUPER_USER)
   @Get()
   @ApiOperation({ summary: 'List users' })
   @ApiOkResponse({ schema: dataArraySchema })
   findAll(@Req() req: Request) {
-    return { data: this.usersService.findAll(getActingRole(req)) };
+    const actor = (req as Request & {user?:{sub?:string;role?:Role}}).user;
+    return { data: this.usersService.findAll(getActingRole(req), actor?.sub,
+      (req as Request & {allowedUserIds?:string[]}).allowedUserIds) };
   }
 
   @Roles(Role.DINER, Role.MANAGER, Role.STAFF, Role.SUPER_USER)
@@ -63,7 +65,7 @@ export class UsersController {
     return { data: this.usersService.findOne(id, getActingRole(req)) };
   }
 
-  @Roles(Role.DINER, Role.MANAGER, Role.SUPER_USER)
+  @Roles(Role.DINER, Role.MANAGER, Role.STAFF, Role.SUPER_USER)
   @UseGuards(ReadOnlyForSuperUserGuard)
   @Post()
   @ApiOperation({ summary: 'Create user (registration or admin creation)' })

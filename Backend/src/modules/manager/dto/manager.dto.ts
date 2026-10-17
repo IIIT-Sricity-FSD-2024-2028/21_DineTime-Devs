@@ -46,7 +46,32 @@ export class RegisterManagerDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  location_id: string;
+  city: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  address: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  state: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  pincode: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  verification_location_id: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  restaurant_phone: string;
 
   @ApiProperty()
   @IsString()

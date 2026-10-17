@@ -1,9 +1,10 @@
+import { store } from 'src/common/storage/memory-store';
 import { Injectable } from '@nestjs/common';
 import { TimeSlot } from 'src/common/types/schema.types';
 
 @Injectable()
 export class TimeSlotRepository {
-  private readonly slots: TimeSlot[] = [];
+  private readonly slots: TimeSlot[] = store.collection<TimeSlot>('slots');
 
   findAll(): TimeSlot[] {
     return [...this.slots];

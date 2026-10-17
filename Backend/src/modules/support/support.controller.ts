@@ -56,10 +56,12 @@ export class SupportController {
   @ApiCreatedResponse({ schema: dataObjectSchema })
   create(
     @Body() dto: CreateSupportTicketDto,
+    @Req() req: Request,
     @UploadedFiles() files?: Express.Multer.File[],
   ) {
     const attachments = (files || []).map((file) => `/uploads/tickets/${file.filename}`);
-    return { data: this.supportService.create(dto, attachments) };
+    const userId = (req as Request & { user?: { sub?: string } }).user?.sub;
+    return { data: this.supportService.create(dto, attachments, userId) };
   }
 
   @Roles(Role.DINER, Role.MANAGER)
@@ -69,6 +71,15 @@ export class SupportController {
   @ApiOkResponse({ schema: dataArraySchema })
   findMine(@Query('user_id') userId: string) {
     return { data: this.supportService.findMine(userId) };
+  }
+
+  @Roles(Role.MANAGER)
+  @Get('context')
+  @ApiOperation({ summary: 'Get the authenticated manager’s restaurant records for a support ticket' })
+  @ApiOkResponse({ schema: dataObjectSchema })
+  managerContext(@Req() req: Request) {
+    const managerId = (req as Request & { user?: { sub?: string } }).user?.sub;
+    return { data: this.supportService.managerContext(managerId || '') };
   }
 
   @Roles(Role.SUPPORT_ADMIN)

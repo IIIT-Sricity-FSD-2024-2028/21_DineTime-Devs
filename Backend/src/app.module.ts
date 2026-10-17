@@ -1,6 +1,8 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { MemoryStateService, MemoryStateInterceptor } from 'src/common/storage/memory-state.service';
+import { AccessPolicyGuard } from 'src/common/guards/access-policy.guard';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { WinstonModule } from 'nest-winston';
 import { AllExceptionsFilter } from 'src/common/filters/all-exceptions.filter';
@@ -29,6 +31,7 @@ import { SupportModule } from 'src/modules/support/support.module';
 import { TablesModule } from 'src/modules/tables/tables.module';
 import { TableslotsModule } from 'src/modules/tableslots/tableslots.module';
 import { TimeslotsModule } from 'src/modules/timeslots/timeslots.module';
+import { SchedulesModule } from 'src/modules/schedules/schedules.module';
 import { UsersModule } from 'src/modules/users/users.module';
 import { VerificationModule } from 'src/modules/verification/verification.module';
 import { RepositoriesModule } from 'src/repositories/repositories.module';
@@ -58,6 +61,7 @@ import { DataSeederService } from 'src/seed/data-seeder.service';
     RestaurantsModule,
     TablesModule,
     TimeslotsModule,
+    SchedulesModule,
     TableslotsModule,
     ReservationsModule,
     CheckinModule,
@@ -74,6 +78,8 @@ import { DataSeederService } from 'src/seed/data-seeder.service';
   ],
   providers: [
     DataSeederService,
+    MemoryStateService,
+    { provide: APP_INTERCEPTOR, useClass: MemoryStateInterceptor },
     AllExceptionsFilter,
     {
       provide: APP_GUARD,
@@ -83,6 +89,7 @@ import { DataSeederService } from 'src/seed/data-seeder.service';
       provide: APP_GUARD,
       useClass: RolesGuard,
     },
+    { provide: APP_GUARD, useClass: AccessPolicyGuard },
   ],
 })
 export class AppModule implements NestModule {

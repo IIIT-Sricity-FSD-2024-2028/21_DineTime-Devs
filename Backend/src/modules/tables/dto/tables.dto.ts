@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsInt, IsNotEmpty, IsString, Min } from 'class-validator';
+import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Min, Max } from 'class-validator';
 
 export class CreateTableDto {
   @ApiProperty()
@@ -15,21 +15,31 @@ export class CreateTableDto {
   @ApiProperty()
   @IsInt()
   @Min(1)
+  @Max(100)
   capacity: number;
 }
 
 export class UpdateTableDto {
   @ApiPropertyOptional()
+  @IsOptional()
   @IsString()
   restaurant_id?: string;
 
   @ApiPropertyOptional()
+  @IsOptional()
   @IsInt()
   @Min(1)
   table_number?: number;
 
   @ApiPropertyOptional()
+  @IsOptional()
   @IsInt()
   @Min(1)
+  @Max(100)
   capacity?: number;
+
+  @ApiPropertyOptional({ enum: ['active', 'inactive'] })
+  @IsOptional()
+  @IsEnum(['active', 'inactive'])
+  status?: 'active' | 'inactive';
 }

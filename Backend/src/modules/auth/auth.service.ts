@@ -23,18 +23,19 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    if (user.status !== 'active') {
-      throw new UnauthorizedException('User account is inactive');
-    }
-
+    const managerDetails =
+      user.role === Role.MANAGER ? this.userRepository.getManagerDetails(user.id) : undefined;
     if (user.role === Role.MANAGER) {
-      const managerDetails = this.userRepository.getManagerDetails(user.id);
       if (managerDetails?.verification_status === 'pending') {
         throw new UnauthorizedException('Your restaurant application is still pending verification. You will be able to log in once it has been reviewed.');
       }
       if (managerDetails?.verification_status === 'rejected') {
         throw new UnauthorizedException('Your restaurant application was rejected. Please register a new account to reapply.');
       }
+    }
+
+    if (user.status !== 'active') {
+      throw new UnauthorizedException('User account is inactive');
     }
 
     const payload = {
@@ -45,7 +46,7 @@ export class AuthService {
 
     const userDetails =
       user.role === 'manager'
-        ? this.userRepository.getManagerDetails(user.id)
+        ? managerDetails
         : user.role === 'staff'
           ? this.userRepository.getStaffDetails(user.id)
           : undefined;

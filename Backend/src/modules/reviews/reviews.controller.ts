@@ -3,7 +3,6 @@ import {
   ApiBadRequestResponse,
   ApiBody,
   ApiCreatedResponse,
-  ApiHeader,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -18,11 +17,10 @@ import {
   dataObjectSchema,
   deletedSchema,
 } from 'src/common/swagger/schemas';
-import { CreateReviewDto, UpdateReviewDto } from 'src/modules/reviews/dto/reviews.dto';
+import { CreateReviewDto, UpdateReviewDto, UpdateReviewReplyDto } from 'src/modules/reviews/dto/reviews.dto';
 import { ReviewsService } from 'src/modules/reviews/reviews.service';
 
 @ApiTags('reviews')
-@ApiHeader({ name: 'role', required: true, description: 'diner | manager | staff' })
 @Controller('reviews')
 export class ReviewsController {
   constructor(private readonly reviewsService: ReviewsService) {}
@@ -66,6 +64,17 @@ export class ReviewsController {
   @ApiNotFoundResponse({ description: 'Review not found' })
   update(@Param('id') id: string, @Body() dto: UpdateReviewDto) {
     return { data: this.reviewsService.update(id, dto) };
+  }
+
+  @Roles(Role.MANAGER)
+  @Patch(':id/reply')
+  @ApiOperation({ summary: 'Update manager reply on a review' })
+  @ApiParam({ name: 'id' })
+  @ApiBody({ type: UpdateReviewReplyDto })
+  @ApiOkResponse({ schema: dataObjectSchema })
+  @ApiNotFoundResponse({ description: 'Review not found' })
+  updateReply(@Param('id') id: string, @Body() dto: UpdateReviewReplyDto) {
+    return { data: this.reviewsService.updateReply(id, dto.reply ?? null) };
   }
 
   @Roles(Role.DINER)

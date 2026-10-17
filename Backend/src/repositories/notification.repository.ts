@@ -1,9 +1,10 @@
+import { store } from 'src/common/storage/memory-store';
 import { Injectable } from '@nestjs/common';
 import { Notification } from 'src/common/types/schema.types';
 
 @Injectable()
 export class NotificationRepository {
-  private readonly notifications: Notification[] = [];
+  private readonly notifications: Notification[] = store.collection<Notification>('notifications');
 
   findAll(): Notification[] {
     return [...this.notifications];

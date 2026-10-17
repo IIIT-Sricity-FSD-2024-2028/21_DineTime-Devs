@@ -1,9 +1,10 @@
+import { store } from 'src/common/storage/memory-store';
 import { Injectable } from '@nestjs/common';
 import { Table } from 'src/common/types/schema.types';
 
 @Injectable()
 export class TableRepository {
-  private readonly tables: Table[] = [];
+  private readonly tables: Table[] = store.collection<Table>('tables');
 
   findAll(): Table[] {
     return [...this.tables];
@@ -13,8 +14,8 @@ export class TableRepository {
     return this.tables.find((item) => item.id === id);
   }
 
-  findByRestaurantId(restaurantId: string): Table[] {
-    return this.tables.filter((item) => item.restaurant_id === restaurantId);
+  findByRestaurantId(restaurantId: string, includeInactive = false): Table[] {
+    return this.tables.filter((item) => item.restaurant_id === restaurantId && (includeInactive || item.status !== 'inactive'));
   }
 
   create(table: Table): Table {

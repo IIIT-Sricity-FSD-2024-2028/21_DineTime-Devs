@@ -1,4 +1,6 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { GoneException, Body, Controller, Delete, Get, Param, Patch, Post, Query, Req } from '@nestjs/common';
+import { Request } from 'express';
+import { getActingRole } from 'src/common/utils/acting-role.util';
 import {
   ApiBadRequestResponse,
   ApiBody,
@@ -27,23 +29,25 @@ import { OrdersService } from 'src/modules/orders/orders.service';
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
-  @Roles(Role.DINER, Role.STAFF)
+  @Roles(Role.DINER, Role.STAFF, Role.MANAGER)
   @Get()
   @ApiOperation({ summary: 'List orders' })
   @ApiQuery({ name: 'reservation_id', required: false })
   @ApiOkResponse({ schema: dataArraySchema })
-  findAll(@Query('reservation_id') reservationId?: string) {
-    return { data: this.ordersService.findAll(reservationId) };
+  findAll(@Req() req: Request, @Query('reservation_id') reservationId?: string) {
+    const userId = (req as Request & { user?: { sub?: string } }).user?.sub;
+    return { data: this.ordersService.findAll(reservationId, getActingRole(req), userId) };
   }
 
-  @Roles(Role.DINER, Role.STAFF)
+  @Roles(Role.DINER, Role.STAFF, Role.MANAGER)
   @Get(':id')
   @ApiOperation({ summary: 'Get order by id' })
   @ApiParam({ name: 'id' })
   @ApiOkResponse({ schema: dataObjectSchema })
   @ApiNotFoundResponse({ description: 'Order not found' })
-  findOne(@Param('id') id: string) {
-    return { data: this.ordersService.findOne(id) };
+  findOne(@Param('id') id: string, @Req() req: Request) {
+    const userId = (req as Request & { user?: { sub?: string } }).user?.sub;
+    return { data: this.ordersService.findOne(id, getActingRole(req), userId) };
   }
 
   @Roles(Role.DINER)
@@ -52,8 +56,9 @@ export class OrdersController {
   @ApiBody({ type: CreateOrderDto })
   @ApiCreatedResponse({ schema: dataObjectSchema })
   @ApiBadRequestResponse({ description: 'Invalid order payload' })
-  create(@Body() dto: CreateOrderDto) {
-    return { data: this.ordersService.create(dto) };
+  create(@Body() dto: CreateOrderDto, @Req() req: Request) {
+    const userId = (req as Request & { user?: { sub?: string } }).user?.sub;
+    throw new GoneException('Online order placement is no longer available. You can still view the restaurant menu.');
   }
 
   @Roles(Role.STAFF)

@@ -1,9 +1,11 @@
+import { store } from 'src/common/storage/memory-store';
 import { Injectable } from '@nestjs/common';
 import { Reservation } from 'src/common/types/schema.types';
+import { reservationTableIds } from 'src/common/utils/reservation-tables.util';
 
 @Injectable()
 export class ReservationRepository {
-  private readonly reservations: Reservation[] = [];
+  private readonly reservations: Reservation[] = store.collection<Reservation>('reservations');
 
   findAll(): Reservation[] {
     return [...this.reservations];
@@ -23,7 +25,8 @@ export class ReservationRepository {
 
   findByTableAndSlot(tableId: string, slotId: string): Reservation | undefined {
     return this.reservations.find(
-      (item) => item.table_id === tableId && item.slot_id === slotId,
+      (item) => reservationTableIds(item).includes(tableId) && item.slot_id === slotId &&
+        ['reserved', 'checked_in'].includes(item.reservation_status),
     );
   }
 

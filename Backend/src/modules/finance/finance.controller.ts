@@ -20,6 +20,7 @@ import {
   SettleAllPayoutsDto,
 } from 'src/modules/finance/dto/finance.dto';
 import { FinanceService } from 'src/modules/finance/finance.service';
+import { NoShowDecisionDto } from './dto/finance.dto';
 
 @ApiTags('finance')
 @ApiHeader({ name: 'role', required: true, description: 'finance_admin' })
@@ -28,6 +29,15 @@ import { FinanceService } from 'src/modules/finance/finance.service';
 @Controller('finance')
 export class FinanceController {
   constructor(private readonly financeService: FinanceService) {}
+
+  @Get('no-shows')
+  listNoShows(@Req() req:Request){return {data:this.financeService.listNoShows(actingRole(req))};}
+
+  @Patch('no-shows/:id/decision')
+  decideNoShow(@Param('id') id:string,@Body() dto:NoShowDecisionDto,@Req() req:Request){return {data:this.financeService.decideNoShow(id,dto,actingRole(req))};}
+
+  @Post('payouts/payments/:id/retry')
+  retryRelease(@Param('id') id:string,@Body() dto:SettleAllPayoutsDto,@Req() req:Request){return {data:this.financeService.retryRelease(id,dto.admin_id,actingRole(req))};}
 
   @Get('refunds')
   @ApiOperation({ summary: 'List support tickets escalated to finance for a refund decision' })

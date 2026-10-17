@@ -137,6 +137,6 @@ Use `http://localhost:3000` as API base URL.
 - `PATCH /orders/{id}`
 
 ## Notes
-- No external database is used.
-- Data is stored only in repositories.
+- No database is used. Repositories use a process-local in-memory store.
+- API-created data is cleared when the backend restarts; no data is persisted to disk.
 - Services do not access in-memory arrays directly.

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBody,
@@ -12,13 +12,19 @@ import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from 'src/common/enums/role.enum';
 import { dataArraySchema, dataObjectSchema } from 'src/common/swagger/schemas';
 import { CheckinService } from 'src/modules/checkin/checkin.service';
-import { CreateCheckinDto } from 'src/modules/checkin/dto/checkin.dto';
+import { CreateCheckinDto, WalkInDto } from 'src/modules/checkin/dto/checkin.dto';
 
 @ApiTags('checkin')
 @ApiHeader({ name: 'role', required: true, description: 'diner | manager | staff' })
 @Controller('checkin')
 export class CheckinController {
   constructor(private readonly checkinService: CheckinService) {}
+
+  @Roles(Role.STAFF)
+  @Post('walk-in')
+  walkIn(@Body() dto:WalkInDto,@Req() req:{user:{sub:string}}) {
+    return {data:this.checkinService.walkIn(dto,req.user.sub)};
+  }
 
   @Roles(Role.STAFF)
   @Get()

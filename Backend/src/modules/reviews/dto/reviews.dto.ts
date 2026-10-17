@@ -40,3 +40,10 @@ export class UpdateReviewDto {
   @IsString()
   comment?: string;
 }
+
+export class UpdateReviewReplyDto {
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  reply?: string;
+}

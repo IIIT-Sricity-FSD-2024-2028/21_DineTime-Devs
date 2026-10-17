@@ -1,7 +1,9 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post, Query, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBadRequestResponse,
   ApiBody,
+  ApiConsumes,
   ApiCreatedResponse,
   ApiHeader,
   ApiNotFoundResponse,
@@ -18,6 +20,7 @@ import {
   dataObjectSchema,
   deletedSchema,
 } from 'src/common/swagger/schemas';
+import { multerConfig } from 'src/common/upload/multer.config';
 import { CreateMenuItemDto, UpdateMenuItemDto } from 'src/modules/menu/dto/menu.dto';
 import { MenuService } from 'src/modules/menu/menu.service';
 
@@ -44,6 +47,27 @@ export class MenuController {
   @ApiNotFoundResponse({ description: 'Menu item not found' })
   findOne(@Param('id') id: string) {
     return { data: this.menuService.findOne(id) };
+  }
+
+  @Roles(Role.MANAGER)
+  @Post('upload-image')
+  @UseInterceptors(FileInterceptor('image', multerConfig))
+  @ApiOperation({ summary: 'Upload a menu item image' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: { image: { type: 'string', format: 'binary' } },
+      required: ['image'],
+    },
+  })
+  @ApiOkResponse({ schema: dataObjectSchema })
+  uploadImage(@UploadedFile() file?: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('Menu image file is required');
+    }
+
+    return { data: { image_url: `/uploads/restaurants/${file.filename}` } };
   }
 
   @Roles(Role.MANAGER)

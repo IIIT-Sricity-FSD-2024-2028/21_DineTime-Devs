@@ -1,9 +1,16 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsEmail, IsEnum, IsIn, IsLatitude, IsLongitude, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { Role } from 'src/common/enums/role.enum';
 import { UserStatus } from 'src/common/types/schema.types';
 
 export class CreateUserDto {
+  @ApiPropertyOptional() @IsOptional() @IsString() city?: string;
+  @ApiPropertyOptional() @IsOptional() @IsIn(['India']) country?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() address?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() pincode?: string;
+  @ApiPropertyOptional() @IsOptional() @IsLatitude() latitude?: number;
+  @ApiPropertyOptional() @IsOptional() @IsLongitude() longitude?: number;
+
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
@@ -64,6 +71,13 @@ export class CreateUserDto {
 }
 
 export class UpdateUserDto {
+  @ApiPropertyOptional() @IsOptional() @IsString() city?: string;
+  @ApiPropertyOptional() @IsOptional() @IsIn(['India']) country?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() address?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() pincode?: string;
+  @ApiPropertyOptional() @IsOptional() @IsLatitude() latitude?: number;
+  @ApiPropertyOptional() @IsOptional() @IsLongitude() longitude?: number;
+
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()

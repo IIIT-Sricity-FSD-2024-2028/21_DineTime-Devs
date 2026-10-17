@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { generateId } from 'src/common/utils/id.util';
 import { CreateReviewDto, UpdateReviewDto } from 'src/modules/reviews/dto/reviews.dto';
 import { ReservationRepository } from 'src/repositories/reservation.repository';
@@ -19,16 +15,12 @@ export class ReviewsService {
     if (restaurantId) {
       return this.reviewRepository.findByRestaurantId(restaurantId);
     }
-
     return this.reviewRepository.findAll();
   }
 
   findOne(id: string) {
     const review = this.reviewRepository.findById(id);
-    if (!review) {
-      throw new NotFoundException('Review not found');
-    }
-
+    if (!review) throw new NotFoundException('Review not found');
     return review;
   }
 
@@ -38,9 +30,9 @@ export class ReviewsService {
       : this.reservationRepository
           .findByUserId(dto.user_id)
           .find(
-            (reservation) =>
-              reservation.restaurant_id === dto.restaurant_id &&
-              reservation.reservation_status === 'completed',
+            (r) =>
+              r.restaurant_id === dto.restaurant_id &&
+              r.reservation_status === 'completed',
           );
 
     if (
@@ -49,9 +41,7 @@ export class ReviewsService {
       completedReservation.restaurant_id !== dto.restaurant_id ||
       completedReservation.reservation_status !== 'completed'
     ) {
-      throw new BadRequestException(
-        'Review allowed only after reservation is completed',
-      );
+      throw new BadRequestException('Review allowed only after reservation is completed');
     }
 
     if (this.reviewRepository.findByReservationId(completedReservation.id)) {
@@ -71,19 +61,20 @@ export class ReviewsService {
 
   update(id: string, _dto: UpdateReviewDto) {
     const existing = this.reviewRepository.findById(id);
-    if (!existing) {
-      throw new NotFoundException('Review not found');
-    }
-
+    if (!existing) throw new NotFoundException('Review not found');
     throw new BadRequestException('Reviews are read-only after submission');
+  }
+
+  /** Save or clear a manager reply on a review. Pass null reply to delete it. */
+  updateReply(id: string, reply: string | null) {
+    const updated = this.reviewRepository.updateReply(id, reply);
+    if (!updated) throw new NotFoundException('Review not found');
+    return updated;
   }
 
   delete(id: string) {
     const existing = this.reviewRepository.findById(id);
-    if (!existing) {
-      throw new NotFoundException('Review not found');
-    }
-
+    if (!existing) throw new NotFoundException('Review not found');
     throw new BadRequestException('Reviews are read-only after submission');
   }
 }

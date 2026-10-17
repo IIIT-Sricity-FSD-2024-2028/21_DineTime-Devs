@@ -76,16 +76,35 @@ export class ManagerService {
       throw new BadRequestException('Email already exists');
     }
 
-    const location = this.restaurantRepository.findLocationById(dto.location_id);
-    if (!location) {
-      throw new BadRequestException('Selected location does not exist');
+    const city = String(dto.city || '').trim();
+    if (!/^[\p{L}]+(?:[-'][\p{L}]+)*$/u.test(city)) {
+      throw new BadRequestException('Enter the city name as one word.');
     }
+    if (!/^\d{6}$/.test(String(dto.pincode || '').trim())) {
+      throw new BadRequestException('Enter a valid 6-digit pincode.');
+    }
+    const restaurantPhone = String(dto.restaurant_phone || '').trim();
+    if (!/^\d{10}$/.test(restaurantPhone)) {
+      throw new BadRequestException('Restaurant contact number must be 10 digits.');
+    }
+    const verificationLocationId = String(dto.verification_location_id || '').trim();
+    const hasVerificationTeam = this.userRepository.findAll().some((user) =>
+      user.role === Role.VERIFICATION_ADMIN && user.status === 'active' && user.location_id === verificationLocationId,
+    );
+    if (!hasVerificationTeam || !this.restaurantRepository.findLocationById(verificationLocationId)) {
+      throw new BadRequestException('Choose an available Verification Team.');
+    }
+    const location = this.restaurantRepository.upsertLocation({
+      id: generateId('location'), latitude: 0, longitude: 0,
+      city, address: String(dto.address).trim(), state: String(dto.state).trim(),
+      pincode: String(dto.pincode).trim(), country: 'India',
+    });
 
     const duplicateRestaurant = this.restaurantRepository
       .findAll()
       .find(
         (restaurant) =>
-          restaurant.location_id === dto.location_id &&
+          restaurant.location_id === location.id &&
           restaurant.name.trim().toLowerCase() === dto.restaurant_name.trim().toLowerCase(),
       );
     if (duplicateRestaurant) {
@@ -101,9 +120,9 @@ export class ManagerService {
       phone: dto.phone,
       password_hash: await hash(dto.password, 10),
       role: Role.MANAGER,
-      status: 'active',
+      status: 'inactive',
       created_at: new Date().toISOString(),
-      location_id: dto.location_id,
+      location_id: location.id,
     });
 
     this.userRepository.upsertManagerDetails({
@@ -111,22 +130,24 @@ export class ManagerService {
       business_license_number: dto.business_license_number,
       verification_document_url: documentUrl,
       verification_status: 'pending',
+      verification_location_id: verificationLocationId,
     });
 
     const restaurant = this.restaurantRepository.create({
       id: generateId('restaurant'),
       manager_id: managerId,
-      location_id: dto.location_id,
+      location_id: location.id,
       name: dto.restaurant_name,
       cuisine_type: dto.cuisine_type,
       description: dto.description,
+      contact_number: restaurantPhone,
       total_tables: 0,
       rating_avg: 0,
       total_reviews: 0,
       status: 'active',
       is_open: false,
       created_at: new Date().toISOString(),
-      image_urls: [],
+      image_urls: ['../images/indian.jpg'],
       reservation_fee_per_guest: DEFAULT_RESERVATION_FEE_PER_GUEST,
       cancellation_cutoff_minutes: DEFAULT_CANCELLATION_CUTOFF_MINUTES,
       no_show_grace_minutes: DEFAULT_NO_SHOW_GRACE_MINUTES,
@@ -158,7 +179,7 @@ export class ManagerService {
       })
       .filter((item): item is typeof item & { details: NonNullable<typeof item.details> } => Boolean(item.details))
       .filter((item) => !status || item.details.verification_status === status)
-      .filter((item) => !locationId || item.restaurant?.location_id === locationId)
+      .filter((item) => !locationId || (item.details.verification_location_id || item.restaurant?.location_id) === locationId)
       .sort((a, b) => b.manager.created_at.localeCompare(a.manager.created_at));
   }
 
@@ -192,12 +213,18 @@ export class ManagerService {
       throw new BadRequestException('This application has already been reviewed');
     }
 
-    return this.userRepository.upsertManagerDetails({
+    const reviewedDetails = this.userRepository.upsertManagerDetails({
       ...details,
       verification_status: dto.decision,
       rejection_reason: dto.decision === 'rejected' ? (dto.reason || 'Not specified') : undefined,
       reviewed_by: dto.reviewer_id,
       reviewed_at: new Date().toISOString(),
     });
+
+    this.userRepository.update(managerId, {
+      status: dto.decision === 'approved' ? 'active' : 'inactive',
+    });
+
+    return reviewedDetails;
   }
 }
