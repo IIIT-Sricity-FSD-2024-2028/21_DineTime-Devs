@@ -24,6 +24,12 @@ export default function DashboardPage() {
   const available = tables.filter((t) => t.computedStatus === "available").length;
   const reserved = tables.filter((t) => t.computedStatus === "reserved").length;
   const occupied = tables.filter((t) => t.computedStatus === "occupied").length;
+  const blocked = tables.filter((t) => t.computedStatus === "blocked").length;
+  const canChangeStatus = Boolean(
+    editingTable &&
+      !editingTable.scheduleBlocked &&
+      ["available", "blocked"].includes(editingTable.computedStatus),
+  );
 
   const filteredTables = tables.filter((t) => {
     if (filter === "All") return true;
@@ -31,7 +37,7 @@ export default function DashboardPage() {
   });
 
   const handleSaveStatus = async () => {
-    if (!editingTable) return;
+    if (!canChangeStatus || saving) return;
     const slotIds = editingTable.slotIds || [];
     if (slotIds.length === 0) {
       setStatusError("No time slots are configured for the selected date.");
@@ -123,6 +129,11 @@ export default function DashboardPage() {
               <span className="card-label red">Occupied</span>
               <span className="card-val red">{loading ? "-" : occupied}</span>
             </div>
+            <div className="card">
+              <div className="card-dots" />
+              <span className="card-label">Blocked</span>
+              <span className="card-val">{loading ? "-" : blocked}</span>
+            </div>
           </section>
 
           <div className="legend-pills-outside">
@@ -134,6 +145,9 @@ export default function DashboardPage() {
             </span>
             <span className="pill occupied">
               <span className="dot" /> Occupied
+            </span>
+            <span className="pill blocked">
+              <span className="dot" /> Blocked
             </span>
           </div>
 
@@ -151,7 +165,7 @@ export default function DashboardPage() {
                 </span>
               </div>
               <div className="floor-filters">
-                {["All", "Available", "Reserved", "Occupied"].map((status) => (
+                {["All", "Available", "Reserved", "Occupied", "Blocked"].map((status) => (
                   <button
                     key={status}
                     type="button"
@@ -180,7 +194,8 @@ export default function DashboardPage() {
                       className={`table-card ${statusClass}`}
                       onClick={() => {
                         setEditingTable(table);
-                        setNewStatus(statusStr);
+                        setStatusError("");
+                        setNewStatus(tableStatusLabel(table.computedStatus));
                       }}
                     >
                       <div className="table-header">
@@ -231,27 +246,39 @@ export default function DashboardPage() {
                 <span className="info-val">{tableStatusLabel(editingTable.computedStatus)}</span>
               </div>
             </div>
-            <div className="form-group" style={{ marginTop: 24 }}>
-              <label htmlFor="new-status-select">Select New Status</label>
-              <select
-                id="new-status-select"
-                className="status-select"
-                value={newStatus}
-                onChange={(e) => setNewStatus(e.target.value)}
-              >
-                <option value="Available">Available</option>
-                <option value="Reserved">Reserved</option>
-                <option value="Occupied">Occupied</option>
-              </select>
-            </div>
+            {editingTable.scheduleBlocked && (
+              <p role="status">
+                This table is blocked by the manager schedule. Ask the manager to remove that block.
+              </p>
+            )}
+            {canChangeStatus && (
+              <div className="form-group" style={{ marginTop: 24 }}>
+                <label htmlFor="new-status-select">Select New Status</label>
+                <select
+                  id="new-status-select"
+                  className="status-select"
+                  value={newStatus}
+                  onChange={(e) => setNewStatus(e.target.value)}
+                >
+                  <option value="Available">Available</option>
+                  <option value="Blocked">Blocked</option>
+                </select>
+              </div>
+            )}
             {statusError && <ErrorMsg message={statusError} />}
             <div className="form-actions">
               <button className="btn-secondary" onClick={() => setEditingTable(null)}>
                 Cancel
               </button>
-              <button className="btn-green" onClick={handleSaveStatus} disabled={saving}>
-                {saving ? "Updating..." : "Update Status"}
-              </button>
+              {canChangeStatus && (
+                <button
+                  className="btn-green"
+                  onClick={handleSaveStatus}
+                  disabled={saving || newStatus === tableStatusLabel(editingTable.computedStatus)}
+                >
+                  {saving ? "Updating..." : "Update Status"}
+                </button>
+              )}
             </div>
           </div>
         </Modal>

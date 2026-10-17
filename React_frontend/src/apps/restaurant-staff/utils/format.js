@@ -31,6 +31,7 @@ export function tableStatusLabel(status) {
       available: "Available",
       reserved: "Reserved",
       occupied: "Occupied",
+      blocked: "Blocked",
     }[status] || "Available"
   );
 }

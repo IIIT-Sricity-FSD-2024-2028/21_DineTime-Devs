@@ -178,6 +178,26 @@ h3 { font-size: 1.15rem; font-weight: 600; color: #1f2937; }
     background: white;
 }
 
+.date-control select {
+    min-width: 176px;
+    border: 1.5px solid var(--border-medium);
+    border-radius: 10px;
+    padding: 9px 38px 9px 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    background: #fff url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") no-repeat right 12px center;
+    background-size: 15px;
+    appearance: none;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.date-control select:focus {
+    border-color: #73a97a;
+    box-shadow: 0 0 0 3px rgba(115, 169, 122, 0.12);
+}
+
 .page-header h2 {
     font-size: 2rem;
     font-weight: 700;
@@ -205,7 +225,7 @@ h3 { font-size: 1.15rem; font-weight: 600; color: #1f2937; }
 /* ─── Summary Cards ──────────────────────────────── */
 .summary-cards {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 16px;
     margin-bottom: 32px;
 }
@@ -350,6 +370,9 @@ h3 { font-size: 1.15rem; font-weight: 600; color: #1f2937; }
 .table-card.available { border-color: #22C55E; background: rgba(34, 197, 94, 0.10); }
 .table-card.reserved  { border-color: #F59E0B; background: rgba(245, 158, 11, 0.10); }
 .table-card.occupied  { border-color: #EF4444; background: rgba(239, 68, 68, 0.10); }
+.table-card.blocked { border-color: #64748B; background: #F1F5F9; }
+.blocked .table-status-label { color: #475569; }
+.pill.blocked .dot { background: #64748B; }
 
 .table-header {
     display: flex;

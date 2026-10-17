@@ -221,7 +221,7 @@ class StaffApi {
       const daySlotIds = new Set(activeSlot ? [activeSlot.id] : []);
 
       // Per-table status (highest rank wins)
-      const statusRank = { occupied: 3, reserved: 2, available: 1 };
+      const statusRank = { blocked: 4, occupied: 3, reserved: 2, available: 1 };
       const statusByTable = {};
       allTableSlots.forEach((ts) => {
         if (!daySlotIds.has(ts.slot_id)) return;
@@ -246,6 +246,10 @@ class StaffApi {
             t.capacity,
           slotIds: [activeSlot.id],
           computedStatus: statusByTable[t.id] || "available",
+          scheduleBlocked: allTableSlots.some(
+            (entry) =>
+              entry.table_id === t.id && entry.slot_id === activeSlot.id && entry.schedule_block,
+          ),
         }));
 
       // Reservations
@@ -292,7 +296,17 @@ class StaffApi {
         .filter((reservation) => reservation.date === date);
 
       this.publish({
-        tables: enrichedTables,
+        tables: enrichedTables.map((table) => ({
+          ...table,
+          bookingManaged: (reservationsRes || []).some(
+            (reservation) =>
+              reservation.slot_id === activeSlot?.id &&
+              ["reserved", "checked_in"].includes(
+                reservation.reservation_status || reservation.status,
+              ) &&
+              (reservation.table_ids || [reservation.table_id]).includes(table.id),
+          ),
+        })),
         allTables,
         slots: allSlots,
         activeSlotId: activeSlot?.id || "",
@@ -307,9 +321,11 @@ class StaffApi {
 
   // ─── Table status update ──────────────────────────────────────────────────────
   async updateTableStatus(tableId, slotIds, newStatus) {
-    const apiStatus =
-      { Available: "available", Reserved: "reserved", Occupied: "occupied" }[newStatus] ||
-      "available";
+    const apiStatus = {
+      Available: "available",
+      Blocked: "blocked",
+    }[newStatus];
+    if (!apiStatus) throw new Error("Staff can only set a table to Available or Blocked.");
     await Promise.all(
       slotIds.map((slotId) =>
         this.request("/tableslots/status", {
