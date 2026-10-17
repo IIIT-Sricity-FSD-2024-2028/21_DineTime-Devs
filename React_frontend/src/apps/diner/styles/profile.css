@@ -1,0 +1,728 @@
+/* profile.css */
+
+/* Hero Banner */
+.diner-app.diner-profile .hero-banner {
+  height: 200px;
+  position: relative;
+  background: url("../utils/images/hero-bg.png") center/cover;
+  padding: 24px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.diner-app.diner-profile .hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 20, 20, 0.6);
+  backdrop-filter: blur(2px);
+}
+
+.diner-app.diner-profile .hero-top-right {
+  position: relative;
+  z-index: 10;
+  align-self: flex-end;
+  display: flex;
+  gap: 12px;
+}
+
+.diner-app.diner-profile .circle-icon {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.diner-app.diner-profile .circle-icon:hover {
+  border-color: white;
+  background: rgba(255, 255, 255, 0.1);
+}
+.diner-app.diner-profile .hero-titles {
+  position: relative;
+  z-index: 10;
+  color: white;
+}
+.diner-app.diner-profile .hero-titles h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+.diner-app.diner-profile .hero-titles p {
+  font-size: 0.95rem;
+  color: #e5e7eb;
+  margin-top: 4px;
+}
+
+/* Page Content Container */
+.diner-app.diner-profile .page-container {
+  padding: 32px 40px;
+  max-width: 1200px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  flex: 1;
+}
+
+/* Large Profile Data Card - 3 Column Layout */
+.diner-app.diner-profile .profile-card-large {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border-card);
+  box-shadow: var(--shadow);
+  display: grid;
+  grid-template-columns: 1fr 2fr 1.2fr;
+  padding: 32px;
+  gap: 24px;
+  align-items: center;
+}
+
+.diner-app.diner-profile .profile-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  border-right: 1px solid var(--border);
+  padding-right: 24px;
+}
+
+.diner-app.diner-profile .photo-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+}
+.diner-app.diner-profile .avatar-circle {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--text-muted);
+  font-size: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.diner-app.diner-profile .avatar-circle img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.diner-app.diner-profile .profile-name {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-main);
+  text-align: center;
+}
+
+.diner-app.diner-profile .btn-green-solid {
+  background: var(--primary);
+  color: white;
+  padding: 10px 20px;
+  border-radius: var(--radius);
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  transition: var(--transition);
+}
+.diner-app.diner-profile .btn-green-solid:hover {
+  background: var(--primary-hover);
+}
+
+.diner-app.diner-profile .profile-right {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  row-gap: 24px;
+  column-gap: 20px;
+  padding: 0 10px;
+}
+
+.diner-app.diner-profile .info-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.diner-app.diner-profile .info-label {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+}
+.diner-app.diner-profile .info-val {
+  font-size: 1rem;
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+/* Map Column Styling */
+.diner-app.diner-profile .profile-map-column {
+  border-left: 1px solid var(--border);
+  padding-left: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.diner-app.diner-profile .location-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.diner-app.diner-profile .map-placeholder {
+  width: 100%;
+  height: 160px;
+  background-color: var(--bg);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.diner-app.diner-profile .map-placeholder iframe,
+.diner-app.diner-profile .interactive-map-embed iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.diner-app.diner-profile .map-label {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 8px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: var(--text-main);
+  border-top: 1px solid var(--border);
+}
+
+/* Typical Section Headings */
+.diner-app.diner-profile .section-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: -16px;
+  margin-top: 10px;
+}
+
+/* Upcoming Cards Flow */
+.diner-app.diner-profile .upcoming-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.diner-app.diner-profile .up-card {
+  background: var(--surface);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  transition: var(--transition);
+}
+
+.diner-app.diner-profile .up-thumb {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+.diner-app.diner-profile .up-details {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: center;
+  row-gap: 12px;
+}
+.diner-app.diner-profile .up-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-main);
+  grid-column: 1 / -1;
+}
+.diner-app.diner-profile .up-meta {
+  font-size: 0.9rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+.diner-app.diner-profile .up-meta.badge-col {
+  grid-column: 1;
+}
+.diner-app.diner-profile .up-actions {
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.diner-app.diner-profile .up-actions {
+  display: flex;
+  gap: 12px;
+}
+
+/* Buttons & Badges */
+.diner-app.diner-profile .badge-success {
+  background: #dcfce7;
+  color: #15803d;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  display: inline-block;
+}
+.diner-app.diner-profile .badge-danger {
+  background: #fee2e2;
+  color: #b91c1c;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  display: inline-block;
+}
+
+.diner-app.diner-profile .btn-blue {
+  background: #4b7baa;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-weight: 600;
+}
+.diner-app.diner-profile .btn-red {
+  background: #e74c3c;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-weight: 600;
+}
+.diner-app.diner-profile .btn-orange-outline {
+  background: transparent;
+  color: #e67e22;
+  border: 2px solid #e67e22;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  width: 180px;
+  font-weight: 700;
+}
+.diner-app.diner-profile .btn-orange-solid {
+  background: #e67e22;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  width: 180px;
+  font-weight: 700;
+}
+
+.diner-app.diner-profile .btn-blue:hover {
+  background: #3a628a;
+}
+.diner-app.diner-profile .btn-red:hover {
+  background: #c0392b;
+}
+.diner-app.diner-profile .btn-orange-outline:hover {
+  background: #e67e22;
+  color: white;
+}
+.diner-app.diner-profile .btn-orange-solid:hover {
+  background: #d35400;
+}
+.diner-app.diner-profile .btn-cancel {
+  background: white;
+  border: 1px solid var(--border);
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.diner-app.diner-profile .btn-red-outline {
+  background: transparent;
+  color: #e74c3c;
+  border: 1px solid #e74c3c;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  width: 100%;
+  max-width: 156px;
+}
+.diner-app.diner-profile .btn-red-outline:hover {
+  background: #e74c3c;
+  color: white;
+}
+.diner-app.diner-profile .btn-cancel:hover {
+  background: #f1f5f9;
+}
+
+/* Table Structure */
+.diner-app.diner-profile .table-card {
+  background: var(--surface);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.diner-app.diner-profile .history-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+.diner-app.diner-profile .history-table th {
+  padding: 18px 24px;
+  font-size: 0.8rem;
+  color: #9ca3af;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.diner-app.diner-profile .history-table td {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.95rem;
+  color: var(--text-main);
+  vertical-align: middle;
+}
+.diner-app.diner-profile .history-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Modals & Dropdown */
+.diner-app.diner-profile .notification-wrapper {
+  position: relative;
+}
+.diner-app.diner-profile .dropdown-menu {
+  position: absolute;
+  top: 48px;
+  right: 0;
+  width: 320px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  z-index: 50;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+.diner-app.diner-profile .dropdown-menu.hidden {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-12px);
+}
+.diner-app.diner-profile .dropdown-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.diner-app.diner-profile .dropdown-header h3 {
+  font-size: 1.1rem;
+  color: var(--text-main);
+  font-weight: 500;
+}
+.diner-app.diner-profile .btn-close-notif {
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 4px;
+}
+.diner-app.diner-profile .btn-close-notif:hover {
+  color: var(--text-main);
+}
+.diner-app.diner-profile .dropdown-body {
+  max-height: 320px;
+  overflow-y: auto;
+}
+.diner-app.diner-profile .dropdown-body.empty-state {
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.diner-app.diner-profile .empty-notif-msg {
+  font-size: 1rem;
+  color: #64748b;
+  text-align: center;
+}
+.diner-app.diner-profile .notif-item {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.diner-app.diner-profile .notif-item:hover {
+  background: #f9fafb;
+}
+.diner-app.diner-profile .notif-title {
+  font-weight: 700;
+  color: var(--text-main);
+  font-size: 0.95rem;
+}
+.diner-app.diner-profile .notif-desc {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.diner-app.diner-profile .modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+.diner-app.diner-profile .modal-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+.diner-app.diner-profile .modal-content {
+  background: var(--surface);
+  width: 100%;
+  max-width: 480px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+.diner-app.diner-profile .modal-header {
+  padding: 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+.diner-app.diner-profile .modal-header h3 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+.diner-app.diner-profile .btn-close {
+  background: transparent;
+  border: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: color 0.2s;
+}
+.diner-app.diner-profile .btn-close:hover {
+  color: var(--text-main);
+}
+.diner-app.diner-profile .modal-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+.diner-app.diner-profile .modal-subtitle {
+  font-size: 1rem;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+.diner-app.diner-profile .modal-footer {
+  padding: 20px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  background: var(--bg);
+  border-radius: 0 0 16px 16px;
+  flex-shrink: 0;
+}
+
+.diner-app.diner-profile .star-rating {
+  display: flex;
+  gap: 8px;
+  font-size: 2.2rem;
+  cursor: pointer;
+  color: #cbd5e1;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+}
+.diner-app.diner-profile .star-rating.read-only {
+  cursor: default;
+}
+.diner-app.diner-profile .star-rating:not(.read-only) .star-btn:hover,
+.diner-app.diner-profile
+  .star-rating:not(.read-only)
+  .star-btn:hover
+  ~ .star-btn {
+  color: #f59e0b;
+}
+.diner-app.diner-profile .star-rating .star-btn.active {
+  color: #f59e0b;
+}
+
+.diner-app.diner-profile .margin-bottom-20 {
+  margin-bottom: 20px;
+}
+.diner-app.diner-profile .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.diner-app.diner-profile .form-group label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+.diner-app.diner-profile .form-control {
+  padding: 14px;
+  border: 2px solid var(--border);
+  background: var(--bg);
+  color: var(--text-main);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 1rem;
+  width: 100%;
+  resize: vertical;
+  outline: none;
+  transition: all 0.2s;
+}
+.diner-app.diner-profile .form-control:focus {
+  border-color: var(--primary);
+  background: var(--surface);
+  box-shadow: 0 0 0 4px rgba(79, 111, 82, 0.1);
+}
+.diner-app.diner-profile .form-control:disabled {
+  background: var(--border);
+}
+
+.diner-app.diner-profile .toast {
+  position: fixed;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text-main);
+  color: white;
+  padding: 14px 28px;
+  border-radius: 40px;
+  font-weight: 600;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 3000;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+.diner-app.diner-profile .toast.hidden {
+  transform: translateX(-50%) translateY(100px);
+  opacity: 0;
+}
+.diner-app.diner-profile .toast-icon {
+  color: #4ade80;
+}
+
+.diner-app.diner-profile .w-full {
+  width: 100%;
+}
+.diner-app.diner-profile .mt-10 {
+  margin-top: 10px;
+}
+.diner-app.diner-profile .loc-modal {
+  max-width: 500px;
+}
+.diner-app.diner-profile .required {
+  color: #e74c3c;
+}
+.diner-app.diner-profile .form-row-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.diner-app.diner-profile .input-with-icon {
+  position: relative;
+}
+.diner-app.diner-profile .input-with-icon i {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  pointer-events: none;
+  z-index: 1;
+}
+.diner-app.diner-profile .input-with-icon .form-control {
+  padding-left: 40px;
+}

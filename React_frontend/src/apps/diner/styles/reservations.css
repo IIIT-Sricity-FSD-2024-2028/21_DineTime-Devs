@@ -1,0 +1,414 @@
+/* reservations.css */
+
+.diner-app.diner-reservations .hero-banner {
+  position: relative;
+  height: 160px;
+  background-image: url("../utils/images/chinese.jpg");
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: flex-end;
+  padding: 24px 32px;
+  flex-shrink: 0;
+}
+
+.diner-app.diner-reservations .hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.65) 0%,
+    rgba(0, 0, 0, 0.35) 100%
+  );
+}
+
+.diner-app.diner-reservations .hero-text {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+}
+
+.diner-app.diner-reservations .hero-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
+
+.diner-app.diner-reservations .hero-sub {
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.diner-app.diner-reservations .hero-user {
+  position: absolute;
+  top: 18px;
+  right: 24px;
+  z-index: 1;
+}
+
+.diner-app.diner-reservations .hero-user-icon {
+  font-size: 1.3rem;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+}
+
+.diner-app.diner-reservations .content-area {
+  flex: 1;
+  padding: 24px 28px 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.diner-app.diner-reservations .filters-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.diner-app.diner-reservations .search-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  background: var(--bg);
+  transition: var(--transition);
+}
+
+.diner-app.diner-reservations .search-row:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.diner-app.diner-reservations .search-icon {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.diner-app.diner-reservations .search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  outline: none;
+}
+
+.diner-app.diner-reservations .search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.diner-app.diner-reservations .filter-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.diner-app.diner-reservations .filter-select-wrap {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 9px 13px;
+  background: var(--surface);
+  flex: 1;
+  min-width: 140px;
+  transition: var(--transition);
+}
+
+.diner-app.diner-reservations .filter-select-wrap:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.diner-app.diner-reservations .filter-select-icon {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.diner-app.diner-reservations .filter-select {
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.88rem;
+  color: var(--text-main);
+  outline: none;
+  flex: 1;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.diner-app.diner-reservations .btn-apply {
+  padding: 10px 18px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--accent);
+  color: white;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+
+.diner-app.diner-reservations .btn-apply:hover {
+  background: var(--accent-hover);
+  box-shadow: 0 3px 10px rgba(230, 126, 34, 0.3);
+}
+
+.diner-app.diner-reservations .btn-clear {
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: var(--transition);
+}
+
+.diner-app.diner-reservations .btn-clear:hover {
+  border-color: var(--text-muted);
+  color: var(--text-main);
+}
+
+.diner-app.diner-reservations #reservationsList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.diner-app.diner-reservations .res-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  transition: var(--transition);
+}
+
+.diner-app.diner-reservations .res-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.diner-app.diner-reservations .res-img {
+  width: 90px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+
+.diner-app.diner-reservations .res-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.diner-app.diner-reservations .res-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.diner-app.diner-reservations .res-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.diner-app.diner-reservations .badge {
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.diner-app.diner-reservations .badge-confirmed {
+  background: var(--green-bg, #d1fae5);
+  color: var(--green-text, #065f46);
+}
+.diner-app.diner-reservations .badge-completed {
+  background: var(--blue-bg, #dbeafe);
+  color: var(--blue-text, #1e40af);
+}
+.diner-app.diner-reservations .badge-cancelled {
+  background: var(--red-bg, #fee2e2);
+  color: var(--red-text, #991b1b);
+}
+
+.diner-app.diner-reservations .res-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 24px;
+}
+
+.diner-app.diner-reservations .res-info-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.diner-app.diner-reservations .res-info-item i {
+  font-size: 0.82rem;
+  width: 14px;
+  text-align: center;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.diner-app.diner-reservations .res-info-item span {
+  color: var(--text-main);
+  font-weight: 500;
+}
+
+.diner-app.diner-reservations .res-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.diner-app.diner-reservations .btn-view-details {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.diner-app.diner-reservations .btn-view-details:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-light);
+}
+
+.diner-app.diner-reservations .btn-view-details i {
+  font-size: 0.85rem;
+}
+
+.diner-app.diner-reservations .btn-rate {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border: 1.5px solid var(--accent);
+  border-radius: var(--radius-md);
+  background: var(--accent);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.diner-app.diner-reservations .btn-rate:hover {
+  background: var(--accent-hover);
+  box-shadow: 0 3px 10px rgba(230, 126, 34, 0.28);
+}
+
+.diner-app.diner-reservations .btn-cancel {
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #ef4444;
+  cursor: pointer;
+  padding: 4px 6px;
+  transition: var(--transition);
+  border-radius: 6px;
+}
+
+.diner-app.diner-reservations .btn-cancel:hover {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.diner-app.diner-reservations .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 10px;
+  text-align: center;
+}
+
+.diner-app.diner-reservations .empty-icon {
+  font-size: 2.5rem;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.diner-app.diner-reservations .empty-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.diner-app.diner-reservations .empty-sub {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+@media (max-width: 900px) {
+  .diner-app.diner-reservations .filter-row {
+    flex-wrap: wrap;
+  }
+  .diner-app.diner-reservations .filter-select-wrap {
+    min-width: 100px;
+  }
+}
+
+@media (max-width: 600px) {
+  .diner-app.diner-reservations .content-area {
+    padding: 16px 12px 60px;
+  }
+  .diner-app.diner-reservations .res-info-grid {
+    grid-template-columns: 1fr;
+  }
+  .diner-app.diner-reservations .res-card {
+    flex-direction: column;
+  }
+  .diner-app.diner-reservations .res-img {
+    width: 100%;
+    height: 140px;
+  }
+}

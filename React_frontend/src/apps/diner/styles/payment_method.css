@@ -1,0 +1,423 @@
+/* payment_method.css */
+
+.diner-app.diner-payment_method .page-main {
+  max-width: 580px;
+  margin: 36px auto;
+  padding: 0 16px 80px;
+}
+
+.diner-app.diner-payment_method .payment-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 32px 28px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+}
+
+.diner-app.diner-payment_method .page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 24px;
+}
+
+.diner-app.diner-payment_method .methods-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.diner-app.diner-payment_method .method-row {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.diner-app.diner-payment_method .method-row.active {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.diner-app.diner-payment_method .method-header {
+  display: flex;
+  align-items: center;
+  padding: 16px 18px;
+  gap: 14px;
+  user-select: none;
+}
+
+.diner-app.diner-payment_method .method-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.diner-app.diner-payment_method .method-icon i {
+  font-size: 1rem;
+  color: var(--primary);
+}
+
+.diner-app.diner-payment_method .method-label {
+  flex: 1;
+}
+
+.diner-app.diner-payment_method .method-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-main);
+  display: block;
+}
+
+.diner-app.diner-payment_method .method-sub {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+  display: block;
+}
+
+.diner-app.diner-payment_method .method-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.diner-app.diner-payment_method .badge {
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  display: inline-flex;
+  align-items: center;
+}
+
+.diner-app.diner-payment_method .badge-visa {
+  background: #1a1f71;
+  color: #ffffff;
+}
+
+.diner-app.diner-payment_method .badge-mc {
+  background: #eb001b;
+  color: #ffffff;
+}
+
+.diner-app.diner-payment_method .badge-rupay {
+  background: #097939;
+  color: #ffffff;
+}
+
+.diner-app.diner-payment_method .method-arrow {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin-left: 8px;
+  transition: transform 0.25s ease;
+  flex-shrink: 0;
+}
+
+.diner-app.diner-payment_method .method-row.active .method-arrow {
+  transform: rotate(180deg);
+}
+
+.diner-app.diner-payment_method .method-body {
+  max-height: 0;
+  overflow: hidden;
+  transition:
+    max-height 0.35s ease,
+    padding 0.25s ease;
+  padding: 0 18px;
+  background: var(--surface);
+}
+
+.diner-app.diner-payment_method .method-row.active .method-body {
+  max-height: 500px;
+  padding: 0 18px 20px;
+}
+
+.diner-app.diner-payment_method .method-divider {
+  height: 1px;
+  background: var(--border);
+  margin-bottom: 16px;
+}
+
+.diner-app.diner-payment_method .field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.diner-app.diner-payment_method .field-group label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.diner-app.diner-payment_method .field-input {
+  padding: 11px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  background: var(--surface);
+  outline: none;
+  transition: var(--transition-fast);
+  width: 100%;
+}
+
+.diner-app.diner-payment_method .field-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.diner-app.diner-payment_method .field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.diner-app.diner-payment_method .field-select {
+  padding: 11px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  background: var(--surface);
+  outline: none;
+  transition: var(--transition-fast);
+  width: 100%;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: none;
+}
+
+.diner-app.diner-payment_method .field-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.diner-app.diner-payment_method .upi-apps {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.diner-app.diner-payment_method .upi-app-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-main);
+  transition: var(--transition-fast);
+}
+
+.diner-app.diner-payment_method .upi-app-btn:hover,
+.diner-app.diner-payment_method .upi-app-btn.selected {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.diner-app.diner-payment_method .upi-app-btn i {
+  font-size: 0.9rem;
+  color: var(--primary);
+}
+
+.diner-app.diner-payment_method .wallet-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.diner-app.diner-payment_method .wallet-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.diner-app.diner-payment_method .wallet-option:hover,
+.diner-app.diner-payment_method .wallet-option.selected {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+.diner-app.diner-payment_method .wallet-option i {
+  color: var(--primary);
+  font-size: 1rem;
+  width: 18px;
+  text-align: center;
+}
+
+.diner-app.diner-payment_method .wallet-option span {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text-main);
+}
+
+.diner-app.diner-payment_method .radio-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  margin-left: auto;
+  flex-shrink: 0;
+  transition: var(--transition-fast);
+}
+
+.diner-app.diner-payment_method .wallet-option.selected .radio-dot {
+  border-color: var(--primary);
+  background: var(--primary);
+  box-shadow: inset 0 0 0 3px var(--surface);
+}
+
+.diner-app.diner-payment_method .secure-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--bg);
+  border: 1px solid #f0e0cc;
+  border-radius: var(--radius-md);
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 18px;
+}
+
+.diner-app.diner-payment_method .secure-icon {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.diner-app.diner-payment_method .btn-pay {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--primary);
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  letter-spacing: 0.01em;
+  margin-bottom: 14px;
+}
+
+.diner-app.diner-payment_method .btn-pay:hover {
+  background: var(--primary-hover);
+  box-shadow: 0 4px 16px rgba(79, 111, 82, 0.35);
+  transform: translateY(-1px);
+}
+
+.diner-app.diner-payment_method .btn-pay:active {
+  transform: translateY(0);
+}
+
+.diner-app.diner-payment_method .back-link-wrap {
+  text-align: center;
+}
+
+.diner-app.diner-payment_method .back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.88rem;
+  color: var(--text-main);
+  text-decoration: none;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  transition: var(--transition-fast);
+}
+
+.diner-app.diner-payment_method .back-link:hover {
+  color: var(--primary);
+  background: var(--primary-light);
+}
+
+.diner-app.diner-payment_method .back-link i {
+  font-size: 0.82rem;
+}
+
+.diner-app.diner-payment_method .toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 22px;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  z-index: 999;
+  opacity: 0;
+  transition:
+    opacity 0.3s,
+    transform 0.3s;
+  white-space: nowrap;
+}
+
+.diner-app.diner-payment_method .toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.diner-app.diner-payment_method .toast.hidden {
+  display: none;
+}
+.diner-app.diner-payment_method .toast-icon {
+  font-size: 1rem;
+}
+.diner-app.diner-payment_method .toast.success .toast-icon {
+  color: #065f46;
+}
+.diner-app.diner-payment_method .toast.error .toast-icon {
+  color: #991b1b;
+}
+
+@media (max-width: 620px) {
+  .diner-app.diner-payment_method .page-main {
+    padding: 0 10px 60px;
+    margin: 16px auto;
+  }
+  .diner-app.diner-payment_method .payment-card {
+    padding: 20px 14px;
+  }
+  .diner-app.diner-payment_method .field-row {
+    grid-template-columns: 1fr;
+  }
+  .diner-app.diner-payment_method .upi-apps {
+    gap: 8px;
+  }
+}

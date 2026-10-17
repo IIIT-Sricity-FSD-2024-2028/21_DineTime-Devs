@@ -1,0 +1,551 @@
+/* =========================================
+   DineTime - Landing Page Styles
+   (all classes prefixed with "landing-" to avoid conflicts)
+   ========================================= */
+
+/* Scoped CSS variables on a wrapper - declare on :root but namespaced */
+.landing-page-root {
+  --landing-primary-green: #5F7A61;
+  --landing-primary-green-hover: #4a614c;
+  --landing-bg-cream: #FAECE3;
+  --landing-bg-light: #FDF9F6;
+  --landing-card-bg: #FFFFFF;
+  --landing-text-dark: #1A1A1A;
+  --landing-text-muted: #666666;
+  --landing-border-light: #EAE0D5;
+  --landing-shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.04);
+  --landing-shadow-md: 0 12px 30px rgba(0, 0, 0, 0.08);
+  --landing-transition-speed: 0.3s;
+}
+
+/* Declare variables also on :root so child components can use them */
+:root {
+  --landing-primary-green: #5F7A61;
+  --landing-primary-green-hover: #4a614c;
+  --landing-bg-cream: #FAECE3;
+  --landing-bg-light: #FDF9F6;
+  --landing-card-bg: #FFFFFF;
+  --landing-text-dark: #1A1A1A;
+  --landing-text-muted: #666666;
+  --landing-border-light: #EAE0D5;
+  --landing-shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.04);
+  --landing-shadow-md: 0 12px 30px rgba(0, 0, 0, 0.08);
+  --landing-transition-speed: 0.3s;
+}
+
+/* Full page wrapper for landing */
+.diner-app.diner-landing,
+.landing-wrapper {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--landing-bg-cream);
+  color: var(--landing-text-dark);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* Body override when landing page is active */
+body:has(.landing-wrapper) {
+  background-color: var(--landing-bg-cream);
+}
+
+.landing-wrapper a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.landing-wrapper section {
+  padding: 6rem 0;
+}
+
+/* =========================================
+   Container
+   ========================================= */
+.landing-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* =========================================
+   Section Title
+   ========================================= */
+.landing-section-title {
+  text-align: center;
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: 3rem;
+  color: var(--landing-text-dark);
+  letter-spacing: -0.5px;
+}
+
+/* =========================================
+   Buttons
+   ========================================= */
+.landing-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--landing-primary-green);
+  color: white;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all var(--landing-transition-speed) ease;
+  text-decoration: none;
+}
+
+.landing-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(95, 122, 97, 0.35);
+  color: white;
+}
+
+.landing-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  border: 2px solid var(--landing-primary-green);
+  color: var(--landing-primary-green);
+  padding: 0.85rem 2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all var(--landing-transition-speed) ease;
+  text-decoration: none;
+}
+
+.landing-btn-outline:hover {
+  background-color: var(--landing-primary-green);
+  color: white;
+}
+
+/* =========================================
+   Navbar
+   ========================================= */
+.landing-wrapper nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.landing-logo {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--landing-primary-green);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  letter-spacing: -0.5px;
+}
+
+.landing-nav-links {
+  display: flex;
+  gap: 2rem;
+  font-weight: 500;
+}
+
+.landing-nav-links a {
+  transition: color 0.2s;
+}
+
+.landing-nav-links a:hover {
+  color: var(--landing-primary-green);
+}
+
+/* =========================================
+   Hero
+   ========================================= */
+.landing-hero {
+  padding: 4rem 0 6rem 0;
+  background-color: var(--landing-bg-cream);
+}
+
+.landing-hero-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+
+.landing-hero-content h1 {
+  font-size: 4rem;
+  line-height: 1.1;
+  margin-bottom: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+
+.landing-hero-content p {
+  font-size: 1.25rem;
+  color: var(--landing-text-muted);
+  margin-bottom: 2.5rem;
+  max-width: 90%;
+}
+
+.landing-hero-image-wrapper {
+  position: relative;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: var(--landing-shadow-md);
+}
+
+.landing-hero-image-wrapper img {
+  width: 100%;
+  height: 500px;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.5s ease;
+}
+
+.landing-hero-image-wrapper:hover img {
+  transform: scale(1.03);
+}
+
+/* =========================================
+   Features
+   ========================================= */
+.landing-features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.landing-feature-card {
+  background: var(--landing-card-bg);
+  padding: 2.5rem;
+  border-radius: 16px;
+  box-shadow: var(--landing-shadow-sm);
+  transition: transform var(--landing-transition-speed);
+  border: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+.landing-feature-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--landing-shadow-md);
+  border-color: var(--landing-border-light);
+}
+
+.landing-feature-card h3 {
+  margin-bottom: 0.5rem;
+  font-size: 1.2rem;
+}
+
+.landing-feature-card p {
+  color: var(--landing-text-muted);
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+/* =========================================
+   How It Works
+   ========================================= */
+.landing-flow-container {
+  background: var(--landing-card-bg);
+  border-radius: 24px;
+  padding: 3rem;
+  box-shadow: var(--landing-shadow-sm);
+  margin-bottom: 2.5rem;
+}
+
+.landing-flow-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 3rem;
+  color: var(--landing-text-dark);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.landing-flow-title::before {
+  content: '';
+  display: block;
+  width: 10px;
+  height: 10px;
+  background-color: var(--landing-primary-green);
+  border-radius: 50%;
+}
+
+.landing-flow-steps {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 2rem;
+  text-align: center;
+}
+
+.landing-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 220px;
+}
+
+.landing-step-image-wrapper {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  padding: 6px;
+  background: #FFF0E6;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.landing-step-image-wrapper img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.landing-step h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--landing-text-dark);
+  margin: 0;
+}
+
+.landing-arrow {
+  color: #D1C4B9;
+  font-size: 1.5rem;
+  margin-top: 65px;
+}
+
+/* =========================================
+   Portals
+   ========================================= */
+.landing-portal-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+
+.landing-portal-card {
+  background: var(--landing-card-bg);
+  border-radius: 16px;
+  text-align: left;
+  box-shadow: var(--landing-shadow-sm);
+  border: 1px solid var(--landing-border-light);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  transition: all var(--landing-transition-speed) ease;
+}
+
+.landing-portal-content {
+  padding: 2.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.landing-portal-grid:hover .landing-portal-card:not(:hover) {
+  opacity: 0.6;
+  transform: scale(0.98);
+}
+
+.landing-portal-card:hover {
+  transform: translateY(-10px);
+  box-shadow: var(--landing-shadow-md);
+  border-color: var(--landing-primary-green);
+}
+
+.landing-portal-content h3 {
+  font-size: 1.5rem;
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.landing-portal-content p {
+  color: var(--landing-text-muted);
+  margin-bottom: 2rem;
+}
+
+.landing-portal-btn-wrapper {
+  margin-top: auto;
+  width: 100%;
+}
+
+.landing-portal-btn-wrapper a {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* =========================================
+   Footer
+   ========================================= */
+.landing-footer {
+  background-color: #263327;
+  color: #D1DED2;
+  padding: 4rem 0 1.5rem 0;
+  font-size: 0.95rem;
+  margin-top: 4rem;
+}
+
+.landing-footer-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 3rem;
+  flex-wrap: wrap;
+  gap: 2rem;
+}
+
+.landing-footer-brand {
+  max-width: 300px;
+}
+
+.landing-footer-logo {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  letter-spacing: -0.5px;
+  margin-bottom: 0.75rem;
+  text-decoration: none;
+}
+
+.landing-footer-tagline {
+  color: #8C9C8D;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.landing-footer-links-group {
+  display: flex;
+  gap: 5rem;
+  flex-wrap: wrap;
+}
+
+.landing-footer-link-col h4 {
+  font-size: 1.1rem;
+  color: #FFFFFF;
+  font-weight: 700;
+  margin-top: 0;
+  margin-bottom: 1.25rem;
+}
+
+.landing-footer-link-col ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.landing-footer-link-col ul li {
+  margin-bottom: 0.85rem;
+}
+
+.landing-footer-link-col ul li a {
+  color: #A3B5A4;
+  transition: color 0.2s, transform 0.2s;
+  display: inline-block;
+  text-decoration: none;
+}
+
+.landing-footer-link-col ul li a:hover {
+  color: #FFFFFF;
+  transform: translateX(3px);
+}
+
+.landing-footer-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.landing-footer-copyright {
+  color: #8C9C8D;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.landing-social-links {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.landing-social-icon {
+  width: 38px;
+  height: 38px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.landing-social-icon svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+.landing-social-icon:hover {
+  background: #FFFFFF;
+  color: #263327;
+  transform: translateY(-3px);
+}
+
+/* =========================================
+   Mobile Responsiveness
+   ========================================= */
+@media (max-width: 768px) {
+  .landing-hero-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .landing-hero-content h1 {
+    font-size: 2.5rem;
+  }
+
+  .landing-portal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-flow-steps {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .landing-arrow {
+    margin-top: 0;
+    transform: rotate(90deg);
+  }
+
+  .landing-footer-top {
+    flex-direction: column;
+    gap: 3rem;
+  }
+
+  .landing-footer-links-group {
+    gap: 3rem;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .landing-footer-bottom {
+    flex-direction: column;
+    text-align: center;
+    justify-content: center;
+  }
+}

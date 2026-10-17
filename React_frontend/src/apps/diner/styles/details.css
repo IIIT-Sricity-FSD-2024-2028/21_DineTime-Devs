@@ -1,0 +1,354 @@
+/* details.css */
+
+.diner-app.diner-details .hero-banner {
+  position: relative;
+  height: 160px;
+  background-image: url("../utils/images/italian.jpg");
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: flex-end;
+  padding: 24px 32px;
+  flex-shrink: 0;
+}
+
+.diner-app.diner-details .hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.65) 0%,
+    rgba(0, 0, 0, 0.35) 100%
+  );
+}
+
+.diner-app.diner-details .hero-text {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+}
+
+.diner-app.diner-details .hero-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
+
+.diner-app.diner-details .hero-sub {
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.diner-app.diner-details .hero-user {
+  position: absolute;
+  top: 18px;
+  right: 24px;
+  z-index: 1;
+}
+
+.diner-app.diner-details .hero-user-icon {
+  font-size: 1.3rem;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+}
+
+.diner-app.diner-details .content-area {
+  flex: 1;
+  padding: 32px 32px 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.diner-app.diner-details .card-pass {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border);
+  max-width: 700px;
+  width: 100%;
+  margin: 0 auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.diner-app.diner-details .pass-header {
+  padding: 32px;
+  background: #fcfcfc;
+  border-bottom: 2px dashed var(--border);
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  position: relative;
+}
+
+.diner-app.diner-details .pass-header::before,
+.diner-app.diner-details .pass-header::after {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  width: 20px;
+  height: 20px;
+  background: var(--bg);
+  border-radius: 50%;
+  z-index: 2;
+  border: 1px solid var(--border);
+}
+
+.diner-app.diner-details .pass-header::before {
+  left: -11px;
+}
+.diner-app.diner-details .pass-header::after {
+  right: -11px;
+}
+
+.diner-app.diner-details .pass-thumb {
+  width: 100px;
+  height: 100px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  border: 4px solid white;
+  box-shadow: var(--shadow-sm);
+}
+
+.diner-app.diner-details .pass-title-row {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.diner-app.diner-details .pass-restaurant {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.5px;
+}
+
+.diner-app.diner-details .pass-cuisine {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.diner-app.diner-details .badge {
+  padding: 5px 14px;
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.diner-app.diner-details .badge-confirmed {
+  background: var(--green-bg, #d1fae5);
+  color: var(--green-text, #065f46);
+}
+.diner-app.diner-details .badge-completed {
+  background: var(--blue-bg, #dbeafe);
+  color: var(--blue-text, #1e40af);
+}
+.diner-app.diner-details .badge-cancelled {
+  background: var(--red-bg, #fee2e2);
+  color: var(--red-text, #991b1b);
+}
+
+.diner-app.diner-details .pass-body {
+  padding: 32px;
+  border-bottom: 1px solid var(--border);
+}
+
+.diner-app.diner-details .pass-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  margin-bottom: 28px;
+}
+
+.diner-app.diner-details .detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.diner-app.diner-details .detail-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.diner-app.diner-details .detail-label i {
+  color: var(--primary);
+  width: 14px;
+  text-align: center;
+}
+
+.diner-app.diner-details .detail-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.diner-app.diner-details .pass-location {
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.diner-app.diner-details .pass-location .detail-value {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-main);
+}
+
+.diner-app.diner-details .pass-footer {
+  padding: 32px;
+  background: #fafafa;
+}
+
+.diner-app.diner-details .pass-qr-section {
+  display: flex;
+  gap: 32px;
+  align-items: center;
+}
+
+.diner-app.diner-details .qr-wrapper-static {
+  background: white;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.diner-app.diner-details .qr-image-static {
+  width: 140px;
+  height: 140px;
+  object-fit: contain;
+}
+
+.diner-app.diner-details .qr-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.diner-app.diner-details .qr-info {
+  flex: 1;
+}
+
+.diner-app.diner-details .qr-hint {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.diner-app.diner-details .res-id-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-main);
+}
+
+.diner-app.diner-details .res-id-label span {
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: 1px;
+}
+
+.diner-app.diner-details .menu-btn-container {
+  margin-top: 32px;
+}
+
+.diner-app.diner-details .btn-menu {
+  width: 100%;
+  padding: 16px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  transition: var(--transition-fast);
+}
+
+.diner-app.diner-details .btn-menu:hover {
+  background: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.diner-app.diner-details .btn-review {
+  background: var(--accent);
+}
+
+.diner-app.diner-details .btn-review:hover {
+  background: var(--accent-hover);
+}
+
+@media (max-width: 650px) {
+  .diner-app.diner-details .pass-header {
+    flex-direction: column;
+    text-align: center;
+  }
+  .diner-app.diner-details .pass-title-row {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .diner-app.diner-details .pass-info-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .diner-app.diner-details .pass-qr-section {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+.diner-app.diner-details .btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  align-self: flex-start;
+}
+
+.diner-app.diner-details .btn-back:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-light);
+}
+
+@media (max-width: 768px) {
+  .diner-app.diner-details .content-area {
+    padding: 20px 16px 60px;
+  }
+}

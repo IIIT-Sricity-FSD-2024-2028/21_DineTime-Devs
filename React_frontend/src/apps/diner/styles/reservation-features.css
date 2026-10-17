@@ -1,0 +1,24 @@
+.reservation-payment { margin-top: 24px; padding: 20px; background: #f7faf9; border: 1px solid #dbe6e1; border-radius: 12px; }
+.reservation-payment h3 { margin: 0 0 14px; }
+.reservation-payment dl { margin: 0; }
+.reservation-payment dl > div { display: flex; justify-content: space-between; gap: 20px; margin: 9px 0; }
+.reservation-payment dt { color: #56625d; }
+.reservation-payment dd { margin: 0; text-align: right; overflow-wrap: anywhere; }
+.reservation-payment-note { margin: 12px 0; font-size: 14px; }
+.reservation-extra-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
+.reservation-extra-actions .btn-view-details { display: inline-flex; padding: 10px 16px; border-radius: 8px; border: 1px solid #bfd4c8; color: #155d3e; text-decoration: none; font-weight: 600; }
+.modify-reservation-form .btn-back { display: block; text-align: center; margin: 16px 0 0; color: #56625d; }
+.modify-reservation-form fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+.modify-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 20px; }
+.modify-fields label { display: flex; flex-direction: column; gap: 8px; font-weight: 600; }
+.modify-fields input, .modify-fields select { width: 100%; min-width: 0; padding: 12px; background: white; border: 1px solid #d2dbd6; border-radius: 8px; font: inherit; }
+.modify-reservation-form .table-tile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+.diner-app.diner-modify .hero-banner { position: relative; padding: 32px; background: #496c50; color: white; }
+.diner-app.diner-modify .hero-title { font-size: 28px; margin: 0 44px 8px 0; }
+.diner-app.diner-modify .hero-sub { margin: 0; color: #eef7ef; }
+.diner-app.diner-modify .hero-user { position: absolute; top: 32px; right: 32px; }
+.diner-app.diner-modify .hero-user a { color: white; }
+.support-issue-options { display: flex; flex-wrap: wrap; gap: 8px; }
+.support-issue-options button { padding: 10px 14px; border: 1px solid #cbd5d0; background: #fff; border-radius: 10px; font: inherit; cursor: pointer; }
+.support-issue-options button[aria-pressed="true"] { border-color: #19734b; background: #eaf7ef; color: #155d3e; }
+@media (max-width: 560px) { .modify-fields { grid-template-columns: 1fr; } .reservation-payment dl > div { flex-wrap: wrap; gap: 4px; } }

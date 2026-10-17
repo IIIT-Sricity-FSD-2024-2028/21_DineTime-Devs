@@ -1,0 +1,465 @@
+/* browse.css */
+
+.diner-app.diner-browse .page-body {
+  padding-top: 24px;
+  padding-bottom: 48px;
+}
+
+.diner-app.diner-browse .search-container {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--bg);
+  border-radius: var(--radius-md);
+  padding: 0 12px;
+  border: 1px solid transparent;
+  transition: var(--transition-fast);
+}
+
+.diner-app.diner-browse .search-container:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.diner-app.diner-browse .search-icon {
+  color: var(--text-muted);
+  width: 16px;
+  height: 16px;
+}
+
+.diner-app.diner-browse .search-input {
+  flex: 1;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: var(--text-main);
+  outline: none;
+}
+
+.diner-app.diner-browse .filter-icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-fast);
+}
+
+.diner-app.diner-browse .filter-icon-btn svg {
+  width: 16px;
+  height: 16px;
+}
+.diner-app.diner-browse .filter-icon-btn:hover {
+  color: var(--primary);
+}
+
+.diner-app.diner-browse .btn-sort {
+  background-color: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius-full);
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: var(--transition-fast);
+  margin-bottom: 24px;
+}
+.diner-app.diner-browse .btn-sort:hover {
+  background-color: var(--accent-hover);
+}
+
+.diner-app.diner-browse .cuisine-section {
+  margin-bottom: 32px;
+}
+
+.diner-app.diner-browse .section h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--text-main);
+}
+
+.diner-app.diner-browse .cuisine-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  scrollbar-width: none;
+}
+.diner-app.diner-browse .cuisine-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.diner-app.diner-browse .cuisine-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.diner-app.diner-browse .cuisine-card img {
+  width: 90px;
+  height: 80px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-fast);
+}
+
+.diner-app.diner-browse .cuisine-card:hover img {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.diner-app.diner-browse .cuisine-card.active-cuisine img {
+  border: 2px solid var(--primary);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.diner-app.diner-browse .cuisine-card span {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-main);
+}
+
+.diner-app.diner-browse .cuisine-card.active-cuisine span {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.diner-app.diner-browse .restaurant-horizontal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.diner-app.diner-browse .card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  border: 1px solid var(--border);
+}
+
+.diner-app.diner-browse .card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.diner-app.diner-browse .card-img-wrapper {
+  position: relative;
+  width: 100%;
+  padding-top: 50%;
+  overflow: hidden;
+}
+
+.diner-app.diner-browse .card-img-wrapper img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.diner-app.diner-browse .card:hover .card-img-wrapper img {
+  transform: scale(1.05);
+}
+
+.diner-app.diner-browse .card-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.diner-app.diner-browse .card-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: var(--text-main);
+}
+
+.diner-app.diner-browse .card-cuisine {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-bottom: 16px;
+}
+
+.diner-app.diner-browse .card-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.diner-app.diner-browse .rating-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  color: var(--text-main);
+  font-size: 0.9rem;
+}
+
+.diner-app.diner-browse .distance-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.diner-app.diner-browse .slots-section {
+  margin-bottom: 24px;
+}
+.diner-app.diner-browse .slots-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.diner-app.diner-browse .time-slots-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.diner-app.diner-browse .time-pill {
+  background-color: var(--bg);
+  color: var(--text-main);
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.diner-app.diner-browse .btn-reserve {
+  margin-top: auto;
+  width: 100%;
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.diner-app.diner-browse .btn-reserve:hover {
+  background-color: var(--primary-hover);
+}
+
+.diner-app.diner-browse .empty-state {
+  text-align: center;
+  padding: 60px 16px;
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  border: 1px dashed var(--border);
+}
+.diner-app.diner-browse .empty-icon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+.diner-app.diner-browse .empty-state h3 {
+  font-size: 1.25rem;
+  margin-bottom: 8px;
+}
+.diner-app.diner-browse .empty-state p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.diner-app.diner-browse .filter-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 32px;
+  width: 380px;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
+  margin-top: 10px;
+}
+
+.diner-app.diner-browse .filter-dropdown.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-10px);
+}
+
+.diner-app.diner-browse .filter-dropdown-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.diner-app.diner-browse .filter-dropdown-header h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.diner-app.diner-browse .filter-dropdown-header p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+.diner-app.diner-browse .filter-close-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.diner-app.diner-browse .filter-dropdown-body {
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.diner-app.diner-browse .filter-section h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+.diner-app.diner-browse .filter-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.diner-app.diner-browse .filter-options-list label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  cursor: pointer;
+}
+.diner-app.diner-browse .filter-options-list input[type="radio"],
+.diner-app.diner-browse .filter-options-list input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+
+.diner-app.diner-browse .orange-text {
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.diner-app.diner-browse .slider-wrapper {
+  margin-top: 8px;
+}
+
+.diner-app.diner-browse .orange-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  background: #e2e8f0;
+  border-radius: var(--radius-full);
+  outline: none;
+}
+.diner-app.diner-browse .orange-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.diner-app.diner-browse .slider-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.diner-app.diner-browse .custom-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  color: var(--text-main);
+  background: var(--surface);
+  outline: none;
+}
+.diner-app.diner-browse .custom-select:focus {
+  border-color: var(--accent);
+}
+
+.diner-app.diner-browse .filter-dropdown-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 12px;
+}
+.diner-app.diner-browse .filter-dropdown-footer .btn {
+  flex: 1;
+  padding: 10px;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  text-align: center;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: var(--transition-fast);
+}
+
+.diner-app.diner-browse .btn-outline-orange {
+  background: transparent;
+  color: var(--text-muted);
+  border-color: var(--border) !important;
+}
+.diner-app.diner-browse .btn-outline-orange:hover {
+  background: var(--bg);
+  color: var(--text-main);
+}
+.diner-app.diner-browse .btn-primary-orange {
+  background: var(--accent);
+  color: white;
+}
+.diner-app.diner-browse .btn-primary-orange:hover {
+  background: var(--accent-hover);
+}

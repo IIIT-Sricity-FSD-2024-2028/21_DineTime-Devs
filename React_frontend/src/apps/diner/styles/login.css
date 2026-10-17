@@ -1,0 +1,506 @@
+/* Modern Diner Design System */
+.diner-app.diner-login {
+  --primary-green: #4f6f52;
+  --primary-green-dark: #3e5a41;
+  --bg-cream: #fff4ea;
+  --white: #ffffff;
+  --text-dark: #1e293b;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  --input-bg: #f8fafc;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --radius-lg: 16px;
+  --radius-md: 12px;
+}
+
+.diner-app.diner-login * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.diner-app.diner-login {
+  font-family: "Inter", sans-serif;
+  color: var(--text-dark);
+  line-height: 1.5;
+  background-color: var(--bg-cream);
+  overflow-x: hidden;
+}
+
+.diner-app.diner-login .split-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Left Hero Side */
+.diner-app.diner-login .hero-side {
+  flex: 1;
+  position: relative;
+  background-image: url("../utils/images/healthy.jpg");
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: white;
+  padding: 60px;
+  overflow: hidden;
+}
+
+/* Fallback background if the image is missing */
+.diner-app.diner-login .hero-side:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(30, 41, 59, 0.9),
+    rgba(15, 23, 42, 0.7)
+  );
+  z-index: 1;
+}
+
+.diner-app.diner-login .hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 520px;
+}
+
+.diner-app.diner-login .back-link {
+  position: absolute;
+  top: 40px;
+  left: 40px;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  color: white;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.diner-app.diner-login .back-link:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.diner-app.diner-login .brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 80px;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.diner-app.diner-login .brand-logo {
+  width: 40px;
+  height: 40px;
+  background: var(--primary-green);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.diner-app.diner-login .hero-title {
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 24px;
+  letter-spacing: -1.5px;
+}
+
+.diner-app.diner-login .hero-subtitle {
+  font-size: 20px;
+  opacity: 0.9;
+  margin-bottom: 48px;
+  line-height: 1.6;
+}
+
+.diner-app.diner-login .feature-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.diner-app.diner-login .feature-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.diner-app.diner-login .feature-list i {
+  color: var(--primary-green);
+  font-size: 22px;
+}
+
+/* Right Form Side */
+.diner-app.diner-login .form-side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+  position: relative;
+}
+
+.diner-app.diner-login .mobile-header {
+  display: none; /* Only visible on smaller screens */
+  margin-bottom: 40px;
+}
+
+.diner-app.diner-login .brand-dark {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.diner-app.diner-login .brand-logo-dark {
+  width: 32px;
+  height: 32px;
+  background: var(--primary-green);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+}
+
+.diner-app.diner-login .login-card {
+  background: var(--white);
+  padding: 48px;
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 480px;
+  box-shadow: var(--shadow-md);
+}
+
+.diner-app.diner-login .card-header {
+  margin-bottom: 40px;
+}
+
+.diner-app.diner-login .card-header h2 {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: var(--text-dark);
+}
+
+.diner-app.diner-login .card-header p {
+  color: var(--text-muted);
+  font-size: 16px;
+}
+
+.diner-app.diner-login .form-group {
+  margin-bottom: 24px;
+}
+
+.diner-app.diner-login .form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text-dark);
+}
+
+.diner-app.diner-login .label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.diner-app.diner-login .label-row label {
+  margin-bottom: 0;
+}
+
+.diner-app.diner-login .forgot-link {
+  font-size: 13px;
+  color: var(--primary-green);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.diner-app.diner-login .form-group input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  background: var(--input-bg);
+  outline: none;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.diner-app.diner-login .form-group input:focus {
+  border-color: var(--primary-green);
+  background: var(--white);
+  box-shadow: 0 0 0 4px rgba(82, 122, 89, 0.1);
+}
+
+.diner-app.diner-login .password-input {
+  position: relative;
+}
+
+.diner-app.diner-login .visibility-btn {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+
+.diner-app.diner-login .visibility-btn:hover {
+  color: var(--text-dark);
+}
+
+.diner-app.diner-login .btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.diner-app.diner-login .btn-login {
+  background: var(--primary-green);
+  color: white;
+  margin-bottom: 32px;
+}
+
+.diner-app.diner-login .btn-login:hover {
+  background: var(--primary-green-dark);
+  transform: translateY(-1px);
+}
+
+.diner-app.diner-login .divider {
+  display: flex;
+  align-items: center;
+  margin-bottom: 32px;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.diner-app.diner-login .divider::before,
+.diner-app.diner-login .divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border-color);
+}
+
+.diner-app.diner-login .divider span {
+  padding: 0 16px;
+}
+
+.diner-app.diner-login .social-login {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.diner-app.diner-login .btn-social {
+  background: var(--white);
+  border: 1px solid var(--border-color);
+  color: var(--text-dark);
+}
+
+.diner-app.diner-login .btn-social:hover {
+  background: var(--input-bg);
+  border-color: #cbd5e1;
+}
+
+.diner-app.diner-login .social-logo {
+  width: 20px;
+  height: 20px;
+}
+
+.diner-app.diner-login .signup-prompt {
+  text-align: center;
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
+.diner-app.diner-login .signup-prompt a {
+  color: var(--primary-green);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.diner-app.diner-login .footer {
+  margin-top: 24px;
+  text-align: center;
+  padding-bottom: 24px;
+}
+
+.diner-app.diner-login .footer-links {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.diner-app.diner-login .footer-links a {
+  font-size: 14px;
+  color: var(--primary-green);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.diner-app.diner-login .footer-links a:hover {
+  color: var(--primary-green-dark);
+  text-decoration: underline;
+}
+
+.diner-app.diner-login .copyright {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* Forgot Password Modal */
+.diner-app.diner-login .modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.diner-app.diner-login .modal.hidden {
+  display: none;
+}
+.diner-app.diner-login .modal-content {
+  background: var(--white);
+  padding: 40px;
+  border-radius: var(--radius-lg);
+  width: 90%;
+  max-width: 440px;
+  position: relative;
+  box-shadow: var(--shadow-md);
+}
+.diner-app.diner-login .close-modal {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  cursor: pointer;
+  font-size: 20px;
+  color: var(--text-muted);
+  transition: var(--transition-fast);
+}
+.diner-app.diner-login .close-modal:hover {
+  color: var(--text-dark);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .diner-app.diner-login .hero-title {
+    font-size: 42px;
+  }
+}
+
+@media (max-width: 900px) {
+  .diner-app.diner-login .hero-side {
+    display: none;
+  }
+  .diner-app.diner-login .mobile-header {
+    display: block;
+  }
+  .diner-app.diner-login .form-side {
+    padding: 40px 20px;
+  }
+  .diner-app.diner-login .footer {
+    position: static;
+    margin-top: 40px;
+  }
+}
+
+/* Error Message Toast Popup */
+.diner-app.diner-login .toast-popup {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background-color: #ef4444;
+  color: white;
+  padding: 16px 24px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  font-size: 15px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 2000;
+  animation: slideUpToast 0.3s ease-out forwards;
+}
+
+@keyframes slideUpToast {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.diner-app.diner-login .toast-popup.social-toast {
+  background-color: var(--primary-green);
+  border-left: 4px solid var(--white);
+}
+
+.diner-app.diner-login .toast-popup.social-toast i {
+  animation: ph-spin 1s infinite linear;
+}
+
+@keyframes ph-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.diner-app.diner-login .hidden {
+  display: none !important;
+}
