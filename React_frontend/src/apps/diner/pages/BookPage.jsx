@@ -1,28 +1,25 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { DinerLayout, Icon, PageLink } from "../components/Navigation.jsx";
-import {
-  DataState,
-  EmptyState,
-  ErrorMessage,
-} from "../components/Feedback.jsx";
-import { useDiner } from "../hooks/useDiner.js";
-import { timeLabel, today } from "../utils/format.js";
+import { DataState, EmptyState, ErrorMessage } from "../components/Feedback.jsx";
+import { DinerContext } from "../context/DinerContext.js";
+import { timeLabel, timeRangeLabel, today } from "../utils/format.js";
 
 export default function BookPage() {
   const {
     api,
     restaurants,
     slots,
-    tables,
+    tables: tableCatalog,
     params,
     navigate,
     booking,
     setBooking,
     user,
-  } = useDiner();
+  } = useContext(DinerContext);
   const restaurant = restaurants.find((item) => item.id === params.id);
   const currentToday = today();
-  const previous = booking?.restaurantId === params.id && booking?.date >= currentToday ? booking : null;
+  const previous =
+    booking?.restaurantId === params.id && booking?.date >= currentToday ? booking : null;
   const [date, setDate] = useState(previous?.date || currentToday);
   const [slotId, setSlotId] = useState(previous?.slotId || "");
   const [guests, setGuests] = useState(previous?.guests || "");
@@ -57,11 +54,16 @@ export default function BookPage() {
       !isSlotInPast(slot),
   );
   const slot = daySlots.find((item) => item.id === slotId);
+  const tables = tableCatalog.map((item) => ({
+    ...item,
+    capacity:
+      slot?.table_layout?.find((entry) => entry.table_id === item.id)?.capacity ?? item.capacity,
+  }));
   const table = tables.find((item) => item.id === selected);
 
   useEffect(() => {
     api.refresh();
-  }, [api, params.id]);
+  }, [api, params.id, date]);
 
   useEffect(() => {
     if (slotId && !daySlots.some((s) => s.id === slotId)) {
@@ -87,7 +89,7 @@ export default function BookPage() {
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [api, params.id, slotId]);
+  }, [api, params.id, slotId, slot]);
 
   function confirm() {
     if (!table || !slot) return;
@@ -117,11 +119,7 @@ export default function BookPage() {
           ) : (
             <>
               <section className="restaurant-banner">
-                <img
-                  src={restaurant.image}
-                  alt={restaurant.name}
-                  className="banner-img"
-                />
+                <img src={restaurant.image} alt={restaurant.name} className="banner-img" />
                 <div className="banner-info">
                   <h2>{restaurant.name}</h2>
                   <p className="banner-subtitle">
@@ -177,7 +175,7 @@ export default function BookPage() {
                             <option value="">Select Time</option>
                             {daySlots.map((item) => (
                               <option key={item.id} value={item.id}>
-                                {timeLabel(item.start_time)}
+                                {timeRangeLabel(item.start_time, item.end_time)}
                               </option>
                             ))}
                           </select>
@@ -201,10 +199,7 @@ export default function BookPage() {
                                 length: Math.max(
                                   6,
                                   ...tables
-                                    .filter(
-                                      (item) =>
-                                        item.restaurant_id === params.id,
-                                    )
+                                    .filter((item) => item.restaurant_id === params.id)
                                     .map((item) => item.capacity),
                                 ),
                               },
@@ -220,7 +215,10 @@ export default function BookPage() {
                     </div>
                     {!daySlots.length && (
                       <p className="section-subtitle">
-                        {date === currentToday && slots.some((s) => s.restaurant_id === params.id && (s.slot_date || s.date) === date)
+                        {date === currentToday &&
+                        slots.some(
+                          (s) => s.restaurant_id === params.id && (s.slot_date || s.date) === date,
+                        )
                           ? "Today's reservation slots have already passed. Please select tomorrow or an upcoming date."
                           : "No reservation slots are available on this date."}
                       </p>
@@ -233,14 +231,12 @@ export default function BookPage() {
                         Select a table based on current availability
                       </p>
                       <div className="legend-row">
-                        {["available", "reserved", "unavailable"].map(
-                          (status) => (
-                            <span className="legend-item" key={status}>
-                              <span className={`legend-dot ${status}`} />
-                              {status}
-                            </span>
-                          ),
-                        )}
+                        {["available", "reserved", "unavailable"].map((status) => (
+                          <span className="legend-item" key={status}>
+                            <span className={`legend-dot ${status}`} />
+                            {status}
+                          </span>
+                        ))}
                       </div>
                       <hr className="divider" />
                       <ErrorMessage message={error} />
@@ -248,56 +244,56 @@ export default function BookPage() {
                         <p role="status">Checking availability…</p>
                       ) : (
                         <div className="table-grid">
-                        {availability.map((entry) => {
-                            const item = tables.find(
-                              (candidate) => candidate.id === entry.table_id,
-                            );
-                            if (!item) return null;
-                            // Hide tables that cannot seat the requested guests at all
-                            if (guests && item.capacity < Number(guests))
-                              return null;
-                            const available = entry.status === "available";
-                            return (
-                              <button
-                                key={entry.table_id}
-                                className={`table-tile ${available ? "available" : entry.status === "reserved" ? "reserved" : "unavailable"} ${selected === item.id ? "selected" : ""}`}
-                                disabled={!available}
-                                aria-pressed={selected === item.id}
-                                onClick={() => setSelected(item.id)}
-                              >
-                                <Icon name="chair" className="tile-icon" />
-                                <strong className="tile-name">
-                                  Table {item.table_number}
-                                </strong>
-                                <span className="tile-seats">
-                                  {item.capacity} Seats
-                                </span>
-                                <span>
-                                  {available
-                                    ? "Available"
-                                    : entry.status === "reserved"
-                                      ? "Reserved"
-                                      : "Unavailable"}
-                                </span>
-                              </button>
-                            );
-                          })}
+                          {[...availability]
+                            .sort((a, b) => {
+                              const tableA = tables.find((item) => item.id === a.table_id);
+                              const tableB = tables.find((item) => item.id === b.table_id);
+                              return (tableA?.capacity || 0) - (tableB?.capacity || 0);
+                            })
+                            .map((entry) => {
+                              const item = tables.find(
+                                (candidate) => candidate.id === entry.table_id,
+                              );
+                              if (!item) return null;
+                              // Hide tables that cannot seat the requested guests at all
+                              if (guests && item.capacity < Number(guests)) return null;
+                              const available = entry.status === "available";
+                              return (
+                                <button
+                                  key={entry.table_id}
+                                  className={`table-tile ${available ? "available" : entry.status === "reserved" ? "reserved" : "unavailable"} ${selected === item.id ? "selected" : ""}`}
+                                  disabled={!available}
+                                  aria-pressed={selected === item.id}
+                                  onClick={() => setSelected(item.id)}
+                                >
+                                  <Icon name="chair" className="tile-icon" />
+                                  <strong className="tile-name">Table {item.table_number}</strong>
+                                  <span className="tile-seats">{item.capacity} Seats</span>
+                                  <span>
+                                    {available
+                                      ? "Available"
+                                      : entry.status === "reserved"
+                                        ? "Reserved"
+                                        : "Unavailable"}
+                                  </span>
+                                </button>
+                              );
+                            })}
                         </div>
                       )}
                       {!loading && !error && !availability.length && (
                         <EmptyState title="No tables are available for this time." />
                       )}
-                      {!loading && !error && availability.length > 0 && guests &&
+                      {!loading &&
+                        !error &&
+                        availability.length > 0 &&
+                        guests &&
                         availability.every(
                           (entry) =>
-                            tables.find((t) => t.id === entry.table_id)
-                              ?.capacity < Number(guests),
+                            tables.find((t) => t.id === entry.table_id)?.capacity < Number(guests),
                         ) && (
-                          <EmptyState
-                            title={`No tables can seat ${guests} guests.`}
-                          >
-                            Try selecting fewer guests or choose a different
-                            restaurant.
+                          <EmptyState title={`No tables can seat ${guests} guests.`}>
+                            Try selecting fewer guests or choose a different restaurant.
                           </EmptyState>
                         )}
                     </section>
@@ -313,10 +309,7 @@ export default function BookPage() {
                           ["Date", date],
                           ["Time", timeLabel(slot?.start_time)],
                           ["Guests", `${guests || table.capacity} People`],
-                          [
-                            "Table",
-                            `Table ${table.table_number} (${table.capacity} Seats)`,
-                          ],
+                          ["Table", `Table ${table.table_number} (${table.capacity} Seats)`],
                         ].map(([label, value]) => (
                           <div className="summary-row" key={label}>
                             <div>
@@ -327,8 +320,7 @@ export default function BookPage() {
                         ))
                       ) : (
                         <p className="summary-empty">
-                          Select an available table to see your reservation
-                          summary.
+                          Select an available table to see your reservation summary.
                         </p>
                       )}
                     </div>

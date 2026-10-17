@@ -19,16 +19,20 @@ export function RestaurantSummary({ restaurant }) {
   );
 }
 
-export function BookingInformation({
-  booking,
-  table,
-  className = "info-grid",
-}) {
+export function BookingInformation({ booking, table, tables, className = "info-grid" }) {
   const rows = [
     ["calendar", "Date", booking.date],
     ["clock", "Time", timeLabel(booking.time)],
     ["user-group", "Guests", `${booking.guests} Guests`],
-    ["chair", "Table", table ? `Table ${table.table_number}` : booking.tableId],
+    [
+      "chair",
+      tables?.length > 1 ? "Tables" : "Table",
+      tables?.length
+        ? tables.map((item) => `Table ${item.table_number} (${item.capacity} seats)`).join(", ")
+        : table
+          ? `Table ${table.table_number} (${table.capacity} seats)`
+          : booking.tableId,
+    ],
   ];
   return (
     <div className={className}>
@@ -45,21 +49,20 @@ export function BookingInformation({
   );
 }
 
-export function reservationCost(restaurant, guests) {
-  const deposit =
-    Number(restaurant?.reservation_fee_per_guest ?? 30) * Number(guests || 0);
+export function reservationCost(restaurant, seats) {
+  const deposit = Number(restaurant?.reservation_fee_per_guest ?? 30) * Number(seats || 0);
   return { deposit, service: 20, total: deposit + 20 };
 }
 
-export function CostSummary({ restaurant, booking }) {
-  const cost = reservationCost(restaurant, booking.guests);
+export function CostSummary({ restaurant, booking, table }) {
+  const cost = reservationCost(restaurant, table?.capacity);
   return (
     <div className="cost-card">
       <h2 className="cost-title">Reservation Cost Summary</h2>
       <div className="cost-lines">
         <div className="cost-line">
           <span className="cost-line-label">
-            Reservation Deposit ({booking.guests} Guests)
+            Reservation Deposit ({table?.capacity || 0} Table Seats)
           </span>
           <span className="cost-line-value">{money(cost.deposit)}</span>
         </div>

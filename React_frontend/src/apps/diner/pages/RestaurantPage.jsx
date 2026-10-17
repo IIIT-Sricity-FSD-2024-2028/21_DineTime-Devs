@@ -1,19 +1,15 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { DinerLayout, Icon, PageLink } from "../components/Navigation.jsx";
 import { DataState, EmptyState } from "../components/Feedback.jsx";
-import { useDiner } from "../hooks/useDiner.js";
+import { DinerContext } from "../context/DinerContext.js";
 import { image } from "../utils/images.js";
 
 export default function RestaurantPage() {
-  const { restaurants, params, menu, reviews } = useDiner();
+  const { restaurants, params, menu, reviews } = useContext(DinerContext);
   const [slide, setSlide] = useState(0);
   const restaurant = restaurants.find((item) => item.id === params.id);
-  const photos = restaurant?.images.length
-    ? restaurant.images
-    : [restaurant?.image];
-  const restaurantReviews = reviews.filter(
-    (review) => review.restaurant_id === restaurant?.id,
-  );
+  const photos = restaurant?.images.length ? restaurant.images : [restaurant?.image];
+  const restaurantReviews = reviews.filter((review) => review.restaurant_id === restaurant?.id);
   const details = restaurant?.details || {};
   return (
     <DinerLayout>
@@ -43,9 +39,7 @@ export default function RestaurantPage() {
                   <button
                     className="carousel-btn prev"
                     aria-label="Previous photo"
-                    onClick={() =>
-                      setSlide((slide + photos.length - 1) % photos.length)
-                    }
+                    onClick={() => setSlide((slide + photos.length - 1) % photos.length)}
                   >
                     <Icon name="chevron-left" />
                   </button>
@@ -70,33 +64,23 @@ export default function RestaurantPage() {
                     <span className="rating-value">
                       {restaurant.total_reviews ? restaurant.rating : "New"}
                     </span>
-                    <span className="review-count">
-                      ({restaurant.total_reviews || 0} reviews)
-                    </span>
+                    <span className="review-count">({restaurant.total_reviews || 0} reviews)</span>
                   </div>
                   <div className="location-row">
                     <Icon name="location-dot" className="location-icon" />
                     <span>{restaurant.location}</span>
                   </div>
                   <div className="price-row">
-                    <span className="price-badge">
-                      {details.price || "Price not provided"}
-                    </span>
+                    <span className="price-badge">{details.price || "Price not provided"}</span>
                   </div>
                   <div className="amenities-row">
-                    {(details.amenities || "Amenities not provided")
-                      .split(",")
-                      .map((amenity) => (
-                        <span key={amenity} className="amenity-tag">
-                          {amenity}
-                        </span>
-                      ))}
+                    {(details.amenities || "Amenities not provided").split(",").map((amenity) => (
+                      <span key={amenity} className="amenity-tag">
+                        {amenity}
+                      </span>
+                    ))}
                   </div>
-                  <PageLink
-                    page="book"
-                    params={{ id: restaurant.id }}
-                    className="btn-reserve-main"
-                  >
+                  <PageLink page="book" params={{ id: restaurant.id }} className="btn-reserve-main">
                     Reserve Table
                   </PageLink>
                 </div>
@@ -106,12 +90,16 @@ export default function RestaurantPage() {
                 <p className="about-text">{restaurant.about}</p>
                 <div className="about-grid">
                   {[
-                    ["phone", "Phone Number", details.contact || details.phone],
                     [
-                      "clock",
-                      "Opening Hours",
-                      details.hours || details.openinghours,
+                      "phone",
+                      "Phone Number",
+                      restaurant.contact_number || details.contact || details.phone,
                     ],
+                    ["location-dot", "City", restaurant.city],
+                    ["location-dot", "Address", restaurant.address],
+                    ["location-dot", "State", restaurant.state],
+                    ["location-dot", "Pincode", restaurant.pincode],
+                    ["clock", "Opening Hours", details.hours || details.openinghours],
                     ["square-parking", "Parking", details.parking],
                     ["shirt", "Dress Code", details.dresscode],
                   ].map(([icon, label, value]) => (
@@ -132,16 +120,15 @@ export default function RestaurantPage() {
                     <strong>Cancellation Policy</strong>
                     <span>
                       Cancellations must be made at least{" "}
-                      {restaurant.cancellation_cutoff_minutes ?? 120} minutes
-                      before your reservation.
+                      {restaurant.cancellation_cutoff_minutes ?? 120} minutes before your
+                      reservation.
                     </span>
                   </div>
                   <div className="policy-item">
                     <strong>No-Show Policy</strong>
                     <span>
-                      Your table is held for{" "}
-                      {restaurant.no_show_grace_minutes ?? 15} minutes past the
-                      reservation time.
+                      Your table is held for {restaurant.no_show_grace_minutes ?? 15} minutes past
+                      the reservation time.
                     </span>
                   </div>
                 </div>
@@ -152,9 +139,7 @@ export default function RestaurantPage() {
                   <div className="hours-row">
                     <span className="hours-label">Everyday</span>
                     <span className="hours-time">
-                      {details.hours ||
-                        details.openinghours ||
-                        "Hours not provided"}
+                      {details.hours || details.openinghours || "Hours not provided"}
                     </span>
                   </div>
                 </div>
@@ -167,11 +152,7 @@ export default function RestaurantPage() {
                     .slice(0, 4)
                     .map((item) => (
                       <div className="menu-img-wrapper" key={item.id}>
-                        <img
-                          src={item.image}
-                          alt={item.item_name}
-                          loading="lazy"
-                        />
+                        <img src={item.image} alt={item.item_name} loading="lazy" />
                       </div>
                     ))}
                 </div>
@@ -185,15 +166,9 @@ export default function RestaurantPage() {
                   {restaurantReviews.map((review) => (
                     <article className="review-card" key={review.id}>
                       <div className="reviewer-row">
-                        <img
-                          src={image("logo.png")}
-                          className="reviewer-avatar"
-                          alt=""
-                        />
+                        <img src={image("logo.png")} className="reviewer-avatar" alt="" />
                         <div>
-                          <div className="reviewer-name">
-                            {review.name || "Guest"}
-                          </div>
+                          <div className="reviewer-name">{review.name || "Guest"}</div>
                           <div
                             className="review-stars"
                             aria-label={`${review.rating} out of 5 stars`}
@@ -206,9 +181,7 @@ export default function RestaurantPage() {
                     </article>
                   ))}
                 </div>
-                {!restaurantReviews.length && (
-                  <EmptyState title="No customer reviews yet." />
-                )}
+                {!restaurantReviews.length && <EmptyState title="No customer reviews yet." />}
               </section>
             </>
           )}

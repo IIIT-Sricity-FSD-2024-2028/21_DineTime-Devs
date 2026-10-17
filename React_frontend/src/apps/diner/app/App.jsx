@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import { dinerApi } from "../api/dinerApi.js";
-import { DinerContext } from "../hooks/useDiner.js";
+import { DinerContext } from "../context/DinerContext.js";
 import DinerSurface from "../components/DinerSurface.jsx";
 import LoginPage from "../pages/LoginPage.jsx";
 import RegisterPage from "../pages/RegisterPage.jsx";
@@ -8,7 +8,9 @@ import BrowsePage from "../pages/BrowsePage.jsx";
 import SearchPage from "../pages/SearchPage.jsx";
 import RestaurantPage from "../pages/RestaurantPage.jsx";
 import BookPage from "../pages/BookPage.jsx";
+import ModifyReservationPage from "../pages/ModifyReservationPage.jsx";
 import PaymentMakingPage from "../pages/PaymentMakingPage.jsx";
+import AdditionalPaymentPage from "../pages/AdditionalPaymentPage.jsx";
 import PaymentMethodPage from "../pages/PaymentMethodPage.jsx";
 import ConfirmationPage from "../pages/ConfirmationPage.jsx";
 import ReservationsPage from "../pages/ReservationsPage.jsx";
@@ -26,7 +28,9 @@ const pages = new Set([
   "search",
   "restaurant",
   "book",
+  "modify",
   "payment_making",
+  "additional_payment",
   "payment_method",
   "confirmation",
   "reservations",
@@ -63,22 +67,25 @@ export default function App() {
   const [params, setParams] = useState(() => readRoute().params);
   const [booking, setBooking] = useState(null);
   const [confirmation, setConfirmation] = useState(null);
-  const { user } = useSyncExternalStore(
-    dinerApi.subscribe,
-    dinerApi.getSnapshot,
-  );
+  const [data, setData] = useState(dinerApi.getSnapshot());
+  const user = data.user;
 
-  const navigate = useCallback((page, nextParams = {}) => {
+  function navigate(page, nextParams = {}) {
+    if (page === "login") {
+      window.history.pushState({}, "", "/login");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+      return;
+    }
     const nextPage = pages.has(page) ? page : "browse";
     const query = new URLSearchParams(nextParams).toString();
-    window.history.pushState(
-      {},
-      "",
-      `/diner/${nextPage}${query ? `?${query}` : ""}`,
-    );
+    window.history.pushState({}, "", `/diner/${nextPage}${query ? `?${query}` : ""}`);
     setParams(nextParams);
     setCurrentPage(nextPage);
     window.scrollTo({ top: 0, behavior: "instant" });
+  }
+
+  useEffect(() => {
+    return dinerApi.subscribe(() => setData(dinerApi.getSnapshot()));
   }, []);
 
   useEffect(() => {
@@ -105,19 +112,30 @@ export default function App() {
     }
   }, [user?.id]);
 
+  useEffect(() => {
+    if (!user && !publicPages.has(currentPage)) navigate("login");
+  }, [user?.id, currentPage]);
+
   const page = !user && !publicPages.has(currentPage) ? "login" : currentPage;
   useEffect(() => {
     document.title = `DineTime - ${page.replaceAll("_", " ")}`;
   }, [page]);
 
-  // Navigation updates currentPage; only the selected React page is mounted.
   let content;
   switch (page) {
     case "register":
       content = <RegisterPage />;
       break;
     case "browse":
-      content = <BrowsePage />;
+      content = (
+        <BrowsePage
+          restaurants={data.restaurants}
+          user={user}
+          loading={data.loading}
+          error={data.error}
+          onRetry={() => dinerApi.refresh()}
+        />
+      );
       break;
     case "search":
       content = <SearchPage />;
@@ -128,8 +146,14 @@ export default function App() {
     case "book":
       content = <BookPage />;
       break;
+    case "modify":
+      content = <ModifyReservationPage />;
+      break;
     case "payment_making":
       content = <PaymentMakingPage />;
+      break;
+    case "additional_payment":
+      content = <AdditionalPaymentPage />;
       break;
     case "payment_method":
       content = <PaymentMethodPage />;
@@ -158,15 +182,20 @@ export default function App() {
     default:
       content = <LoginPage />;
   }
-  const stacked = ["payment_making", "payment_method", "confirmation"].includes(
-    page,
-  );
+  const stacked = [
+    "payment_making",
+    "additional_payment",
+    "payment_method",
+    "confirmation",
+  ].includes(page);
   return (
     <DinerContext.Provider
       value={{
         currentPage,
         params,
         navigate,
+        ...data,
+        api: dinerApi,
         booking,
         setBooking,
         confirmation,
@@ -175,7 +204,7 @@ export default function App() {
     >
       <DinerSurface>
         <div
-          className={`diner-app diner-${page}${stacked ? " layout-stacked" : ""}`}
+          className={`diner-app diner-${page}${page === "modify" ? " diner-book" : ""}${stacked ? " layout-stacked" : ""}`}
           key={`${page}:${params.id || ""}:${params.q || ""}`}
         >
           {content}

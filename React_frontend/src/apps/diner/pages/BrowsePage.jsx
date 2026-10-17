@@ -1,29 +1,29 @@
 import { useState } from "react";
 import { DinerLayout, Icon } from "../components/Navigation.jsx";
-import { DataState, EmptyState } from "../components/Feedback.jsx";
+import { EmptyState } from "../components/Feedback.jsx";
 import RestaurantCard from "../components/RestaurantCard.jsx";
 import RestaurantFilters, {
   defaultFilters,
   matchesRestaurant,
 } from "../components/RestaurantFilters.jsx";
-import { useDiner } from "../hooks/useDiner.js";
 import { image } from "../utils/images.js";
 
-export default function BrowsePage() {
-  const { restaurants } = useDiner();
+export default function BrowsePage({ restaurants, user, loading, error, onRetry }) {
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState(defaultFilters);
   const [filterOpen, setFilterOpen] = useState(false);
-  const cuisines = [...new Set(restaurants.map((item) => item.cuisine))];
-  const filtered = restaurants.filter((restaurant) =>
+  const dinerCity = user?.city?.trim() || "";
+  const cityRestaurants = dinerCity
+    ? restaurants.filter(
+        (restaurant) =>
+          restaurant.city?.trim().toLocaleLowerCase() === dinerCity.toLocaleLowerCase(),
+      )
+    : restaurants;
+  const cuisines = [...new Set(cityRestaurants.map((item) => item.cuisine))];
+  const filtered = cityRestaurants.filter((restaurant) =>
     matchesRestaurant(restaurant, query, filters),
   );
-  const searching =
-    query ||
-    filters.rating ||
-    filters.cuisines.length ||
-    filters.time ||
-    filters.distance < 10;
+  const searching = query || filters.rating || filters.cuisines.length || filters.time;
   const section = (title, items) => (
     <section className="section">
       <h2>{title}</h2>
@@ -61,46 +61,57 @@ export default function BrowsePage() {
         />
       )}
       <div className="page-body container">
-        <DataState>
-          <section className="section cuisine-section">
-            <h2>Browse by Cuisine</h2>
-            <div className="cuisine-scroll">
-              {cuisines.map((cuisine) => (
-                <button
-                  key={cuisine}
-                  className={`cuisine-card ${filters.cuisines.includes(cuisine) ? "active-cuisine" : ""}`}
-                  onClick={() =>
-                    setFilters({
-                      ...filters,
-                      cuisines: filters.cuisines.includes(cuisine)
-                        ? filters.cuisines.filter((item) => item !== cuisine)
-                        : [...filters.cuisines, cuisine],
-                    })
-                  }
-                >
-                  <img src={image(`${cuisine.toLowerCase()}.jpg`)} alt="" />
-                  <span>{cuisine}</span>
-                </button>
-              ))}
-            </div>
-          </section>
-          {searching ? (
-            section(`${filtered.length} Restaurants Found`, filtered)
-          ) : (
-            <>
-              {section(
-                "Top Rated Restaurants",
-                [...restaurants].sort((a, b) => b.rating - a.rating),
-              )}
-              {section("Popular Near You", restaurants)}
-            </>
-          )}
-          {!filtered.length && (
-            <EmptyState title="No restaurants match">
-              Try adjusting your search.
-            </EmptyState>
-          )}
-        </DataState>
+        {loading ? (
+          <p className="diner-loading" role="status">
+            Loading…
+          </p>
+        ) : error ? (
+          <div className="diner-error" role="alert">
+            {error}{" "}
+            <button type="button" onClick={onRetry}>
+              Try again
+            </button>
+          </div>
+        ) : (
+          <>
+            {dinerCity && cityRestaurants.length === 0 ? (
+              <EmptyState title="No active restaurants in this city">
+                There are currently no active restaurants in {dinerCity}.
+              </EmptyState>
+            ) : (
+              <>
+                <section className="section cuisine-section">
+                  <h2>Browse by Cuisine</h2>
+                  <div className="cuisine-scroll">
+                    {cuisines.map((cuisine) => (
+                      <button
+                        key={cuisine}
+                        className={`cuisine-card ${filters.cuisines.includes(cuisine) ? "active-cuisine" : ""}`}
+                        onClick={() =>
+                          setFilters({
+                            ...filters,
+                            cuisines: filters.cuisines.includes(cuisine)
+                              ? filters.cuisines.filter((item) => item !== cuisine)
+                              : [...filters.cuisines, cuisine],
+                          })
+                        }
+                      >
+                        <img src={image(`${cuisine.toLowerCase()}.jpg`)} alt="" />
+                        <span>{cuisine}</span>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+                {searching
+                  ? section(`${filtered.length} Restaurants Found`, filtered)
+                  : section("Popular Near Me", cityRestaurants)}
+                {searching && !filtered.length && (
+                  <EmptyState title="No restaurants match">Try adjusting your search.</EmptyState>
+                )}
+              </>
+            )}
+          </>
+        )}
       </div>
     </DinerLayout>
   );

@@ -1,0 +1,135 @@
+/* support.css */
+
+.diner-app.diner-support .support-helper {
+  background: rgba(95, 122, 97, 0.08);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 0.85rem;
+  color: var(--text-main);
+  margin-bottom: 20px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.diner-app.diner-support .support-helper i {
+  color: var(--primary);
+  margin-top: 2px;
+}
+
+.diner-app.diner-support .file-input-wrap {
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  text-align: center;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+.diner-app.diner-support .file-input-wrap input {
+  display: none;
+}
+.diner-app.diner-support .file-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.diner-app.diner-support .file-chip {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.diner-app.diner-support .file-chip button {
+  border: none;
+  background: none;
+  color: #c1121f;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.diner-app.diner-support .ticket-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.diner-app.diner-support .ticket-item {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+}
+.diner-app.diner-support .ticket-item-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.diner-app.diner-support .ticket-item-head h4 {
+  margin: 0 0 4px;
+  font-size: 0.95rem;
+  color: var(--text-main);
+}
+.diner-app.diner-support .ticket-meta {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.diner-app.diner-support .ticket-desc {
+  font-size: 0.85rem;
+  color: var(--text-main);
+  margin: 6px 0 0;
+  white-space: pre-wrap;
+}
+.diner-app.diner-support .ticket-resolution {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: var(--bg);
+  border-radius: 8px;
+  font-size: 0.83rem;
+  border-left: 3px solid var(--primary);
+}
+
+.diner-app.diner-support .status-pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.diner-app.diner-support .status-open {
+  background: #fff3e0;
+  color: #e65100;
+}
+.diner-app.diner-support .status-in_review {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+.diner-app.diner-support .status-escalated_finance_team {
+  background: #f3e5f5;
+  color: #6a1b9a;
+}
+.diner-app.diner-support .status-escalated_super_admin {
+  background: #ffebee;
+  color: #c62828;
+}
+.diner-app.diner-support .status-resolved {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+.diner-app.diner-support .status-rejected {
+  background: #eceff1;
+  color: #455a64;
+}
+
+.diner-app.diner-support .empty-state {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 20px 0;
+}

@@ -12,12 +12,11 @@ const readSession = () => {
 };
 
 // This singleton owns all backend communication and the current backend snapshot.
-// Components consume snapshots through useDiner; they never call fetch directly.
+// Components consume snapshots through DinerContext.
 class DinerApi {
-  baseUrl = (
-    import.meta.env.VITE_API_BASE_URL || "http://localhost:3000"
-  ).replace(/\/$/, "");
+  baseUrl = (import.meta.env.VITE_API_BASE_URL || "http://localhost:3000").replace(/\/$/, "");
   session = readSession();
+  authVersion = 0;
   listeners = new Set();
   refreshVersion = 0;
   data = {
@@ -30,6 +29,7 @@ class DinerApi {
     notifications: [],
     reservationError: "",
     notificationError: "",
+    sessionError: "",
     locations: [],
     loading: false,
     error: "",
@@ -49,27 +49,30 @@ class DinerApi {
 
   async request(path, { method = "GET", body, ...options } = {}) {
     const multipart = body instanceof FormData;
+    // Credential checks are independent of an existing login. Other requests
+    // must only invalidate the session whose token they actually sent.
+    const requestToken = path === "/auth/login" ? null : this.session?.access_token;
+    const authVersion = this.authVersion;
     const response = await fetch(`${this.baseUrl}${path}`, {
       ...options,
       method,
+      cache: method === "GET" ? "no-store" : options.cache,
       headers: {
         role: "diner",
         ...(multipart ? {} : { "Content-Type": "application/json" }),
-        ...(this.session?.access_token
-          ? { Authorization: `Bearer ${this.session.access_token}` }
-          : {}),
+        ...(requestToken ? { Authorization: `Bearer ${requestToken}` } : {}),
       },
-      body:
-        body === undefined
-          ? undefined
-          : multipart
-            ? body
-            : JSON.stringify(body),
+      body: body === undefined ? undefined : multipart ? body : JSON.stringify(body),
     });
     const payload = await response.json().catch(() => null);
     if (!response.ok) {
-      if ((response.status === 401 || response.status === 403) && this.session) {
-        this.logout();
+      if (
+        response.status === 401 &&
+        requestToken &&
+        authVersion === this.authVersion &&
+        this.session?.access_token === requestToken
+      ) {
+        this.logout("Your session is no longer valid. Please sign in again to continue.");
       }
       const message = payload?.message;
       throw new Error(
@@ -92,7 +95,7 @@ class DinerApi {
     this.session = session;
     if (session) sessionStorage.setItem(SESSION_KEY, JSON.stringify(bindSession(session)));
     else sessionStorage.removeItem(SESSION_KEY);
-    this.publish();
+    this.publish(session?.user ? { sessionError: "" } : {});
   }
 
   async login(email, password) {
@@ -104,7 +107,10 @@ class DinerApi {
       throw new Error("Please sign in with an active diner account.");
     // Persist only public profile fields, never the backend password hash.
     const { password_hash, ...user } = session.user;
+    this.authVersion += 1;
+    this.refreshVersion += 1;
     this.saveSession({ access_token: session.access_token, user });
+    this.publish({ loading: false, error: "" });
     return user;
   }
 
@@ -122,6 +128,12 @@ class DinerApi {
         password_hash: account.password,
         role: "diner",
         status: "active",
+        city: location.city,
+        address: location.address,
+        pincode: location.pincode,
+        country: location.country || "India",
+        ...(location.latitude !== undefined ? { latitude: location.latitude } : {}),
+        ...(location.longitude !== undefined ? { longitude: location.longitude } : {}),
         ...(match ? { location_id: match.id } : {}),
       },
     });
@@ -132,7 +144,8 @@ class DinerApi {
     });
   }
 
-  logout() {
+  logout(sessionError = "") {
+    this.authVersion += 1;
     this.refreshVersion += 1;
     this.saveSession(null);
     this.publish({
@@ -140,6 +153,7 @@ class DinerApi {
       notifications: [],
       loading: false,
       error: "",
+      sessionError,
     });
   }
 
@@ -157,6 +171,28 @@ class DinerApi {
     );
   }
 
+  async cities() {
+    try {
+      return await this.request("/restaurants/cities");
+    } catch {
+      // Older backend processes may not have the cities route loaded yet.
+      // Derive the options from the existing restaurants and locations APIs.
+      const [restaurants, locations] = await Promise.all([
+        this.request("/restaurants"),
+        this.request("/restaurants/locations"),
+      ]);
+      const locationById = new Map(locations.map((location) => [location.id, location]));
+      return [
+        ...new Map(
+          restaurants
+            .map((restaurant) => locationById.get(restaurant.location_id)?.city?.trim())
+            .filter(Boolean)
+            .map((city) => [city.toLocaleLowerCase(), city]),
+        ).values(),
+      ].sort((a, b) => a.localeCompare(b));
+    }
+  }
+
   savePreferences(preferences) {
     this.saveSession({ ...this.session, preferences });
   }
@@ -164,32 +200,26 @@ class DinerApi {
   async refresh() {
     const userId = this.session?.user?.id;
     const version = ++this.refreshVersion;
-    const isCurrent = () =>
-      version === this.refreshVersion && userId === this.session?.user?.id;
+    const isCurrent = () => version === this.refreshVersion && userId === this.session?.user?.id;
     this.publish({ loading: true, error: "" });
     try {
-      const [restaurants, menu, tables, slots, reviews, locations] =
-        await Promise.all(
-          [
-            "/restaurants",
-            "/menu",
-            "/tables",
-            "/timeslots",
-            "/reviews",
-            "/restaurants/locations",
-          ].map((path) => this.request(path)),
-        );
+      const [restaurants, menu, tables, slots, reviews, locations] = await Promise.all(
+        [
+          "/restaurants",
+          "/menu",
+          "/tables",
+          "/timeslots",
+          "/reviews",
+          "/restaurants/locations",
+        ].map((path) => this.request(path)),
+      );
       if (!isCurrent()) return;
       const currentUser = this.session?.user;
       if (currentUser?.location_id) {
-        const location = locations.find(
-          (item) => item.id === currentUser.location_id,
-        );
+        const location = locations.find((item) => item.id === currentUser.location_id);
         let safeProfile = {};
         try {
-          const profile = await this.request(
-            `/users/${encodeURIComponent(currentUser.id)}`,
-          );
+          const profile = await this.request(`/users/${encodeURIComponent(currentUser.id)}`);
           const { password_hash: _passwordHash, ...publicProfile } = profile;
           safeProfile = publicProfile;
         } catch {
@@ -200,16 +230,14 @@ class DinerApi {
         const { id: _locationId, ...locationDetails } = location || {};
         const hydratedUser = {
           ...currentUser,
-          ...safeProfile,
           ...locationDetails,
+          ...safeProfile,
         };
         this.session = { ...this.session, user: hydratedUser };
         sessionStorage.setItem(SESSION_KEY, JSON.stringify(bindSession(this.session)));
       }
       const normalized = restaurants.map((restaurant) => {
-        const location = locations.find(
-          (item) => item.id === restaurant.location_id,
-        );
+        const location = locations.find((item) => item.id === restaurant.location_id);
         const description = restaurant.description || "";
         const details = Object.fromEntries(
           (description.split("Details:")[1]?.split("Policies:")[0] || "")
@@ -217,22 +245,34 @@ class DinerApi {
             .filter((line) => line.includes(":"))
             .map((line) => {
               const [key, ...value] = line.replace(/^-\s*/, "").split(":");
-              return [
-                key.trim().toLowerCase().replace(/\s/g, ""),
-                value.join(":").trim(),
-              ];
+              return [key.trim().toLowerCase().replace(/\s/g, ""), value.join(":").trim()];
             }),
         );
+        const locationLabel = [location?.address, location?.city]
+          .filter(Boolean)
+          .flatMap((part) =>
+            part
+              .split(",")
+              .map((value) => value.trim())
+              .filter(Boolean),
+          )
+          .filter(
+            (part, index, parts) =>
+              parts.findIndex((value) => value.toLocaleLowerCase() === part.toLocaleLowerCase()) ===
+              index,
+          )
+          .join(", ");
         return {
           ...restaurant,
           cuisine: restaurant.cuisine_type,
           rating: Number(restaurant.rating_avg || 0),
           image: this.asset(restaurant.image_urls?.[0]),
           images: (restaurant.image_urls || []).map((url) => this.asset(url)),
-          location: [location?.address, location?.city]
-            .filter(Boolean)
-            .join(", "),
+          location: locationLabel,
           city: location?.city || "",
+          address: location?.address || "",
+          state: location?.state || "",
+          pincode: location?.pincode || "",
           distance: distanceKm(this.session?.user, location),
           details,
           about: description.split(/Details:|Policies:/)[0].trim(),
@@ -250,20 +290,13 @@ class DinerApi {
         reservationError = "",
         notificationError = "";
       if (this.session?.user) {
-        const [reservationResult, notificationResult] =
-          await Promise.allSettled([
-            this.request(
-              `/reservations?user_id=${encodeURIComponent(this.session.user.id)}`,
-            ),
-            this.request(
-              `/notifications?user_id=${encodeURIComponent(this.session.user.id)}`,
-            ),
-          ]);
-        if (reservationResult.status === "fulfilled")
-          reservations = reservationResult.value;
+        const [reservationResult, notificationResult] = await Promise.allSettled([
+          this.request(`/reservations?user_id=${encodeURIComponent(this.session.user.id)}`),
+          this.request(`/notifications?user_id=${encodeURIComponent(this.session.user.id)}`),
+        ]);
+        if (reservationResult.status === "fulfilled") reservations = reservationResult.value;
         else reservationError = reservationResult.reason.message;
-        if (notificationResult.status === "fulfilled")
-          notifications = notificationResult.value;
+        if (notificationResult.status === "fulfilled") notifications = notificationResult.value;
         else notificationError = notificationResult.reason.message;
       }
       if (!isCurrent()) return;
@@ -296,8 +329,7 @@ class DinerApi {
   }
 
   createReservation(booking) {
-    if (!this.session?.user)
-      throw new Error("Please sign in before making a reservation.");
+    if (!this.session?.user) throw new Error("Please sign in before making a reservation.");
     return this.request("/reservations", {
       method: "POST",
       body: {
@@ -325,6 +357,20 @@ class DinerApi {
     });
   }
 
+  payAdditional(reservationId, method) {
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
+    const rand = Math.floor(100000 + Math.random() * 900000);
+    return this.request("/payments/additional", {
+      method: "POST",
+      body: {
+        reservation_id: reservationId,
+        payment_method: method,
+        transaction_ref: `DT-ADJ-${dateStr}-${rand}`,
+      },
+    });
+  }
+
   async deleteReservation(id) {
     await this.request(`/reservations/${encodeURIComponent(id)}`, {
       method: "DELETE",
@@ -338,6 +384,35 @@ class DinerApi {
       body: { reservation_status: "cancelled" },
     });
     await this.refresh();
+  }
+
+  async completeDine(id) {
+    const result = await this.request(`/reservations/${encodeURIComponent(id)}/dine-complete`, {
+      method: "PATCH",
+      body: {},
+    });
+    await this.refresh();
+    return result;
+  }
+
+  async modifyReservation(id, values) {
+    const reservation = await this.request(`/reservations/${encodeURIComponent(id)}/modify`, {
+      method: "PATCH",
+      body: values,
+    });
+    await this.refresh();
+    return reservation;
+  }
+
+  async discardModification(id) {
+    const reservation = await this.request(
+      `/reservations/${encodeURIComponent(id)}/modify/pending`,
+      {
+        method: "DELETE",
+      },
+    );
+    await this.refresh();
+    return reservation;
   }
 
   async review(reservation, rating, comment) {
@@ -362,25 +437,25 @@ class DinerApi {
   }
 
   async updateProfile(values) {
-    const { name, email, phone, photo_url, ...localLocation } = values;
+    const { name, email, phone, photo_url, city, ...localLocation } = values;
     const user = await this.request(`/users/${this.session.user.id}`, {
       method: "PATCH",
-      body: { name, email, phone, photo_url },
+      body: { name, email, phone, photo_url, city },
     });
     const { password_hash, ...safeUser } = user;
     this.saveSession({
       ...this.session,
-      user: { ...this.session.user, ...safeUser, ...localLocation },
+      user: { ...this.session.user, ...safeUser, ...localLocation, city },
     });
   }
 
   async uploadPhoto(file) {
     const body = new FormData();
     body.append("photo", file);
-    const result = await this.request(
-      `/users/${this.session.user.id}/upload-photo`,
-      { method: "POST", body },
-    );
+    const result = await this.request(`/users/${this.session.user.id}/upload-photo`, {
+      method: "POST",
+      body,
+    });
     this.saveSession({
       ...this.session,
       user: { ...this.session.user, photo_url: result.photo_url },

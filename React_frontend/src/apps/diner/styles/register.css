@@ -1,0 +1,1365 @@
+/* Diner Registration Design System */
+.diner-app.diner-register {
+  --primary-green: #527a59;
+  --primary-green-dark: #3e5f46;
+  --bg-cream: #fdf6f1;
+  --white: #ffffff;
+  --text-dark: #1e293b;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  --input-bg: #f8fafc;
+  --radius-lg: 24px;
+  --radius-md: 12px;
+  --shadow-md:
+    0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+}
+
+.diner-app.diner-register * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.diner-app.diner-register {
+  font-family: "Inter", sans-serif;
+  background-color: var(--bg-cream);
+  color: var(--text-dark);
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+.diner-app.diner-register .split-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Left Info Side */
+.diner-app.diner-register .info-side {
+  flex: 0.9;
+  padding: 40px 120px 80px 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.diner-app.diner-register .info-content {
+  max-width: 480px;
+}
+
+.diner-app.diner-register .brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 60px;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.diner-app.diner-register .brand-logo {
+  width: 40px;
+  height: 40px;
+  background: var(--primary-green);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 20px;
+}
+
+.diner-app.diner-register .step-info {
+  display: none;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.diner-app.diner-register .step-info.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.diner-app.diner-register .badge {
+  background: #e2e8f0;
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-block;
+  margin-bottom: 24px;
+}
+
+.diner-app.diner-register .info-title {
+  font-size: 52px;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 24px;
+  letter-spacing: -1.5px;
+}
+
+.diner-app.diner-register .info-subtitle {
+  font-size: 18px;
+  color: var(--text-muted);
+  margin-bottom: 48px;
+  line-height: 1.6;
+}
+
+.diner-app.diner-register .feature-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.diner-app.diner-register .feature-list li {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.diner-app.diner-register .feature-icon {
+  width: 40px;
+  height: 40px;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: var(--text-dark);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.diner-app.diner-register .feature-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.diner-app.diner-register .feature-text strong {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.diner-app.diner-register .feature-text span {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.diner-app.diner-register .info-footer {
+  position: absolute;
+  bottom: 40px;
+  left: 80px;
+  right: 80px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.diner-app.diner-register .decorative-line {
+  flex: 1;
+  height: 1px;
+  background: #e2e8f0;
+}
+
+.diner-app.diner-register .fine-dining {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* Right Form Side */
+.diner-app.diner-register .form-side {
+  flex: 1.1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  margin-right: 60px;
+}
+
+.diner-app.diner-register .step-card {
+  display: none;
+  background: white;
+  padding: 48px;
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 520px;
+  box-shadow: var(--shadow-md);
+  animation: slideIn 0.4s ease-out;
+}
+
+.diner-app.diner-register .step-card.active {
+  display: block;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.diner-app.diner-register .card-header-icon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.diner-app.diner-register .icon-circle {
+  width: 56px;
+  height: 56px;
+  background: #fef9c3;
+  color: #854d0e;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.diner-app.diner-register .text-center {
+  text-align: center;
+}
+
+.diner-app.diner-register .card-header h2 {
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  color: var(--text-dark);
+}
+
+.diner-app.diner-register .card-header p {
+  color: var(--text-muted);
+  font-size: 15px;
+  margin-bottom: 32px;
+}
+
+.diner-app.diner-register .form-group {
+  margin-bottom: 20px;
+}
+
+.diner-app.diner-register .form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.diner-app.diner-register .required {
+  color: #dc2626;
+  margin-left: 2px;
+}
+
+.diner-app.diner-register .input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.diner-app.diner-register .input-container:focus-within {
+  border-color: var(--primary-green);
+  background: white;
+  box-shadow: 0 0 0 4px rgba(82, 122, 89, 0.1);
+}
+
+.diner-app.diner-register .input-container i {
+  position: absolute;
+  left: 16px;
+  color: var(--text-muted);
+  font-size: 18px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.diner-app.diner-register .input-container input {
+  width: 100%;
+  padding: 14px 16px 14px 48px;
+  border: none;
+  background: transparent;
+  font-size: 15px;
+  outline: none;
+  font-family: inherit;
+  color: var(--text-dark);
+}
+
+/* Password Field Specifics */
+.diner-app.diner-register .password-input-wrapper input {
+  padding-right: 48px !important;
+}
+
+.diner-app.diner-register .view-toggle {
+  position: absolute;
+  right: 8px; /* Slightly closer to the edge inside the box */
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  z-index: 10;
+  transition: color 0.2s;
+}
+
+.diner-app.diner-register .view-toggle:hover {
+  color: var(--primary-green);
+}
+
+.diner-app.diner-register .checkbox-label {
+  display: flex;
+  gap: 12px;
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 32px;
+  cursor: pointer;
+  align-items: center;
+}
+
+.diner-app.diner-register .checkbox-label a {
+  color: var(--primary-green);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.diner-app.diner-register .btn {
+  width: 100%;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  font-family: inherit;
+}
+
+.diner-app.diner-register .btn-primary {
+  background: var(--primary-green);
+  color: white;
+  margin-bottom: 32px;
+}
+
+.diner-app.diner-register .btn-primary:hover {
+  background: var(--primary-green-dark);
+}
+
+.diner-app.diner-register .btn-outline {
+  background: white;
+  border: 1px solid var(--primary-green);
+  color: var(--primary-green);
+}
+
+.diner-app.diner-register .btn-location-detect {
+  margin-bottom: 24px;
+}
+
+.diner-app.diner-register .divider {
+  display: flex;
+  align-items: center;
+  margin-bottom: 32px;
+  color: #cbd5e1;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.diner-app.diner-register .divider::before,
+.diner-app.diner-register .divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border-color);
+}
+
+.diner-app.diner-register .divider span {
+  padding: 0 16px;
+}
+
+.diner-app.diner-register .social-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 48px;
+}
+
+.diner-app.diner-register .btn-social {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  background: white;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-dark);
+  cursor: pointer;
+  transition: background 0.2s;
+  font-family: inherit;
+}
+
+.diner-app.diner-register .btn-social svg {
+  width: 20px;
+  height: 20px;
+}
+
+.diner-app.diner-register .btn-social:hover {
+  background: var(--input-bg);
+}
+
+.diner-app.diner-register .login-link {
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.diner-app.diner-register .login-link a {
+  color: var(--primary-green);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+/* Step 2 Map & HUD (Manager Reference) */
+.diner-app.diner-register .map-container {
+  width: 100%;
+  height: 220px;
+  background: #fdf6f1;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  position: relative;
+  margin-bottom: 32px;
+  overflow: hidden;
+}
+
+.diner-app.diner-register .map-hud-card {
+  position: absolute;
+  background: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.diner-app.diner-register .map-coords-card {
+  top: 12px;
+  left: 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.diner-app.diner-register .map-hud-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.diner-app.diner-register .map-hud-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.diner-app.diner-register .map-zoom-level {
+  bottom: 12px;
+  right: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.diner-app.diner-register .manual-entry-divider {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.diner-app.diner-register .manual-entry-divider::before,
+.diner-app.diner-register .manual-entry-divider::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 25%;
+  height: 1px;
+  background: var(--border-color);
+}
+
+.diner-app.diner-register .manual-entry-divider::before {
+  left: 0;
+}
+.diner-app.diner-register .manual-entry-divider::after {
+  right: 0;
+}
+
+.diner-app.diner-register .location-footer-note {
+  background: #f8fafc;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.diner-app.diner-register .location-footer-note i {
+  color: var(--primary-green);
+}
+
+.diner-app.diner-register .select-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.diner-app.diner-register .select-container i {
+  position: absolute;
+  left: 16px;
+  color: var(--text-muted);
+  font-size: 18px;
+}
+
+.diner-app.diner-register .select-container select {
+  width: 100%;
+  padding: 14px 48px 14px 48px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--input-bg);
+  font-size: 15px;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  font-family: inherit;
+  color: var(--text-dark);
+}
+
+.diner-app.diner-register .select-arrow {
+  position: absolute;
+  right: 16px !important;
+  left: auto !important;
+  pointer-events: none;
+}
+
+.diner-app.diner-register .back-btn {
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--border-color);
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 32px auto 24px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.2s;
+}
+
+.diner-app.diner-register .back-btn:hover {
+  background: var(--input-bg);
+  color: var(--text-dark);
+}
+
+.diner-app.diner-register .location-warning {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted);
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.diner-app.diner-register .footer {
+  margin-top: 40px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* Response */
+@media (max-width: 1024px) {
+  .diner-app.diner-register .info-side {
+    padding: 40px;
+  }
+  .diner-app.diner-register .info-title {
+    font-size: 40px;
+  }
+}
+
+@media (max-width: 900px) {
+  .diner-app.diner-register .split-container {
+    flex-direction: column;
+  }
+  .diner-app.diner-register .info-side {
+    height: auto;
+    position: static;
+    padding: 60px 20px;
+  }
+  .diner-app.diner-register .info-content {
+    max-width: 100%;
+  }
+  .diner-app.diner-register .info-footer {
+    display: none;
+  }
+  .diner-app.diner-register .brand {
+    margin-bottom: 60px;
+  }
+}
+/* Social Toast Styling */
+.diner-app.diner-register .toast-popup {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background-color: var(--primary-green);
+  color: white;
+  padding: 16px 24px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  font-size: 15px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 2000;
+  border-left: 4px solid var(--white);
+  animation: slideUpToast 0.3s ease-out forwards;
+}
+
+.diner-app.diner-register .toast-popup i {
+  animation: ph-spin 1s infinite linear;
+}
+
+@keyframes slideUpToast {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ph-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.diner-app.diner-register .hidden {
+  display: none !important;
+}
+
+/* Hero Styles for Register */
+/* Modern Diner Design System */
+.diner-app.diner-register {
+  --primary-green: #4f6f52;
+  --primary-green-dark: #3e5a41;
+  --bg-cream: #fff4ea;
+  --white: #ffffff;
+  --text-dark: #1e293b;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  --input-bg: #f8fafc;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --radius-lg: 16px;
+  --radius-md: 12px;
+}
+
+.diner-app.diner-register * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.diner-app.diner-register {
+  font-family: "Inter", sans-serif;
+  color: var(--text-dark);
+  line-height: 1.5;
+  background-color: var(--bg-cream);
+  overflow-x: hidden;
+}
+
+.diner-app.diner-register .split-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Left Hero Side */
+.diner-app.diner-register .hero-side {
+  flex: 1;
+  position: relative;
+  background-image: url("../utils/images/healthy.jpg");
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: white;
+  padding: 60px;
+  overflow: hidden;
+}
+
+/* Fallback background if the image is missing */
+.diner-app.diner-register .hero-side:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(30, 41, 59, 0.9),
+    rgba(15, 23, 42, 0.7)
+  );
+  z-index: 1;
+}
+
+.diner-app.diner-register .hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 520px;
+}
+
+.diner-app.diner-register .back-link {
+  position: absolute;
+  top: 40px;
+  left: 40px;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  color: white;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.diner-app.diner-register .back-link:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.diner-app.diner-register .brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 80px;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.diner-app.diner-register .brand-logo {
+  width: 40px;
+  height: 40px;
+  background: var(--primary-green);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.diner-app.diner-register .hero-title {
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 24px;
+  letter-spacing: -1.5px;
+}
+
+.diner-app.diner-register .hero-subtitle {
+  font-size: 20px;
+  opacity: 0.9;
+  margin-bottom: 48px;
+  line-height: 1.6;
+}
+
+.diner-app.diner-register .feature-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.diner-app.diner-register .feature-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.diner-app.diner-register .feature-list i {
+  color: var(--primary-green);
+  font-size: 22px;
+}
+
+/* Right Form Side */
+.diner-app.diner-register .form-side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+  position: relative;
+}
+
+.diner-app.diner-register .mobile-header {
+  display: none; /* Only visible on smaller screens */
+  margin-bottom: 40px;
+}
+
+.diner-app.diner-register .brand-dark {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.diner-app.diner-register .brand-logo-dark {
+  width: 32px;
+  height: 32px;
+  background: var(--primary-green);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+}
+
+.diner-app.diner-register .login-card {
+  background: var(--white);
+  padding: 48px;
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 480px;
+  box-shadow: var(--shadow-md);
+}
+
+.diner-app.diner-register .card-header {
+  margin-bottom: 40px;
+}
+
+.diner-app.diner-register .card-header h2 {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: var(--text-dark);
+}
+
+.diner-app.diner-register .card-header p {
+  color: var(--text-muted);
+  font-size: 16px;
+}
+
+.diner-app.diner-register .form-group {
+  margin-bottom: 24px;
+}
+
+.diner-app.diner-register .form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text-dark);
+}
+
+.diner-app.diner-register .label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.diner-app.diner-register .label-row label {
+  margin-bottom: 0;
+}
+
+.diner-app.diner-register .forgot-link {
+  font-size: 13px;
+  color: var(--primary-green);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.diner-app.diner-register .form-group input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  background: var(--input-bg);
+  outline: none;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.diner-app.diner-register .form-group input:focus {
+  border-color: var(--primary-green);
+  background: var(--white);
+  box-shadow: 0 0 0 4px rgba(82, 122, 89, 0.1);
+}
+
+.diner-app.diner-register .password-input {
+  position: relative;
+}
+
+.diner-app.diner-register .visibility-btn {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+
+.diner-app.diner-register .visibility-btn:hover {
+  color: var(--text-dark);
+}
+
+.diner-app.diner-register .btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.diner-app.diner-register .btn-login {
+  background: var(--primary-green);
+  color: white;
+  margin-bottom: 32px;
+}
+
+.diner-app.diner-register .btn-login:hover {
+  background: var(--primary-green-dark);
+  transform: translateY(-1px);
+}
+
+.diner-app.diner-register .divider {
+  display: flex;
+  align-items: center;
+  margin-bottom: 32px;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.diner-app.diner-register .divider::before,
+.diner-app.diner-register .divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border-color);
+}
+
+.diner-app.diner-register .divider span {
+  padding: 0 16px;
+}
+
+.diner-app.diner-register .social-login {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.diner-app.diner-register .btn-social {
+  background: var(--white);
+  border: 1px solid var(--border-color);
+  color: var(--text-dark);
+}
+
+.diner-app.diner-register .btn-social:hover {
+  background: var(--input-bg);
+  border-color: #cbd5e1;
+}
+
+.diner-app.diner-register .social-logo {
+  width: 20px;
+  height: 20px;
+}
+
+.diner-app.diner-register .signup-prompt {
+  text-align: center;
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
+.diner-app.diner-register .signup-prompt a {
+  color: var(--primary-green);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.diner-app.diner-register .footer {
+  margin-top: 24px;
+  text-align: center;
+  padding-bottom: 24px;
+}
+
+.diner-app.diner-register .footer-links {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.diner-app.diner-register .footer-links a {
+  font-size: 14px;
+  color: var(--primary-green);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.diner-app.diner-register .footer-links a:hover {
+  color: var(--primary-green-dark);
+  text-decoration: underline;
+}
+
+.diner-app.diner-register .copyright {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* Forgot Password Modal */
+.diner-app.diner-register .modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.diner-app.diner-register .modal.hidden {
+  display: none;
+}
+.diner-app.diner-register .modal-content {
+  background: var(--white);
+  padding: 40px;
+  border-radius: var(--radius-lg);
+  width: 90%;
+  max-width: 440px;
+  position: relative;
+  box-shadow: var(--shadow-md);
+}
+.diner-app.diner-register .close-modal {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  cursor: pointer;
+  font-size: 20px;
+  color: var(--text-muted);
+  transition: var(--transition-fast);
+}
+.diner-app.diner-register .close-modal:hover {
+  color: var(--text-dark);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .diner-app.diner-register .hero-title {
+    font-size: 42px;
+  }
+}
+
+@media (max-width: 900px) {
+  .diner-app.diner-register .hero-side {
+    display: none;
+  }
+  .diner-app.diner-register .mobile-header {
+    display: block;
+  }
+  .diner-app.diner-register .form-side {
+    padding: 40px 20px;
+  }
+  .diner-app.diner-register .footer {
+    position: static;
+    margin-top: 40px;
+  }
+}
+
+/* Error Message Toast Popup */
+.diner-app.diner-register .toast-popup {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background-color: #ef4444;
+  color: white;
+  padding: 16px 24px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  font-size: 15px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 2000;
+  animation: slideUpToast 0.3s ease-out forwards;
+}
+
+@keyframes slideUpToast {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.diner-app.diner-register .toast-popup.social-toast {
+  background-color: var(--primary-green);
+  border-left: 4px solid var(--white);
+}
+
+.diner-app.diner-register .toast-popup.social-toast i {
+  animation: ph-spin 1s infinite linear;
+}
+
+@keyframes ph-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.diner-app.diner-register .hidden {
+  display: none !important;
+}
+
+/* Hero Styles for Register */
+/* Modern Diner Design System */
+.diner-app.diner-register {
+  --primary-green: #4f6f52;
+  --primary-green-dark: #3e5a41;
+  --bg-cream: #fff4ea;
+  --white: #ffffff;
+  --text-dark: #1e293b;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  --input-bg: #f8fafc;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --radius-lg: 16px;
+  --radius-md: 12px;
+}
+
+.diner-app.diner-register * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.diner-app.diner-register {
+  font-family: "Inter", sans-serif;
+  color: var(--text-dark);
+  line-height: 1.5;
+  background-color: var(--bg-cream);
+  overflow-x: hidden;
+}
+
+.diner-app.diner-register .split-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Left Hero Side */
+.diner-app.diner-register .hero-side {
+  flex: 1;
+  position: relative;
+  background-image: url("../utils/images/healthy.jpg");
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: white;
+  padding: 60px;
+  overflow: hidden;
+}
+
+/* Fallback background if the image is missing */
+.diner-app.diner-register .hero-side:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(30, 41, 59, 0.9),
+    rgba(15, 23, 42, 0.7)
+  );
+  z-index: 1;
+}
+
+.diner-app.diner-register .hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 520px;
+}
+
+.diner-app.diner-register .back-link {
+  position: absolute;
+  top: 40px;
+  left: 40px;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  color: white;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.diner-app.diner-register .back-link:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.diner-app.diner-register .brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 80px;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.diner-app.diner-register .brand-logo {
+  width: 40px;
+  height: 40px;
+  background: var(--primary-green);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.diner-app.diner-register .hero-title {
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 24px;
+  letter-spacing: -1.5px;
+}
+
+.diner-app.diner-register .hero-subtitle {
+  font-size: 20px;
+  opacity: 0.9;
+  margin-bottom: 48px;
+  line-height: 1.6;
+}
+
+.diner-app.diner-register .feature-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.diner-app.diner-register .feature-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.diner-app.diner-register .feature-list i {
+  color: var(--primary-green);
+  font-size: 22px;
+}
+
+
+.diner-app.diner-register .form-control {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--text-dark);
+    background-color: var(--input-bg);
+    outline: none;
+    transition: all 0.2s;
+}
+.diner-app.diner-register .form-control:focus {
+    border-color: var(--primary-green);
+    background-color: #fff;
+    box-shadow: 0 0 0 4px rgba(82, 122, 89, 0.1);
+}

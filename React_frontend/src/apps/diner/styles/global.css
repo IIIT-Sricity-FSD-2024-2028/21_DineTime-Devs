@@ -382,3 +382,29 @@
     font-size: 14px;
     margin: 0;
 }
+
+.diner-app .btn-dine-complete {
+  padding: 9px 16px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--primary);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.diner-app .btn-dine-complete:hover { background: var(--primary-hover); }
+.diner-app .btn-dine-complete:disabled {
+  background: #e7efe8;
+  color: #45694c;
+  cursor: default;
+  opacity: 1;
+}
+.diner-app .diner-success {
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  border: 1px solid #b7dfc0;
+  border-radius: var(--radius-md);
+  background: #effaf1;
+  color: #25633a;
+}

@@ -1,17 +1,22 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { Icon, PageLink } from "../components/Navigation.jsx";
 import { DataState, EmptyState } from "../components/Feedback.jsx";
 import RestaurantCard from "../components/RestaurantCard.jsx";
 import { matchesRestaurant } from "../components/RestaurantFilters.jsx";
-import { useDiner } from "../hooks/useDiner.js";
+import { DinerContext } from "../context/DinerContext.js";
 import { image } from "../utils/images.js";
 
 export default function SearchPage() {
-  const { restaurants, params } = useDiner();
+  const { restaurants, params, user } = useContext(DinerContext);
   const [query, setQuery] = useState(params.q || "");
-  const results = restaurants.filter((restaurant) =>
-    matchesRestaurant(restaurant, query),
-  );
+  const dinerCity = user?.city?.trim() || "";
+  const cityRestaurants = dinerCity
+    ? restaurants.filter(
+        (restaurant) =>
+          restaurant.city?.trim().toLocaleLowerCase() === dinerCity.toLocaleLowerCase(),
+      )
+    : restaurants;
+  const results = cityRestaurants.filter((restaurant) => matchesRestaurant(restaurant, query));
   return (
     <>
       <header className="search-header">
@@ -20,11 +25,7 @@ export default function SearchPage() {
             <img src={image("logo.png")} alt="" height="28" />
             <span className="logo-text">DineTime</span>
           </PageLink>
-          <PageLink
-            page="browse"
-            className="back-btn"
-            aria-label="Back to browse"
-          >
+          <PageLink page="browse" className="back-btn" aria-label="Back to browse">
             <Icon name="chevron-left" />
           </PageLink>
           <div className="search-bar-wrapper">
@@ -45,16 +46,17 @@ export default function SearchPage() {
           <div className="results-info">
             {results.length} restaurants found{query && ` for “${query}”`}
           </div>
+          {dinerCity && cityRestaurants.length === 0 && (
+            <EmptyState title="No active restaurants in this city">
+              There are currently no active restaurants in {dinerCity}.
+            </EmptyState>
+          )}
           <div className="restaurant-list">
             {results.map((restaurant) => (
-              <RestaurantCard
-                key={restaurant.id}
-                restaurant={restaurant}
-                compact
-              />
+              <RestaurantCard key={restaurant.id} restaurant={restaurant} compact />
             ))}
           </div>
-          {!results.length && (
+          {!!cityRestaurants.length && !results.length && (
             <EmptyState title="No results matching">
               Try searching for a different name or cuisine.
             </EmptyState>

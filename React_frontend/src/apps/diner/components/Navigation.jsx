@@ -1,22 +1,19 @@
-import { useState } from "react";
-import { useDiner } from "../hooks/useDiner.js";
+import { useState, useContext } from "react";
+import { DinerContext } from "../context/DinerContext.js";
 import { image } from "../utils/images.js";
 
 export function Icon({ name, className = "" }) {
-  return (
-    <i aria-hidden="true" className={`fa-solid fa-${name} ${className}`} />
-  );
+  return <i aria-hidden="true" className={`fa-solid fa-${name} ${className}`} />;
 }
 
 export function PageLink({ page, params, children, ...props }) {
-  const { navigate } = useDiner();
+  const { navigate } = useContext(DinerContext);
   return (
     <a
       {...props}
       href={`/diner/${page}${params ? `?${new URLSearchParams(params)}` : ""}`}
       onClick={(event) => {
-        if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey)
-          return;
+        if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
         event.preventDefault();
         navigate(page, params);
       }}
@@ -27,7 +24,7 @@ export function PageLink({ page, params, children, ...props }) {
 }
 
 export function Sidebar() {
-  const { currentPage } = useDiner();
+  const { currentPage } = useContext(DinerContext);
   const links = [
     ["profile", "user", "Profile"],
     ["reservations", "calendar-check", "My Reservations"],
@@ -59,7 +56,7 @@ export function Sidebar() {
 }
 
 export function SearchHeader({ value, onChange, children }) {
-  const { navigate } = useDiner();
+  const { navigate } = useContext(DinerContext);
   const [query, setQuery] = useState("");
   return (
     <header className="top-header">
@@ -70,22 +67,14 @@ export function SearchHeader({ value, onChange, children }) {
           navigate("search", { q: value ?? query });
         }}
       >
-        <img
-          src={image("icon-search.png")}
-          className="search-icon"
-          alt=""
-          width="25"
-          height="25"
-        />
+        <img src={image("icon-search.png")} className="search-icon" alt="" width="25" height="25" />
         <input
           aria-label="Search restaurants"
           className="search-input"
           placeholder="Search restaurants, cuisines, or locations"
           value={value ?? query}
           onChange={(event) =>
-            onChange
-              ? onChange(event.target.value)
-              : setQuery(event.target.value)
+            onChange ? onChange(event.target.value) : setQuery(event.target.value)
           }
         />
         {children}

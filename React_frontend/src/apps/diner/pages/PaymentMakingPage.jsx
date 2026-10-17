@@ -1,3 +1,4 @@
+import { useContext } from "react";
 import { StackedHeader, PageLink } from "../components/Navigation.jsx";
 import { DataState, EmptyState } from "../components/Feedback.jsx";
 import {
@@ -5,14 +6,12 @@ import {
   CostSummary,
   RestaurantSummary,
 } from "../components/BookingSummary.jsx";
-import { useDiner } from "../hooks/useDiner.js";
+import { DinerContext } from "../context/DinerContext.js";
 import { today } from "../utils/format.js";
 
 export default function PaymentMakingPage() {
-  const { booking, restaurants, tables, navigate } = useDiner();
-  const restaurant = restaurants.find(
-    (item) => item.id === booking?.restaurantId,
-  );
+  const { booking, restaurants, tables, navigate } = useContext(DinerContext);
+  const restaurant = restaurants.find((item) => item.id === booking?.restaurantId);
   const table = tables.find((item) => item.id === booking?.tableId);
 
   const isPast = () => {
@@ -35,9 +34,7 @@ export default function PaymentMakingPage() {
         <DataState>
           {!booking || !restaurant ? (
             <EmptyState title="No reservation selected">
-              <PageLink page="browse">
-                Choose a restaurant to get started
-              </PageLink>
+              <PageLink page="browse">Choose a restaurant to get started</PageLink>
             </EmptyState>
           ) : (
             <>
@@ -49,10 +46,21 @@ export default function PaymentMakingPage() {
                   <BookingInformation booking={booking} table={table} />
                 </div>
               </div>
-              <CostSummary restaurant={restaurant} booking={booking} />
+              <CostSummary restaurant={restaurant} booking={booking} table={table} />
               {past && (
-                <div style={{ color: "#b91c1c", backgroundColor: "#fef2f2", border: "1px solid #fecaca", padding: "12px 16px", borderRadius: "8px", margin: "16px 0", fontSize: "0.95rem" }}>
-                  This reservation slot is in the past. Please modify your reservation to pick an upcoming date and time.
+                <div
+                  style={{
+                    color: "#b91c1c",
+                    backgroundColor: "#fef2f2",
+                    border: "1px solid #fecaca",
+                    padding: "12px 16px",
+                    borderRadius: "8px",
+                    margin: "16px 0",
+                    fontSize: "0.95rem",
+                  }}
+                >
+                  This reservation slot is in the past. Please modify your reservation to pick an
+                  upcoming date and time.
                 </div>
               )}
               <button
@@ -65,11 +73,7 @@ export default function PaymentMakingPage() {
                 Proceed to Payment
               </button>
               <div className="modify-link-wrap">
-                <PageLink
-                  page="book"
-                  params={{ id: restaurant.id }}
-                  className="modify-link"
-                >
+                <PageLink page="book" params={{ id: restaurant.id }} className="modify-link">
                   ← Modify Reservation
                 </PageLink>
               </div>

@@ -1,16 +1,19 @@
-import { useState } from "react";
-import AuthLayout, { SocialButtons } from "../components/AuthLayout.jsx";
+import { createAction } from "../../../app/actions.js";
+import { useState, useContext } from "react";
+import AuthLayout from "../components/AuthLayout.jsx";
 import { Field, PasswordField } from "../components/Fields.jsx";
 import { ErrorMessage, Modal } from "../components/Feedback.jsx";
 import { PageLink } from "../components/Navigation.jsx";
-import { useAction, useDiner } from "../hooks/useDiner.js";
+import { DinerContext } from "../context/DinerContext.js";
 
 export default function LoginPage() {
-  const { api, navigate, booking, currentPage, params } = useDiner();
+  const { api, navigate, booking, currentPage, params, sessionError } = useContext(DinerContext);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [forgot, setForgot] = useState(false);
-  const { run, busy, error, setError } = useAction();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [run] = useState(() => createAction(setBusy, setError));
   function submit(event) {
     event.preventDefault();
     run(async () => {
@@ -53,22 +56,20 @@ export default function LoginPage() {
             value={password}
             onChange={(event) => setPassword(event.target.value)}
           />
-          <ErrorMessage message={error} />
+          <ErrorMessage message={error || sessionError} />
           <button className="btn btn-login" disabled={busy}>
             {busy ? "Logging in…" : "Login"}
           </button>
-          <SocialButtons onSelect={setError} />
           <p className="signup-prompt">
-            Don't have an account?{" "}
-            <PageLink page="register">Create Account</PageLink>
+            Don't have an account? <PageLink page="register">Create Account</PageLink>
           </p>
         </form>
       </div>
       {forgot && (
         <Modal title="Reset Password" onClose={() => setForgot(false)}>
           <p>
-            Password recovery is not connected to the backend yet. Contact
-            support to recover your account.
+            Password recovery is not connected to the backend yet. Contact support to recover your
+            account.
           </p>
           <button className="btn btn-login" onClick={() => setForgot(false)}>
             Back to Login

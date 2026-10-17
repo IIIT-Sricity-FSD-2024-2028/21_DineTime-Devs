@@ -1,20 +1,14 @@
+import { useContext } from "react";
 import { StackedHeader, Icon, PageLink } from "../components/Navigation.jsx";
 import { DataState, EmptyState } from "../components/Feedback.jsx";
-import {
-  BookingInformation,
-  RestaurantSummary,
-} from "../components/BookingSummary.jsx";
-import { useDiner } from "../hooks/useDiner.js";
+import { BookingInformation, RestaurantSummary } from "../components/BookingSummary.jsx";
+import { DinerContext } from "../context/DinerContext.js";
 import { money } from "../utils/format.js";
 
 export default function ConfirmationPage() {
-  const { confirmation, restaurants, tables } = useDiner();
-  const restaurant = restaurants.find(
-    (item) => item.id === confirmation?.booking.restaurantId,
-  );
-  const table = tables.find(
-    (item) => item.id === confirmation?.booking.tableId,
-  );
+  const { confirmation, restaurants, tables } = useContext(DinerContext);
+  const restaurant = restaurants.find((item) => item.id === confirmation?.booking.restaurantId);
+  const table = tables.find((item) => item.id === confirmation?.booking.tableId);
   return (
     <>
       <StackedHeader />
@@ -30,10 +24,15 @@ export default function ConfirmationPage() {
                 <div className="check-circle">
                   <Icon name="check" className="check-icon" />
                 </div>
-                <h1 className="confirmed-title">Reservation Confirmed!</h1>
+                <h1 className="confirmed-title">
+                  {confirmation.additionalPayment
+                    ? "Additional Payment Successful"
+                    : "Reservation Confirmed!"}
+                </h1>
                 <p className="confirmed-sub">
-                  Your table has been successfully reserved. We look forward to
-                  serving you.
+                  {confirmation.additionalPayment
+                    ? "Your additional table seat payment has been recorded."
+                    : "Your table has been successfully reserved. We look forward to serving you."}
                 </p>
               </div>
               <div className="details-card">
@@ -54,17 +53,14 @@ export default function ConfirmationPage() {
                   <Icon name="circle-check" />
                   <div>
                     <strong>
-                      {money(confirmation.payment.amount)} paid via{" "}
-                      {confirmation.method}
+                      {money(confirmation.payment.amount)} paid via {confirmation.method}
                     </strong>
                     <p>Transaction: {confirmation.payment.transaction_ref}</p>
                   </div>
                 </div>
                 <div className="arrive-notice">
                   <Icon name="circle-info" className="arrive-icon" />
-                  <span>
-                    Please arrive 10 minutes before your reservation time.
-                  </span>
+                  <span>Please arrive 10 minutes before your reservation time.</span>
                 </div>
               </div>
               <div className="action-row">

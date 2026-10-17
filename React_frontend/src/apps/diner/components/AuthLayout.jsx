@@ -1,52 +1,14 @@
 import { image } from "../utils/images.js";
 import { Icon } from "./Navigation.jsx";
 
-export function SocialButtons({ onSelect }) {
-  return (
-    <>
-      <div className="divider">
-        <span>OR</span>
-      </div>
-      <div className="social-login social-btns">
-        {["Google", "Apple"].map((provider) => (
-          <button
-            key={provider}
-            type="button"
-            className="btn btn-social"
-            onClick={() =>
-              onSelect(
-                `${provider} sign-in is not connected yet. Please use your email and password.`,
-              )
-            }
-          >
-            <i
-              aria-hidden="true"
-              className={`fa-brands fa-${provider.toLowerCase()} social-logo`}
-            />
-            Continue with {provider}
-          </button>
-        ))}
-      </div>
-    </>
-  );
-}
-
-export default function AuthLayout({
-  register = false,
-  locationStep = false,
-  children,
-}) {
+export default function AuthLayout({ register = false, locationStep = false, children }) {
   const features = register
     ? [
         "Discover top restaurants",
         "Real-time table availability",
         "Instant reservation confirmations",
       ]
-    : [
-        "Instant Reservations",
-        "Real-time Table Availability",
-        "Smart Dining Experience",
-      ];
+    : ["Instant Reservations", "Real-time Table Availability", "Smart Dining Experience"];
   return (
     <div className="split-container">
       <section className="hero-side">

@@ -4,21 +4,11 @@ import { Icon } from "./Navigation.jsx";
 const methods = [
   ["card", "Credit / Debit Card", "Visa, Mastercard, RuPay", "credit-card"],
   ["upi", "UPI", "Google Pay, PhonePe, Paytm", "mobile-screen"],
-  [
-    "netbanking",
-    "Net Banking",
-    "All major banks supported",
-    "building-columns",
-  ],
+  ["netbanking", "Net Banking", "All major banks supported", "building-columns"],
   ["wallet", "Wallets", "Paytm, Amazon Pay, PhonePe", "wallet"],
 ];
 
-export default function PaymentMethods({
-  method,
-  setMethod,
-  values,
-  setValues,
-}) {
+export default function PaymentMethods({ method, setMethod, values, setValues }) {
   const bind = (key) => ({
     value: values[key] || "",
     onChange: (event) => setValues({ ...values, [key]: event.target.value }),
