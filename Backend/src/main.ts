@@ -14,6 +14,7 @@ async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: WinstonModule.createLogger(winstonConfig),
   });
+  app.enableShutdownHooks();
   const logger = app.get<Logger>(WINSTON_MODULE_PROVIDER);
 
   app.use(
@@ -46,7 +47,7 @@ async function bootstrap(): Promise<void> {
 
   const config = new DocumentBuilder()
     .setTitle('Restaurant Reservation & Capacity Management API')
-    .setDescription('NestJS in-memory backend for diner, manager, staff, and super user frontends')
+    .setDescription('NestJS backend with process-local in-memory storage for diner, manager, staff, and admin frontends. Data resets when the server restarts.')
     .setVersion('1.0.0')
     .addApiKey(
       {

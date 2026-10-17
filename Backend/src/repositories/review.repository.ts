@@ -1,9 +1,10 @@
+import { store } from 'src/common/storage/memory-store';
 import { Injectable } from '@nestjs/common';
 import { Review } from 'src/common/types/schema.types';
 
 @Injectable()
 export class ReviewRepository {
-  private readonly reviews: Review[] = [];
+  private readonly reviews: Review[] = store.collection<Review>('reviews');
 
   findAll(): Review[] {
     return [...this.reviews];
@@ -32,20 +33,26 @@ export class ReviewRepository {
 
   update(id: string, payload: Partial<Review>): Review | undefined {
     const review = this.findById(id);
-    if (!review) {
-      return undefined;
-    }
-
+    if (!review) return undefined;
     Object.assign(review, payload);
+    return review;
+  }
+
+  /** Update only the manager_reply field. Pass null to remove the reply. */
+  updateReply(id: string, reply: string | null): Review | undefined {
+    const review = this.findById(id);
+    if (!review) return undefined;
+    if (reply === null || reply === '') {
+      delete review.manager_reply;
+    } else {
+      review.manager_reply = reply;
+    }
     return review;
   }
 
   remove(id: string): boolean {
     const index = this.reviews.findIndex((item) => item.id === id);
-    if (index === -1) {
-      return false;
-    }
-
+    if (index === -1) return false;
     this.reviews.splice(index, 1);
     return true;
   }

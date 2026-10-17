@@ -1,9 +1,10 @@
+import { store } from 'src/common/storage/memory-store';
 import { Injectable } from '@nestjs/common';
 import { Checkin } from 'src/common/types/schema.types';
 
 @Injectable()
 export class CheckinRepository {
-  private readonly checkins: Checkin[] = [];
+  private readonly checkins: Checkin[] = store.collection<Checkin>('checkins');
 
   findAll(): Checkin[] {
     return [...this.checkins];

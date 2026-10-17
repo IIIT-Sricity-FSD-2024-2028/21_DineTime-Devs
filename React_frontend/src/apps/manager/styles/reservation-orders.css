@@ -1,0 +1,10 @@
+.reservation-orders { margin: 20px 0; padding-top: 20px; border-top: 1px solid #e2e8e4; }
+.reservation-orders-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+.reservation-orders-heading h4 { margin: 0; }
+.reservation-order { border: 1px solid #e2e8e4; border-radius: 10px; padding: 16px; margin-top: 12px; }
+.reservation-order-meta { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; font-size: 13px; }
+.reservation-order-meta span { text-transform: capitalize; }
+.reservation-order-table-wrap { overflow-x: auto; }
+.reservation-order table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+.reservation-order th, .reservation-order td { padding: 10px 8px; border-bottom: 1px solid #edf1ee; }
+.reservation-order-total { text-align: right; margin: 12px 0 0; }

@@ -41,6 +41,7 @@ import { getActingRole as actingRole } from 'src/common/utils/acting-role.util';
 import {
   CreateLocationDto,
   CreateRestaurantDto,
+  ClosureStatusDto,
   ServingStatusDto,
   UpdateRestaurantDto,
 } from 'src/modules/restaurants/dto/restaurants.dto';
@@ -70,6 +71,14 @@ export class RestaurantsController {
   }
 
   @Roles(Role.DINER, Role.MANAGER, Role.STAFF, Role.SUPER_USER)
+  @Get('cities')
+  @ApiOperation({ summary: 'List distinct cities where restaurants are located' })
+  @ApiOkResponse({ schema: dataArraySchema })
+  findRestaurantCities() {
+    return { data: this.restaurantsService.findRestaurantCities() };
+  }
+
+  @Roles(Role.DINER, Role.MANAGER, Role.STAFF, Role.SUPER_USER)
   @Get('locations/:id')
   @ApiOperation({ summary: 'Get restaurant location by id' })
   @ApiParam({ name: 'id' })
@@ -94,8 +103,8 @@ export class RestaurantsController {
   @ApiParam({ name: 'id' })
   @ApiOkResponse({ schema: dataObjectSchema })
   @ApiNotFoundResponse({ description: 'Restaurant not found' })
-  findOne(@Param('id') id: string) {
-    return { data: this.restaurantsService.findOne(id) };
+  findOne(@Param('id') id: string, @Req() req: Request) {
+    return { data: this.restaurantsService.findOne(id, actingRole(req)) };
   }
 
   @Roles(Role.MANAGER)
@@ -159,13 +168,21 @@ export class RestaurantsController {
 
   @Roles(Role.MANAGER)
   @Patch(':id/serving-status')
-  @ApiOperation({ summary: 'Open or close a restaurant for diner visibility (manager, verified only)' })
+  @ApiOperation({ summary: 'Resume or pause new reservations without changing existing bookings' })
   @ApiParam({ name: 'id' })
   @ApiBody({ type: ServingStatusDto })
   @ApiOkResponse({ schema: dataObjectSchema })
   @ApiBadRequestResponse({ description: 'Restaurant not verified or not owned by this manager' })
   setServingStatus(@Param('id') id: string, @Body() dto: ServingStatusDto) {
     return { data: this.restaurantsService.setServingStatus(id, dto.manager_id, dto.is_open) };
+  }
+
+  @Roles(Role.MANAGER)
+  @Patch(':id/closure-status')
+  @ApiOperation({ summary: 'Close or reopen a restaurant; closure requires no active reservations' })
+  @ApiBody({ type: ClosureStatusDto })
+  setClosureStatus(@Param('id') id: string, @Body() dto: ClosureStatusDto) {
+    return { data: this.restaurantsService.setClosureStatus(id, dto.manager_id, dto.is_closed) };
   }
 
   @Roles(Role.MANAGER, Role.SUPER_USER)

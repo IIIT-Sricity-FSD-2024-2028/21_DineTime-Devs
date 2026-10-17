@@ -1,0 +1,311 @@
+/* payment_making.css */
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .page-main {
+  max-width: 520px;
+  margin: 32px auto;
+  padding: 0 16px 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .review-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .page-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 20px;
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .restaurant-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .rest-img {
+  width: 90px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .rest-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .rest-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .rest-cuisine {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .rest-meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 4px;
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .rest-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .star-icon {
+  color: #f59e0b;
+  font-size: 0.85rem;
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .rest-distance {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .rest-distance i {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .section-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 14px;
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .info-tile {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .info-tile-icon {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  width: 18px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .info-tile-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .info-tile-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .info-tile-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .special-requests-box {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-top: 4px;
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .special-req-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .special-req-text {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .cost-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .cost-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 20px;
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .cost-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .cost-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .cost-line-label {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .cost-line-value {
+  font-size: 0.88rem;
+  color: var(--text-main);
+  font-weight: 500;
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .cost-line-value.discount {
+  color: #2e7d32;
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .cost-divider {
+  height: 1px;
+  background: var(--border);
+  margin-bottom: 16px;
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .cost-total-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .cost-total-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .cost-total-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .secure-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .secure-icon {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .btn-proceed {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--primary);
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  letter-spacing: 0.01em;
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .btn-proceed:hover {
+  background: var(--primary-hover);
+  box-shadow: 0 4px 16px rgba(79, 111, 82, 0.35);
+  transform: translateY(-1px);
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .btn-proceed:active {
+  transform: translateY(0);
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .modify-link-wrap {
+  text-align: center;
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .modify-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-main);
+  text-decoration: none;
+  transition: var(--transition-fast);
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .modify-link:hover {
+  color: var(--primary);
+  background: var(--primary-light);
+}
+
+:is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .modify-link i {
+  font-size: 0.85rem;
+}
+
+@media (max-width: 560px) {
+  :is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .page-main {
+    padding: 0 10px 60px;
+    margin: 16px auto;
+  }
+  :is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .review-card,
+  :is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .cost-card {
+    padding: 20px 16px;
+  }
+  :is(.diner-app.diner-payment_making, .diner-app.diner-additional_payment) .info-grid {
+    grid-template-columns: 1fr;
+  }
+}

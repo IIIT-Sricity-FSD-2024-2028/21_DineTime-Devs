@@ -1,10 +1,11 @@
+import { store } from 'src/common/storage/memory-store';
 import { Injectable } from '@nestjs/common';
 import { Order, OrderItem } from 'src/common/types/schema.types';
 
 @Injectable()
 export class OrderRepository {
-  private readonly orders: Order[] = [];
-  private readonly orderItems: OrderItem[] = [];
+  private readonly orders: Order[] = store.collection<Order>('orders');
+  private readonly orderItems: OrderItem[] = store.collection<OrderItem>('orderItems');
 
   findAllOrders(): Order[] {
     return [...this.orders];

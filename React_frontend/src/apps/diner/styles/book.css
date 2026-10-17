@@ -1,0 +1,394 @@
+/* book.css */
+
+.diner-app.diner-book .page-body {
+  padding-top: 28px;
+  padding-bottom: 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.diner-app.diner-book .restaurant-banner {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 18px 24px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.diner-app.diner-book .banner-img {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.diner-app.diner-book .banner-info h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.diner-app.diner-book .banner-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.diner-app.diner-book .banner-meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 0.85rem;
+}
+.diner-app.diner-book .banner-meta .loc-icon {
+  color: var(--primary);
+  font-size: 0.8rem;
+}
+.diner-app.diner-book .banner-meta .star-icon {
+  color: #f59e0b;
+  font-size: 0.8rem;
+}
+.diner-app.diner-book .banner-meta span {
+  color: var(--text-muted);
+}
+
+.diner-app.diner-book .reservation-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px;
+  align-items: start;
+}
+
+.diner-app.diner-book .detail-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+  margin-bottom: 24px;
+}
+
+.diner-app.diner-book .detail-card h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.diner-app.diner-book .section-subtitle {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-bottom: 16px;
+}
+
+.diner-app.diner-book .inputs-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+.diner-app.diner-book .input-group label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.diner-app.diner-book .input-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  background: var(--surface);
+  transition: var(--transition-fast);
+}
+
+.diner-app.diner-book .input-box:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.diner-app.diner-book .input-box i {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.diner-app.diner-book .input-box input,
+.diner-app.diner-book .input-box select {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-main);
+  flex: 1;
+  cursor: pointer;
+}
+
+.diner-app.diner-book .legend-row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 14px;
+}
+.diner-app.diner-book .legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.diner-app.diner-book .legend-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+}
+.diner-app.diner-book .legend-dot.available {
+  background: var(--green-bg);
+  border: 1px solid var(--green-border);
+}
+.diner-app.diner-book .legend-dot.reserved {
+  background: var(--yellow-bg);
+  border: 1px solid var(--yellow-border);
+}
+.diner-app.diner-book .legend-dot.unavailable {
+  background: var(--red-bg);
+  border: 1px solid var(--red-border);
+}
+.diner-app.diner-book .divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.diner-app.diner-book .table-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+}
+
+.diner-app.diner-book .table-tile {
+  border-radius: var(--radius-md);
+  padding: 14px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  border: 2px solid transparent;
+  position: relative;
+}
+
+.diner-app.diner-book .table-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.diner-app.diner-book .table-tile .tile-icon {
+  font-size: 1.6rem;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.diner-app.diner-book .table-tile .tile-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: block;
+}
+.diner-app.diner-book .table-tile .tile-seats {
+  font-size: 0.75rem;
+  display: block;
+  margin-top: 2px;
+}
+
+.diner-app.diner-book .table-tile.available {
+  background: var(--green-bg);
+  border-color: var(--green-border);
+  color: var(--green-text);
+}
+.diner-app.diner-book .table-tile.available .tile-icon {
+  color: var(--green-text);
+}
+
+.diner-app.diner-book .table-tile.reserved {
+  background: var(--yellow-bg);
+  border-color: var(--yellow-border);
+  color: var(--yellow-text);
+}
+.diner-app.diner-book .table-tile.reserved .tile-icon {
+  color: var(--yellow-text);
+}
+
+.diner-app.diner-book .table-tile.unavailable {
+  background: var(--red-bg);
+  border-color: var(--red-border);
+  color: var(--red-text);
+}
+.diner-app.diner-book .table-tile.unavailable .tile-icon {
+  color: var(--red-text);
+}
+
+.diner-app.diner-book .table-tile.selected {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.diner-app.diner-book .summary-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+  position: sticky;
+  top: 90px;
+}
+
+.diner-app.diner-book .summary-card h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.diner-app.diner-book .summary-body {
+  min-height: 160px;
+}
+
+.diner-app.diner-book .summary-empty {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  text-align: center;
+  padding: 40px 0;
+}
+
+.diner-app.diner-book .summary-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.diner-app.diner-book .summary-row i {
+  color: var(--primary);
+  font-size: 0.95rem;
+  margin-top: 3px;
+}
+
+.diner-app.diner-book .summary-row .summary-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  display: block;
+}
+
+.diner-app.diner-book .summary-row .summary-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-main);
+  display: block;
+}
+
+.diner-app.diner-book .change-link {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: var(--transition-fast);
+}
+
+.diner-app.diner-book .change-link:hover {
+  background-color: var(--primary-light);
+}
+
+.diner-app.diner-book .btn-confirm {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--primary);
+  color: white;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  margin-top: 12px;
+}
+.diner-app.diner-book .btn-confirm:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+.diner-app.diner-book .btn-confirm:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.diner-app.diner-book .summary-hint {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 10px;
+}
+
+.diner-app.diner-book .toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px 24px;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  z-index: 999;
+  opacity: 0;
+  transition:
+    opacity 0.3s,
+    transform 0.3s;
+}
+
+.diner-app.diner-book .toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.diner-app.diner-book .toast.hidden {
+  display: none;
+}
+
+.diner-app.diner-book .toast-icon {
+  font-size: 1.1rem;
+}
+.diner-app.diner-book .toast.warn .toast-icon {
+  color: var(--yellow-text);
+}
+.diner-app.diner-book .toast.error .toast-icon {
+  color: var(--red-text);
+}
+.diner-app.diner-book .toast.success .toast-icon {
+  color: var(--green-text);
+}
+
+@media (max-width: 900px) {
+  .diner-app.diner-book .reservation-layout {
+    grid-template-columns: 1fr;
+  }
+  .diner-app.diner-book .table-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .diner-app.diner-book .inputs-row {
+    grid-template-columns: 1fr;
+  }
+}

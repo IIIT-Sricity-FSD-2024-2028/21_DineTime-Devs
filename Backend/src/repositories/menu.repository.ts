@@ -1,9 +1,10 @@
+import { store } from 'src/common/storage/memory-store';
 import { Injectable } from '@nestjs/common';
 import { MenuItem } from 'src/common/types/schema.types';
 
 @Injectable()
 export class MenuRepository {
-  private readonly menuItems: MenuItem[] = [];
+  private readonly menuItems: MenuItem[] = store.collection<MenuItem>('menuItems');
 
   findAll(): MenuItem[] {
     return [...this.menuItems];

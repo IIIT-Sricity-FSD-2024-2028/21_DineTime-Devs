@@ -1,0 +1,446 @@
+/* restaurant.css */
+
+.diner-app.diner-restaurant .top-header {
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.diner-app.diner-restaurant .search-container {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--bg);
+  border-radius: var(--radius-md);
+  padding: 0 12px;
+  border: 1px solid transparent;
+  transition: var(--transition-fast);
+}
+
+.diner-app.diner-restaurant .search-container:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.diner-app.diner-restaurant .search-icon {
+  color: var(--text-muted);
+}
+
+.diner-app.diner-restaurant .search-input {
+  flex: 1;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: var(--text-main);
+  outline: none;
+}
+
+.diner-app.diner-restaurant .user-avatar {
+  border-radius: 50%;
+  cursor: pointer;
+  opacity: 0.75;
+}
+
+.diner-app.diner-restaurant .page-body {
+  padding-top: 32px;
+  padding-bottom: 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.diner-app.diner-restaurant .hero-section {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+  align-items: start;
+}
+
+.diner-app.diner-restaurant .carousel-wrapper {
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: #ddd;
+  aspect-ratio: 16/10;
+}
+
+.diner-app.diner-restaurant .carousel-track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.4s ease;
+}
+
+.diner-app.diner-restaurant .carousel-slide {
+  min-width: 100%;
+  height: 100%;
+}
+
+.diner-app.diner-restaurant .carousel-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.diner-app.diner-restaurant .carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.85);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-fast);
+  box-shadow: var(--shadow-md);
+}
+
+.diner-app.diner-restaurant .carousel-btn:hover {
+  background: white;
+}
+.diner-app.diner-restaurant .carousel-btn.prev {
+  left: 12px;
+}
+.diner-app.diner-restaurant .carousel-btn.next {
+  right: 12px;
+}
+
+.diner-app.diner-restaurant .carousel-counter {
+  position: absolute;
+  bottom: 12px;
+  right: 14px;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  font-size: 0.75rem;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+}
+
+.diner-app.diner-restaurant .info-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.diner-app.diner-restaurant .rest-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.diner-app.diner-restaurant .rest-subtitle {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.diner-app.diner-restaurant .rating-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.diner-app.diner-restaurant .star-icon {
+  color: #f59e0b;
+  font-size: 0.9rem;
+}
+
+.diner-app.diner-restaurant .rating-value {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text-main);
+}
+
+.diner-app.diner-restaurant .review-count {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.diner-app.diner-restaurant .location-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.diner-app.diner-restaurant .location-icon {
+  color: var(--primary);
+  font-size: 0.85rem;
+}
+
+.diner-app.diner-restaurant .price-badge {
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.diner-app.diner-restaurant .amenities-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.diner-app.diner-restaurant .amenity-tag {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  color: var(--text-main);
+}
+
+.diner-app.diner-restaurant .btn-reserve-main {
+  margin-top: 8px;
+  width: 100%;
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.diner-app.diner-restaurant .btn-reserve-main:hover {
+  background-color: var(--primary-hover);
+}
+
+.diner-app.diner-restaurant .detail-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+}
+
+.diner-app.diner-restaurant .detail-card h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text-main);
+}
+
+.diner-app.diner-restaurant .about-text {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.7;
+  margin-bottom: 20px;
+}
+
+.diner-app.diner-restaurant .about-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.diner-app.diner-restaurant .policies-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.diner-app.diner-restaurant .policy-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.diner-app.diner-restaurant .policy-item strong {
+  font-size: 0.9rem;
+  color: var(--text-main);
+}
+
+.diner-app.diner-restaurant .policy-item span {
+  font-size: 0.86rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.diner-app.diner-restaurant .about-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.diner-app.diner-restaurant .about-item-icon {
+  color: var(--primary);
+  font-size: 1rem;
+  margin-top: 2px;
+}
+
+.diner-app.diner-restaurant .about-item-text strong {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.diner-app.diner-restaurant .about-item-text span {
+  font-size: 0.9rem;
+  color: var(--text-main);
+  font-weight: 500;
+}
+
+.diner-app.diner-restaurant .hours-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.diner-app.diner-restaurant .hours-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.diner-app.diner-restaurant .hours-row:last-child {
+  border-bottom: none;
+}
+
+.diner-app.diner-restaurant .hours-label {
+  font-size: 0.9rem;
+  color: var(--text-main);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.diner-app.diner-restaurant .open-badge {
+  background: #d1fae5;
+  color: #065f46;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.diner-app.diner-restaurant .hours-time {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.diner-app.diner-restaurant .menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.diner-app.diner-restaurant .menu-img-wrapper {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  aspect-ratio: 4/3;
+}
+
+.diner-app.diner-restaurant .menu-img-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.diner-app.diner-restaurant .menu-img-wrapper:hover img {
+  transform: scale(1.06);
+}
+
+.diner-app.diner-restaurant .reviews-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.diner-app.diner-restaurant .empty-state {
+  grid-column: 1 / -1;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  background: var(--bg);
+  padding: 18px;
+  font-size: 0.9rem;
+}
+
+.diner-app.diner-restaurant .review-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+.diner-app.diner-restaurant .reviewer-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.diner-app.diner-restaurant .reviewer-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.diner-app.diner-restaurant .reviewer-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-main);
+}
+
+.diner-app.diner-restaurant .review-stars {
+  color: #f59e0b;
+  font-size: 0.8rem;
+  margin-top: 2px;
+}
+
+.diner-app.diner-restaurant .review-text {
+  font-size: 0.86rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+@media (max-width: 900px) {
+  .diner-app.diner-restaurant .hero-section {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .diner-app.diner-restaurant .sidebar {
+    transform: translateX(-100%);
+    z-index: 200;
+  }
+  .diner-app.diner-restaurant .main-content {
+    margin-left: 0;
+    width: 100vw;
+  }
+}

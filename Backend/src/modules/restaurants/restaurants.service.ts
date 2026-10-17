@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import {
   DEFAULT_CANCELLATION_CUTOFF_MINUTES,
   DEFAULT_NO_SHOW_GRACE_MINUTES,
@@ -6,7 +6,7 @@ import {
 } from 'src/common/config/billing.config';
 import { Role } from 'src/common/enums/role.enum';
 import { generateId } from 'src/common/utils/id.util';
-import { autoSettleOverduePayments, netPayout } from 'src/common/utils/settlement.util';
+import { autoSettleOverduePayments, payoutEntries } from 'src/common/utils/settlement.util';
 import {
   CreateLocationDto,
   CreateRestaurantDto,
@@ -15,6 +15,8 @@ import {
 import { PaymentRepository } from 'src/repositories/payment.repository';
 import { ReservationRepository } from 'src/repositories/reservation.repository';
 import { RestaurantRepository } from 'src/repositories/restaurant.repository';
+import { TableRepository } from 'src/repositories/table.repository';
+import { TimeSlotRepository } from 'src/repositories/timeslot.repository';
 import { UserRepository } from 'src/repositories/user.repository';
 
 @Injectable()
@@ -24,6 +26,8 @@ export class RestaurantsService {
     private readonly userRepository: UserRepository,
     private readonly reservationRepository: ReservationRepository,
     private readonly paymentRepository: PaymentRepository,
+    private readonly tableRepository: TableRepository,
+    private readonly timeslotRepository: TimeSlotRepository,
   ) {}
 
   findAll(city?: string, actingRole?: Role) {
@@ -33,7 +37,7 @@ export class RestaurantsService {
 
     if (actingRole === Role.DINER) {
       restaurants = restaurants.filter((restaurant) => {
-        if (!restaurant.is_open) {
+        if (!restaurant.is_open || restaurant.is_closed) {
           return false;
         }
         const managerDetails = this.userRepository.getManagerDetails(restaurant.manager_id);
@@ -48,10 +52,21 @@ export class RestaurantsService {
     return this.restaurantRepository.findAllLocations();
   }
 
-  findOne(id: string) {
+  findRestaurantCities() {
+    return this.restaurantRepository.findRestaurantCities();
+  }
+
+  findOne(id: string, actingRole?: Role) {
     const restaurant = this.restaurantRepository.findById(id);
     if (!restaurant) {
       throw new NotFoundException('Restaurant not found');
+    }
+
+    if (actingRole === Role.DINER) {
+      const managerDetails = this.userRepository.getManagerDetails(restaurant.manager_id);
+      if (!restaurant.is_open || restaurant.is_closed || managerDetails?.verification_status !== 'approved') {
+        throw new NotFoundException('Restaurant not found');
+      }
     }
 
     return restaurant;
@@ -98,9 +113,20 @@ export class RestaurantsService {
       throw new BadRequestException('You do not manage this restaurant');
     }
 
-    const managerDetails = this.userRepository.getManagerDetails(managerId);
-    if (managerDetails?.verification_status !== 'approved') {
-      throw new BadRequestException('Restaurant is not verified yet');
+    if (isOpen) {
+      if (restaurant.is_closed) {
+        throw new BadRequestException('Reopen the restaurant before accepting new reservations');
+      }
+      const managerDetails = this.userRepository.getManagerDetails(managerId);
+      if (managerDetails?.verification_status !== 'approved') {
+        throw new BadRequestException('Restaurant is not verified yet');
+      }
+      if (this.tableRepository.findByRestaurantId(id).length === 0) {
+        throw new BadRequestException('Add at least one table before opening your restaurant');
+      }
+      if (this.timeslotRepository.findByRestaurantId(id).length === 0) {
+        throw new BadRequestException('Add at least one time slot before opening your restaurant');
+      }
     }
 
     const updated = this.restaurantRepository.update(id, { is_open: isOpen });
@@ -108,7 +134,29 @@ export class RestaurantsService {
       throw new NotFoundException('Restaurant not found');
     }
 
-    return updated;
+    return { ...updated, active_reservation_count: this.activeReservations(id).length };
+  }
+
+  private activeReservations(id: string) {
+    return this.reservationRepository.findByRestaurantId(id)
+      .filter((reservation) => ['reserved', 'checked_in'].includes(reservation.reservation_status));
+  }
+
+  setClosureStatus(id: string, managerId: string, isClosed: boolean) {
+    const restaurant = this.findOne(id);
+    if (restaurant.manager_id !== managerId) throw new BadRequestException('You do not manage this restaurant');
+    const active = this.activeReservations(id);
+    if (isClosed && active.length) {
+      throw new ConflictException({
+        message: `Cannot close the restaurant while ${active.length} active reservation(s) remain. Pause new reservations and resolve these bookings first.`,
+        reservation_ids: active.map((reservation) => reservation.id),
+      });
+    }
+    return this.restaurantRepository.update(id, {
+      is_closed: isClosed,
+      // Reopening does not silently resume taking new bookings.
+      is_open: false,
+    });
   }
 
   revenue(id: string, managerId?: string) {
@@ -119,16 +167,15 @@ export class RestaurantsService {
 
     autoSettleOverduePayments(this.paymentRepository, this.reservationRepository, this.restaurantRepository);
 
-    const reservations = this.reservationRepository.findByRestaurantId(id);
-    const paidPayments = reservations
-      .flatMap((reservation) => this.paymentRepository.findByReservationId(reservation.id))
-      .filter((payment) => payment.payment_status === 'paid');
-
-    const settledPayments = paidPayments.filter((payment) => payment.settled_at);
-    const pending_payout = paidPayments
-      .filter((payment) => !payment.settled_at)
-      .reduce((sum, payment) => sum + netPayout(payment), 0);
-    const paid_by_platform = settledPayments.reduce((sum, payment) => sum + netPayout(payment), 0);
+    const entries = this.paymentRepository.findAll()
+      .filter((payment) => ['paid', 'refunded'].includes(payment.payment_status))
+      .flatMap((payment) => payoutEntries(payment, this.reservationRepository.findById(payment.reservation_id)?.restaurant_id)
+        .filter((entry) => entry.restaurant_id === id && (payment.payment_status === 'paid' || entry.settled_at))
+        .map((entry) => ({ ...entry, payment })));
+    const settledPayments = entries.filter((entry) => entry.settled_at);
+    const total = (rows: typeof entries) => Math.round(rows.reduce((sum, entry) => sum + entry.amount, 0) * 100) / 100;
+    const pending_payout = total(entries.filter((entry) => !entry.settled_at));
+    const paid_by_platform = total(settledPayments);
 
     // Payments settled together (same settle-all run or auto-settle sweep) share
     // an identical settled_at timestamp, so grouping by it reconstructs each payout batch.
@@ -136,7 +183,7 @@ export class RestaurantsService {
     settledPayments.forEach((payment) => {
       const key = payment.settled_at as string;
       const entry = batches.get(key) || { amount: 0, payment_count: 0 };
-      entry.amount += netPayout(payment);
+      entry.amount = Math.round((entry.amount + payment.amount) * 100) / 100;
       entry.payment_count += 1;
       batches.set(key, entry);
     });
@@ -149,6 +196,18 @@ export class RestaurantsService {
       pending_payout,
       paid_by_platform,
       settlement_history,
+      payments: settledPayments
+        .sort((a, b) => b.settled_at!.localeCompare(a.settled_at!))
+        .map((entry) => ({
+          id: entry.id,
+          payment_id: entry.payment.id,
+          reservation_id: entry.payment.reservation_id,
+          amount: entry.amount,
+          status: 'paid_out',
+          payment_time: entry.payment.payment_time,
+          settled_at: entry.settled_at,
+          settled_by: entry.settled_by,
+        })),
     };
   }
 
@@ -158,6 +217,7 @@ export class RestaurantsService {
       latitude: dto.latitude ?? 0,
       longitude: dto.longitude ?? 0,
       city: dto.city,
+      state: dto.state,
       pincode: dto.pincode,
       address: dto.address,
       country: dto.country,
@@ -174,7 +234,8 @@ export class RestaurantsService {
   }
 
   update(id: string, dto: UpdateRestaurantDto) {
-    const updated = this.restaurantRepository.update(id, dto);
+    const { location_id: _locationId, ...editableDetails } = dto as UpdateRestaurantDto & { location_id?: string };
+    const updated = this.restaurantRepository.update(id, editableDetails);
     if (!updated) {
       throw new NotFoundException('Restaurant not found');
     }

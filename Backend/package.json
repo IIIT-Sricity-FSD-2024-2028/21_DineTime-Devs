@@ -7,7 +7,8 @@
     "build": "tsc -p tsconfig.build.json",
     "start": "node start.js",
     "start:dev": "ts-node -r tsconfig-paths/register src/main.ts",
-    "test": "npm run build && node scripts/smoke-tests.js"
+    "test": "npm run build && node scripts/serving-staff-status.test.cjs && node scripts/smoke-tests.js && node scripts/reservation-features.test.js && node scripts/modification-policy.test.js && node scripts/phase-one.test.cjs && node scripts/phase-two.test.cjs",
+    "test:operations": "npm run build && node scripts/serving-staff-status.test.cjs"
   },
   "keywords": [],
   "author": "",
@@ -41,5 +42,8 @@
     "@types/node": "^25.6.0",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": ">=22.13.0"
   }
 }

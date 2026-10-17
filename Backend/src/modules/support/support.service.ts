@@ -20,6 +20,7 @@ import { PaymentRepository } from 'src/repositories/payment.repository';
 import { ReservationRepository } from 'src/repositories/reservation.repository';
 import { RestaurantRepository } from 'src/repositories/restaurant.repository';
 import { SupportTicketRepository } from 'src/repositories/support-ticket.repository';
+import { TimeSlotRepository } from 'src/repositories/timeslot.repository';
 import { UserRepository } from 'src/repositories/user.repository';
 
 @Injectable()
@@ -32,12 +33,115 @@ export class SupportService {
     private readonly checkinRepository: CheckinRepository,
     private readonly paymentRepository: PaymentRepository,
     private readonly notificationsService: NotificationsService,
+    private readonly timeSlotRepository: TimeSlotRepository,
   ) {}
 
-  create(dto: CreateSupportTicketDto, attachments: string[]) {
+  managerContext(managerId: string) {
+    const restaurants = this.restaurantRepository.findByManagerId(managerId);
+    const restaurantIds = new Set(restaurants.map((restaurant) => restaurant.id));
+    const staff = this.userRepository.findAll()
+      .filter((user) => user.role === Role.STAFF && restaurantIds.has(this.userRepository.getStaffDetails(user.id)?.restaurant_id || ''))
+      .map((user) => ({ id: user.id, name: user.name, email: user.email, ...this.userRepository.getStaffDetails(user.id) }));
+    const reservations = this.reservationRepository.findAll()
+      .filter((reservation) => restaurantIds.has(reservation.restaurant_id));
+    const reservationIds = new Set(reservations.map((reservation) => reservation.id));
+    return {
+      restaurants,
+      staff,
+      reservations: reservations.map((reservation) => ({
+        ...reservation,
+        diner_name: this.userRepository.findById(reservation.user_id)?.name || 'Diner',
+        slot: this.timeSlotRepository.findById(reservation.slot_id),
+      })),
+      slots: restaurants.flatMap((restaurant) => this.timeSlotRepository.findByRestaurantId(restaurant.id)),
+      payments: this.paymentRepository.findAll().filter((payment) => reservationIds.has(payment.reservation_id)),
+    };
+  }
+
+  create(dto: CreateSupportTicketDto, attachments: string[], userId?: string) {
     const raiser = this.userRepository.findById(dto.raised_by_user_id);
     if (!raiser) {
       throw new BadRequestException('Raising user not found');
+    }
+    if (raiser.role !== dto.raised_by_role) {
+      throw new BadRequestException('Ticket role does not match the raising user');
+    }
+    if (userId && userId !== dto.raised_by_user_id) {
+      throw new ForbiddenException('You can only raise your own support ticket');
+    }
+    const reservation = dto.reservation_id ? this.reservationRepository.findById(dto.reservation_id) : undefined;
+    if (dto.reservation_id && (!reservation || (dto.raised_by_role === 'diner'
+        ? reservation.user_id !== dto.raised_by_user_id
+        : this.restaurantRepository.findById(reservation.restaurant_id)?.manager_id !== dto.raised_by_user_id))) {
+      throw new BadRequestException('Select one of your own reservations');
+    }
+    let linkedRestaurantId = reservation?.restaurant_id;
+    if (dto.restaurant_id) {
+      const restaurant = this.restaurantRepository.findById(dto.restaurant_id);
+      if (!restaurant || (dto.raised_by_role === 'manager' && restaurant.manager_id !== dto.raised_by_user_id) ||
+          (reservation && reservation.restaurant_id !== dto.restaurant_id)) {
+        throw new BadRequestException('Select a restaurant linked to your account or reservation');
+      }
+      linkedRestaurantId = restaurant.id;
+    }
+    if (dto.slot_id) {
+      const slot = this.timeSlotRepository.findById(dto.slot_id);
+      if (!slot || (linkedRestaurantId && slot.restaurant_id !== linkedRestaurantId)) {
+        throw new BadRequestException('Select a service belonging to your restaurant');
+      }
+      linkedRestaurantId ||= slot.restaurant_id;
+    }
+    if (dto.payment_id) {
+      const payment = this.paymentRepository.findById(dto.payment_id);
+      const paymentReservation = payment && this.reservationRepository.findById(payment.reservation_id);
+      const paymentRestaurantId = payment?.restaurant_id || paymentReservation?.restaurant_id;
+      if (!payment || !paymentReservation || !paymentRestaurantId ||
+          (dto.raised_by_role === 'manager' && this.restaurantRepository.findById(paymentRestaurantId)?.manager_id !== dto.raised_by_user_id) ||
+          (dto.raised_by_role === 'diner' && paymentReservation.user_id !== dto.raised_by_user_id) ||
+          (linkedRestaurantId && linkedRestaurantId !== paymentRestaurantId)) {
+        throw new BadRequestException('Select a payment linked to your account or restaurant');
+      }
+      linkedRestaurantId ||= paymentRestaurantId;
+    }
+    const reservationRequiredForManager = ['customer_dispute_no_show', 'checkin_problem'].includes(dto.issue_code || '');
+    if ((dto.raised_by_role === 'diner' && dto.issue_code && !['app_problem', 'other'].includes(dto.issue_code) && !reservation) ||
+        (dto.raised_by_role === 'manager' && reservationRequiredForManager && !reservation)) {
+      throw new BadRequestException('Select the affected reservation');
+    }
+    if (dto.raised_by_role === 'diner' && !dto.issue_note?.trim()) {
+      throw new BadRequestException('Please add a short note so support can help with your issue');
+    }
+    if (dto.raised_by_role === 'diner' && !dto.issue_code) {
+      throw new BadRequestException('Select what happened before raising a support ticket');
+    }
+
+    let affectedStaffId: string | undefined;
+    let affectedStaffName: string | undefined;
+    if (dto.raised_by_role === 'manager') {
+      const managerIssueCodes = ['customer_dispute_no_show', 'staff_issue', 'app_problem', 'other', 'checkin_problem', 'payout_missing'];
+      if (!dto.issue_code || !managerIssueCodes.includes(dto.issue_code)) {
+        throw new BadRequestException('Choose one of the available manager support issues');
+      }
+      if (dto.issue_code === 'staff_issue') {
+        if (dto.affected_staff_scope === 'all') {
+          if (dto.affected_staff_id) throw new BadRequestException('Choose all staff or one staff member');
+        } else if (dto.affected_staff_scope === 'individual' && dto.affected_staff_id) {
+          const staffUser = this.userRepository.findById(dto.affected_staff_id);
+          const staffDetails = this.userRepository.getStaffDetails(dto.affected_staff_id);
+          if (!staffUser || staffUser.role !== Role.STAFF || !staffDetails || staffDetails.restaurant_id !== linkedRestaurantId ||
+              this.restaurantRepository.findById(staffDetails.restaurant_id)?.manager_id !== dto.raised_by_user_id) {
+            throw new BadRequestException('Choose a staff member from your restaurant');
+          }
+          affectedStaffId = staffUser.id;
+          affectedStaffName = staffUser.name;
+        } else {
+          throw new BadRequestException('Choose all staff or one staff member');
+        }
+        if (!dto.issue_note?.trim()) throw new BadRequestException('Describe the staff issue');
+      }
+      if (dto.issue_code === 'other' && !dto.issue_note?.trim()) {
+        throw new BadRequestException('Describe the issue');
+      }
     }
 
     const now = new Date().toISOString();
@@ -48,6 +152,15 @@ export class SupportService {
       category: dto.category,
       subject: dto.subject,
       description: dto.description,
+      issue_code: dto.issue_code,
+      issue_note: dto.issue_note,
+      affected_staff_scope: dto.issue_code === 'staff_issue' ? dto.affected_staff_scope : undefined,
+      affected_staff_id: affectedStaffId,
+      affected_staff_name: affectedStaffName,
+      linked_reservation_id: reservation?.id,
+      linked_restaurant_id: linkedRestaurantId,
+      linked_slot_id: dto.slot_id,
+      linked_payment_id: dto.payment_id,
       attachments,
       status: 'open',
       created_at: now,
@@ -60,7 +173,17 @@ export class SupportService {
   findMine(userId: string) {
     return this.ticketRepository
       .findByRaiser(userId)
-      .sort((a, b) => b.created_at.localeCompare(a.created_at));
+      .sort((a, b) => b.created_at.localeCompare(a.created_at))
+      .map((ticket) => {
+        const reservation = ticket.linked_reservation_id ? this.reservationRepository.findById(ticket.linked_reservation_id) : undefined;
+        if (ticket.raised_by_role !== 'diner' || reservation?.user_id !== userId) return ticket;
+        // Legacy refunds may have payment records but no ticket-level receipt.
+        // Report the reservation total without inventing a receipt for this ticket.
+        const refundedCents = this.paymentRepository.findByReservationId(reservation.id)
+          .filter((payment) => ['paid', 'refunded'].includes(payment.payment_status))
+          .reduce((sum, payment) => sum + Math.round((payment.refunded_amount || 0) * 100), 0);
+        return { ...ticket, reservation_refunded_amount: refundedCents / 100 };
+      });
   }
 
   findAll(raisedByRole?: TicketRaiserRole, status?: TicketStatus) {
@@ -136,9 +259,11 @@ export class SupportService {
     let status: TicketStatus;
     let message: string;
 
-    if (dto.decision === 'refund_approved') {
+    if (dto.decision === 'refund_approved' || dto.decision === 'finance_review') {
       status = 'escalated_finance_team';
-      message = 'Your support ticket was verified and escalated to our finance team for a refund.';
+      message = dto.decision === 'refund_approved'
+        ? 'Your support ticket was verified and escalated to our finance team for a refund.'
+        : 'Your support ticket was escalated to our finance team for review.';
     } else if (dto.decision === 'refund_denied') {
       status = 'resolved';
       message = `Your support ticket was reviewed — no refund applicable. ${dto.notes}`;

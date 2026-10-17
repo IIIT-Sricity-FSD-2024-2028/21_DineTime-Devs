@@ -1,3 +1,4 @@
+import { store } from 'src/common/storage/memory-store';
 import { Injectable } from '@nestjs/common';
 import {
   DinerDetails,
@@ -8,10 +9,10 @@ import {
 
 @Injectable()
 export class UserRepository {
-  private readonly users: User[] = [];
-  private readonly dinerDetails: DinerDetails[] = [];
-  private readonly managerDetails: ManagerDetails[] = [];
-  private readonly staffDetails: StaffDetails[] = [];
+  private readonly users: User[] = store.collection<User>('users');
+  private readonly dinerDetails: DinerDetails[] = store.collection<DinerDetails>('dinerDetails');
+  private readonly managerDetails: ManagerDetails[] = store.collection<ManagerDetails>('managerDetails');
+  private readonly staffDetails: StaffDetails[] = store.collection<StaffDetails>('staffDetails');
 
   findAll(): User[] {
     return [...this.users];
@@ -47,18 +48,12 @@ export class UserRepository {
     }
 
     this.users.splice(index, 1);
-    this.dinerDetails.splice(
-      this.dinerDetails.findIndex((d) => d.diner_id === id),
-      1,
-    );
-    this.managerDetails.splice(
-      this.managerDetails.findIndex((m) => m.manager_id === id),
-      1,
-    );
-    this.staffDetails.splice(
-      this.staffDetails.findIndex((s) => s.staff_id === id),
-      1,
-    );
+    const dinerIndex=this.dinerDetails.findIndex((d)=>d.diner_id===id);
+    const managerIndex=this.managerDetails.findIndex((d)=>d.manager_id===id);
+    const staffIndex=this.staffDetails.findIndex((d)=>d.staff_id===id);
+    if(dinerIndex>=0)this.dinerDetails.splice(dinerIndex,1);
+    if(managerIndex>=0)this.managerDetails.splice(managerIndex,1);
+    if(staffIndex>=0)this.staffDetails.splice(staffIndex,1);
 
     return true;
   }

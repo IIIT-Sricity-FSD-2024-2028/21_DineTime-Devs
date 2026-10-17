@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsNotEmpty, IsString } from 'class-validator';
+import { IsBoolean, IsEnum, IsNotEmpty, IsString, MinLength } from 'class-validator';
+
+export class NoShowDecisionDto {
+  @IsEnum(['release','refund_deposit','refund_full']) decision:'release'|'refund_deposit'|'refund_full';
+  @IsString() @MinLength(3) notes:string;
+  @IsString() @IsNotEmpty() admin_id:string;
+}
 
 export class FinanceRefundDecisionDto {
   @ApiProperty({ description: 'true to approve and process the refund, false to deny it' })

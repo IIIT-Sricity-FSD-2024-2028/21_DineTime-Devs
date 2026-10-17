@@ -1,0 +1,7 @@
+/* Base styles for restaurant staff */
+@import url('./login.css');
+@import url('./dashboard.css');
+@import url('./check-in.css');
+@import url('./profile.css');
+@import url('./registration.css');
+@import url('./request.css');

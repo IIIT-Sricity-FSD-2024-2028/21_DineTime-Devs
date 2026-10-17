@@ -1,68 +1,37 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from 'src/common/decorators/roles.decorator';
 import { Role } from 'src/common/enums/role.enum';
+import { UserRepository } from 'src/repositories/user.repository';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(
-    private readonly reflector: Reflector,
-    private readonly jwtService: JwtService,
-  ) {}
-
-  canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-
-    if (!requiredRoles || requiredRoles.length === 0) {
-      return true;
-    }
-
-    const request = context.switchToHttp().getRequest();
-    const role = this.getRoleFromRequest(request);
-
-    if (!role) {
-      throw new ForbiddenException('Missing role header');
-    }
-
-    if (role === Role.SUPER_USER) {
-      return true;
-    }
-
-    if (!requiredRoles.includes(role as Role)) {
-      throw new ForbiddenException('Role is not allowed for this resource');
-    }
-
-    return true;
-  }
-
-  private getRoleFromRequest(request: { headers: Record<string, string | string[] | undefined>; user?: unknown }): Role | undefined {
-    const authorization = request.headers.authorization;
-    const token = typeof authorization === 'string' && authorization.startsWith('Bearer ')
-      ? authorization.slice('Bearer '.length).trim()
-      : undefined;
-
-    if (token) {
-      try {
-        const payload = this.jwtService.verify<{ role?: Role }>(token);
-        request.user = payload;
-        return payload.role;
-      } catch {
-        throw new UnauthorizedException('Invalid or expired token');
-      }
-    }
-
-    const roleHeader = request.headers.role;
-    const role = Array.isArray(roleHeader) ? roleHeader[0] : roleHeader;
-    return role?.toLowerCase() as Role | undefined;
+  constructor(private readonly reflector: Reflector, private readonly jwt: JwtService, private readonly users: UserRepository) {}
+  canActivate(context: ExecutionContext) {
+    const req = context.switchToHttp().getRequest();
+    const path = req.path.replace(/\/$/,'');
+    const registration = req.method === 'POST' && ['/auth/login','/sub-admin/login','/super-admin/login','/managers/register','/users'].includes(path);
+    const catalog = req.method === 'GET' && /^(\/(restaurants|tables|timeslots|tableslots|menu|reviews))(\/[^/]+)?$/.test(path) && !path.endsWith('/revenue');
+    const publicLocations = req.method === 'GET' && path.startsWith('/restaurants/locations');
+    const publicVerificationTeams = req.method === 'GET' && path === '/verification/teams';
+    const authorization = req.headers.authorization;
+    let role: Role;
+    if (authorization && !['/auth/login','/sub-admin/login'].includes(path)) {
+      if (!authorization.startsWith('Bearer ')) throw new UnauthorizedException('Invalid authorization.');
+      let payload: {sub:string;role:Role};
+      try { payload = this.jwt.verify(authorization.slice(7)); } catch { throw new UnauthorizedException('Invalid or expired token'); }
+      const account = this.users.findById(payload.sub);
+      if (!account || account.role !== payload.role || account.status !== 'active') throw new UnauthorizedException('Your account is no longer active.');
+      req.user = { sub:account.id, role:account.role }; role = account.role;
+    } else if (registration || catalog || publicLocations || publicVerificationTeams) {
+      role = Role.DINER;
+      req.user = { role, anonymous: true };
+      if (path === '/users' && req.method === 'POST') return true;
+    } else throw new UnauthorizedException('Please sign in to continue.');
+    if (registration || publicLocations || publicVerificationTeams) return true;
+    const required = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY,[context.getHandler(),context.getClass()]);
+    if (!required?.length || role === Role.SUPER_USER || required.includes(role)) return true;
+    throw new ForbiddenException('Your account cannot perform this action.');
   }
 }

@@ -19,7 +19,7 @@ import {
   dataObjectSchema,
   deletedSchema,
 } from 'src/common/swagger/schemas';
-import { CreatePaymentDto, UpdatePaymentDto } from 'src/modules/payments/dto/payments.dto';
+import { CreateAdditionalPaymentDto, CreatePaymentDto, UpdatePaymentDto } from 'src/modules/payments/dto/payments.dto';
 import { PaymentsService } from 'src/modules/payments/payments.service';
 
 @ApiTags('payments')
@@ -56,6 +56,16 @@ export class PaymentsController {
   @ApiBadRequestResponse({ description: 'Invalid payment payload' })
   create(@Body() dto: CreatePaymentDto) {
     return { data: this.paymentsService.create(dto) };
+  }
+
+  @Roles(Role.DINER)
+  @Post('additional')
+  @ApiOperation({ summary: 'Pay an additional table seat deposit' })
+  @ApiBody({ type: CreateAdditionalPaymentDto })
+  @ApiCreatedResponse({ schema: dataObjectSchema })
+  @ApiBadRequestResponse({ description: 'No additional seat payment is due' })
+  createAdditional(@Body() dto: CreateAdditionalPaymentDto) {
+    return { data: this.paymentsService.createAdditional(dto) };
   }
 
   @Roles(Role.DINER, Role.STAFF)

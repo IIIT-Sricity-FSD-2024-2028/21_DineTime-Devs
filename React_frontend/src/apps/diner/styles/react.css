@@ -1,0 +1,343 @@
+/* React-specific elements. Original page styles remain scoped to their page. */
+.diner-app {
+  width: 100%;
+  min-height: 100vh;
+  text-align: left;
+}
+.diner-app.diner-login,
+.diner-app.diner-register,
+.diner-app.diner-search {
+  display: block;
+}
+.diner-app button,
+.diner-app input,
+.diner-app select,
+.diner-app textarea {
+  font: inherit;
+}
+.diner-app button {
+  cursor: pointer;
+}
+.diner-app button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.diner-app a {
+  color: inherit;
+}
+.diner-app a:focus-visible,
+.diner-app button:focus-visible,
+.diner-app input:focus-visible,
+.diner-app select:focus-visible {
+  outline: 3px solid #e67e22;
+  outline-offset: 3px;
+}
+.diner-app .text-button {
+  background: transparent;
+  border: 0;
+  padding: 8px 0;
+  color: var(--primary, #4f6f52);
+}
+.diner-app .auth-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  object-fit: contain;
+}
+.diner-app .stacked-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: var(--shadow-sm);
+}
+.diner-app .stacked-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.1rem;
+  text-decoration: none;
+}
+.diner-app .diner-loading {
+  padding: 48px;
+  text-align: center;
+}
+.diner-app .diner-error {
+  background: #fef2f2;
+  color: #991b1b;
+  padding: 14px;
+  margin: 12px 0;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+}
+.diner-app .diner-success {
+  background: #e8efe9;
+  color: #365139;
+  padding: 14px;
+  margin: 12px 0;
+  border-radius: 8px;
+}
+.diner-app .diner-dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(560px, calc(100vw - 32px));
+  max-height: 90vh;
+  padding: 24px;
+  border: none;
+  border-radius: 16px;
+  background: #fff;
+  color: #2d3748;
+  box-shadow: 0 24px 80px #0005;
+}
+.diner-app .diner-dialog::backdrop {
+  background: #0008;
+}
+.diner-app .diner-dialog .modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.diner-app .diner-dialog .modal-body {
+  padding: 0;
+}
+.diner-app .diner-dialog .modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+.diner-app .diner-dialog .btn-close {
+  border: 0;
+  background: transparent;
+  font-size: 28px;
+}
+.diner-app .diner-dialog .form-control {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+.diner-app .diner-dialog .form-group {
+  display: block;
+  margin: 16px 0;
+}
+.diner-app .diner-dialog .star-btn {
+  border: 0;
+  background: transparent;
+  color: #cbd5e1;
+  font-size: 32px;
+  padding: 4px;
+}
+.diner-app .diner-dialog .star-btn.active {
+  color: #f59e0b;
+}
+.diner-app .diner-location-map {
+  width: 100%;
+  height: 280px;
+  border-radius: 12px;
+  z-index: 1;
+}
+.diner-app .map-placeholder .diner-location-map {
+  height: 100%;
+  min-height: 180px;
+}
+.diner-app .avatar-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.diner-app .footer-links {
+  gap: 24px;
+}
+.diner-app .btn-reserve,
+.diner-app .btn-reserve-main,
+.diner-app .btn-view-details,
+.diner-app .btn-menu,
+.diner-app .btn-reservations,
+.diner-app .btn-explore {
+  text-decoration: none;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.diner-app .btn-reserve,
+.diner-app .btn-reserve-main {
+  width: 100%;
+}
+.diner-app .card-title a,
+.diner-app .header-logo,
+.diner-app .logo-group {
+  text-decoration: none;
+}
+.diner-app .card-img-wrapper {
+  display: block;
+}
+.diner-app .cuisine-card {
+  background: transparent;
+  border: 0;
+  font: inherit;
+}
+.diner-app.diner-browse .filter-dropdown {
+  position: fixed;
+  top: 70px;
+  right: 32px;
+  z-index: 1100;
+  max-height: calc(100vh - 90px);
+  overflow: auto;
+}
+.diner-app .method-header {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  color: inherit;
+}
+.diner-app .method-body .field-group {
+  display: block;
+}
+.diner-app .carousel-track > img {
+  flex: 0 0 100%;
+  width: 100%;
+  min-width: 100%;
+  object-fit: cover;
+}
+.diner-app.diner-menu .main-content {
+  margin-left: 0;
+  width: 100%;
+}
+.diner-app .info-tile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.diner-app .info-tile-label,
+.diner-app .info-tile-value {
+  display: block;
+}
+.diner-app .info-tile-label {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.diner-app .info-tile-value {
+  font-weight: 600;
+}
+.diner-app .table-card {
+  overflow-x: auto;
+}
+.diner-app .notification-item {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+}
+@media (max-width: 768px) {
+  .diner-app.diner-browse .filter-dropdown {
+    left: 16px;
+    right: 16px;
+    width: auto;
+  }
+  .diner-app .modal-actions {
+    flex-wrap: wrap;
+  }
+}
+
+.diner-toast-container {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.diner-toast {
+  pointer-events: auto;
+  background: #ffffff;
+  color: #1e293b;
+  padding: 16px 20px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 300px;
+  max-width: 460px;
+  border-left: 5px solid #2e7d32;
+  animation: dinerToastIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.diner-toast.toast-error {
+  border-left-color: #ef4444;
+}
+
+.diner-toast .toast-icon {
+  color: #2e7d32;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.diner-toast.toast-error .toast-icon {
+  color: #ef4444;
+}
+
+.diner-toast .toast-message {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1e293b;
+  flex: 1;
+  line-height: 1.4;
+}
+
+.diner-toast .toast-close {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  padding: 4px 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
+}
+
+.diner-toast .toast-close:hover {
+  color: #1e293b;
+  background: #f1f5f9;
+}
+
+@keyframes dinerToastIn {
+  from {
+    transform: translateY(24px) scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 600px) {
+  .diner-toast-container {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+  }
+  .diner-toast {
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+

@@ -1,4 +1,5 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req } from '@nestjs/common';
+import { Request } from 'express';
 import {
   ApiBadRequestResponse,
   ApiBody,
@@ -20,6 +21,8 @@ import {
 } from 'src/common/swagger/schemas';
 import {
   CreateTimeSlotDto,
+  ResetSlotLayoutDto,
+  SaveSlotLayoutDto,
   UpdateTimeSlotDto,
 } from 'src/modules/timeslots/dto/timeslots.dto';
 import { TimeslotsService } from 'src/modules/timeslots/timeslots.service';
@@ -39,8 +42,9 @@ export class TimeslotsController {
   findAll(
     @Query('restaurant_id') restaurantId?: string,
     @Query('slot_date') slotDate?: string,
+    @Req() req?: Request,
   ) {
-    return { data: this.timeslotsService.findAll(restaurantId, slotDate) };
+    return { data: this.timeslotsService.findAll(restaurantId, slotDate, (req as Request & { user?: { role?: Role } })?.user?.role === Role.DINER) };
   }
 
   @Roles(Role.DINER, Role.MANAGER, Role.STAFF, Role.SUPER_USER)
@@ -61,6 +65,18 @@ export class TimeslotsController {
   @ApiBadRequestResponse({ description: 'Invalid time slot payload' })
   create(@Body() dto: CreateTimeSlotDto) {
     return { data: this.timeslotsService.create(dto) };
+  }
+
+  @Roles(Role.MANAGER)
+  @Patch(':id/layout/reset')
+  resetLayout(@Param('id') id:string,@Body() dto:ResetSlotLayoutDto) {
+    return {data:this.timeslotsService.resetLayout(id,dto.revision)};
+  }
+
+  @Roles(Role.MANAGER)
+  @Patch(':id/layout')
+  saveLayout(@Param('id') id:string,@Body() dto:SaveSlotLayoutDto) {
+    return {data:this.timeslotsService.saveLayout(id,dto)};
   }
 
   @Roles(Role.MANAGER, Role.SUPER_USER)

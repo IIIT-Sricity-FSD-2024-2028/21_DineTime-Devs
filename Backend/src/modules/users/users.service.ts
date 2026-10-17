@@ -1,8 +1,10 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { hash } from 'bcrypt';
+import { validateLocation } from 'src/common/utils/city.util';
 import { Role } from 'src/common/enums/role.enum';
 import { generateId } from 'src/common/utils/id.util';
 import { CreateUserDto, UpdateUserDto } from 'src/modules/users/dto/users.dto';
+import { RestaurantRepository } from 'src/repositories/restaurant.repository';
 import { SettingsRepository } from 'src/repositories/settings.repository';
 import { UserRepository } from 'src/repositories/user.repository';
 
@@ -11,10 +13,11 @@ export class UsersService {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly settingsRepository: SettingsRepository,
+    private readonly restaurants: RestaurantRepository,
   ) {}
 
-  findAll(actingRole?: Role) {
-    return this.userRepository.findAll().map((user) => this.enrichUser(user, actingRole));
+  findAll(actingRole?: Role, actorId?: string, allowedIds?: string[]) {
+    return this.userRepository.findAll().filter((user) => !allowedIds || allowedIds.includes(user.id)).map((user) => this.enrichUser(user, actingRole));
   }
 
   findOne(id: string, actingRole?: Role) {
@@ -94,6 +97,8 @@ export class UsersService {
   }
 
   async create(dto: CreateUserDto) {
+    dto = validateLocation(dto);
+    if(dto.role===Role.STAFF && !this.restaurants.findById(dto.restaurant_id || '')) throw new BadRequestException('Select a valid restaurant for staff registration.');
     const existing = this.userRepository.findByEmail(dto.email);
     if (existing) {
       throw new BadRequestException('Email already exists');
@@ -110,6 +115,9 @@ export class UsersService {
       created_at: new Date().toISOString(),
       location_id: dto.location_id,
       photo_url: dto.photo_url,
+      city: dto.city || (dto.role === Role.DINER ? 'Bengaluru' : undefined),
+      country: dto.country || 'India', address:dto.address, pincode:dto.pincode,
+      latitude:dto.latitude,longitude:dto.longitude,
     });
 
     if (dto.role === Role.DINER) {
@@ -150,7 +158,7 @@ export class UsersService {
   }
 
   async update(id: string, dto: UpdateUserDto) {
-    const payload = { ...dto };
+    const payload = validateLocation({ ...dto });
     if (payload.password_hash) {
       payload.password_hash = await hash(payload.password_hash, 10);
     }

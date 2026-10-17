@@ -1,0 +1,183 @@
+/* search.css */
+
+.diner-app.diner-search {
+  display: block !important;
+}
+
+.diner-app.diner-search .search-header {
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.diner-app.diner-search .header-container {
+  width: 100%;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.diner-app.diner-search .logo-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-right: 12px;
+}
+
+.diner-app.diner-search .logo-text {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #2d3748;
+  letter-spacing: -0.5px;
+}
+
+.diner-app.diner-search .search-bar-wrapper {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--bg);
+  border-radius: var(--radius-md);
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  transition: all 0.2s;
+  height: 40px;
+}
+
+.diner-app.diner-search .search-bar-wrapper:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+  background: var(--surface);
+}
+
+.diner-app.diner-search .search-icon {
+  width: 16px;
+  height: 16px;
+  opacity: 0.6;
+}
+
+.diner-app.diner-search .search-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: var(--text-main);
+  outline: none;
+}
+
+.diner-app.diner-search .back-btn {
+  background: var(--primary-light);
+  border: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--primary);
+}
+
+.diner-app.diner-search .back-btn:hover {
+  transform: scale(1.05);
+  background-color: var(--primary);
+  color: white;
+}
+
+.diner-app.diner-search .page-container {
+  max-width: 1100px;
+  margin: 32px auto;
+  padding: 0 24px;
+}
+
+.diner-app.diner-search .results-info {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.diner-app.diner-search .restaurant-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.diner-app.diner-search .result-bar {
+  display: flex;
+  align-items: center;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid transparent;
+  border-radius: var(--radius-md);
+  padding: 10px 16px;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s ease;
+}
+
+.diner-app.diner-search .result-bar:hover {
+  background-color: var(--primary-light);
+  border-color: var(--primary);
+  border-left-color: var(--accent);
+  transform: translateX(4px);
+}
+
+.diner-app.diner-search .result-img {
+  width: 48px;
+  height: 48px;
+  border-radius: 4px;
+  object-fit: cover;
+  margin-right: 16px;
+  flex-shrink: 0;
+}
+
+.diner-app.diner-search .result-info {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.diner-app.diner-search .result-name {
+  font-weight: 600;
+  font-size: 1rem;
+  min-width: 180px;
+}
+
+.diner-app.diner-search .result-cuisine {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.diner-app.diner-search .result-meta {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 0.85rem;
+}
+
+.diner-app.diner-search .result-rating {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.diner-app.diner-search .result-distance {
+  color: var(--text-muted);
+}
+
+.diner-app.diner-search .no-results {
+  text-align: center;
+  margin-top: 50px;
+  color: var(--text-muted);
+}
+
+.diner-app.diner-search .hidden {
+  display: none;
+}

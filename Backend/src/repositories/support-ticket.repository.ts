@@ -1,9 +1,10 @@
+import { store } from 'src/common/storage/memory-store';
 import { Injectable } from '@nestjs/common';
 import { SupportTicket, TicketRaiserRole, TicketStatus } from 'src/common/types/schema.types';
 
 @Injectable()
 export class SupportTicketRepository {
-  private readonly tickets: SupportTicket[] = [];
+  private readonly tickets: SupportTicket[] = store.collection<SupportTicket>('tickets');
 
   findAll(): SupportTicket[] {
     return [...this.tickets];
@@ -36,7 +37,11 @@ export class SupportTicketRepository {
       return undefined;
     }
 
-    Object.assign(ticket, payload, { updated_at: new Date().toISOString() });
+    const now=new Date().toISOString();
+    const changed=payload.status && payload.status!==ticket.status;
+    const notes=payload.resolution_notes || (payload.linked_reservation_id ? 'Linked reservation '+payload.linked_reservation_id:payload.linked_restaurant_id ? 'Linked restaurant '+payload.linked_restaurant_id:undefined);
+    if(changed || notes) ticket.history=[...(ticket.history || []),{at:now,status:payload.status || ticket.status,actor_id:payload.assigned_admin_id || ticket.assigned_admin_id,notes}];
+    Object.assign(ticket, payload, { updated_at: now });
     return ticket;
   }
 }

@@ -1,0 +1,305 @@
+:root {
+    --bg-main: #e6dfd1; /* Slight darker cream from the mockup */
+    --bg-card: #ffffff;
+    --btn-primary: #59745b; /* A bit more muted green */
+    --btn-primary-hover: #455d47;
+    --text-dark: #1f2937;
+    --text-muted: #6b7280;
+    --border-light: #f3f4f6;
+    --border-medium: #e5e7eb;
+    --warning-yellow: #f4d06a;
+    --warning-yellow-bg: #fdf5e2;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    background-color: var(--bg-main);
+    color: var(--text-dark);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+}
+
+/* ─── Layout ───────────────────────────────────────── */
+.request-layout {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 60px 40px;
+    gap: 80px;
+    align-items: center;
+}
+
+/* ─── Left Section ─────────────────────────────────── */
+.request-info-section {
+    flex: 1;
+}
+
+.hero-title {
+    font-size: 2.8rem;
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 20px;
+    letter-spacing: -0.02em;
+    color: #1a1a1a;
+}
+
+.hero-desc {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    font-weight: 400;
+    line-height: 1.5;
+    margin-bottom: 50px;
+    max-width: 400px;
+}
+
+.status-steps {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+.status-steps li {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 1rem;
+    color: #4b5563;
+}
+.step-icon {
+    font-size: 1.3rem;
+    color: var(--btn-primary);
+    width: 24px;
+    text-align: center;
+}
+
+/* ─── Right Card Section ───────────────────────────── */
+.request-card-section {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.status-card {
+    background: var(--bg-card);
+    width: 100%;
+    max-width: 500px;
+    border-radius: 20px;
+    padding: 50px 48px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    text-align: center;
+    position: relative;
+}
+
+.status-icon-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 30px;
+}
+
+.status-icon-ring {
+    width: 70px;
+    height: 70px;
+    background-color: var(--warning-yellow-bg);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
+    color: #df9e2c; /* deeper amber for the icon */
+}
+
+.status-card h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 16px;
+    letter-spacing: -0.01em;
+}
+
+.status-card p {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 24px;
+}
+
+/* Badge */
+.badge-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 40px;
+}
+.badge-pending {
+    background-color: var(--warning-yellow);
+    color: #8c6012;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 8px 16px;
+    border-radius: 6px;
+}
+
+/* Actions */
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 30px;
+}
+
+.btn-primary {
+    background: var(--btn-primary);
+    color: white;
+    font-weight: 500;
+    font-size: 1rem;
+    border: none;
+    border-radius: 8px;
+    padding: 14px;
+    cursor: pointer;
+    transition: background 0.2s;
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+.btn-primary:hover { background: var(--btn-primary-hover); }
+
+.btn-outline {
+    background: transparent;
+    color: var(--text-dark);
+    font-weight: 600;
+    font-size: 1rem;
+    border: 1.5px solid var(--border-medium);
+    border-radius: 8px;
+    padding: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+    text-decoration: none;
+    display: block;
+}
+.btn-outline:hover { 
+    background: #f9fafb; 
+    border-color: #d1d5db; 
+}
+
+.footer-note {
+    font-size: 0.8rem !important;
+    color: #9ca3af !important;
+    margin-bottom: 0 !important;
+}
+
+/* ─── Responsive ───────────────────────────────────── */
+@media (max-width: 900px) {
+    .request-layout { 
+        flex-direction: column; 
+        gap: 50px;
+        padding: 40px 24px;
+    }
+    
+    .hero-title { font-size: 2.2rem; }
+    
+    .request-card-section {
+        justify-content: center;
+    }
+    .status-card {
+        padding: 40px 32px;
+    }
+}
+
+/* ─── Toast Notifications ────────────────────────── */
+.toast-container {
+    position: fixed !important;
+    top: 24px !important;
+    right: 24px !important;
+    z-index: 99999 !important;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    pointer-events: none;
+    max-width: 420px;
+    width: calc(100% - 48px);
+}
+
+.toast-notification {
+    background: #1e293b;
+    color: #f8fafc;
+    padding: 14px 18px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    font-weight: 500;
+    font-size: 0.92rem;
+    line-height: 1.4;
+    border-left: 4px solid #4ade80;
+    pointer-events: auto;
+    animation: toastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.toast-notification.warning {
+    border-left-color: #f59e0b;
+}
+
+.toast-notification.error {
+    border-left-color: #ef4444;
+}
+
+.toast-notification i {
+    font-size: 1.15rem;
+    color: #4ade80;
+    flex-shrink: 0;
+}
+
+.toast-notification.warning i {
+    color: #f59e0b;
+}
+
+.toast-notification.error i {
+    color: #ef4444;
+}
+
+.toast-message {
+    flex: 1;
+}
+
+.toast-dismiss {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s, background 0.15s;
+    margin-left: 4px;
+}
+
+.toast-dismiss:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+@keyframes toastSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-16px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}

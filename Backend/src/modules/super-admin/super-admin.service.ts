@@ -24,11 +24,11 @@ export class SuperAdminService {
   async login(dto: SuperAdminLoginDto) {
     const user = this.userRepository.findByEmail(dto.email.toLowerCase());
     if (!user || user.role !== Role.SUPER_USER) {
-      throw new UnauthorizedException('Invalid super admin credentials');
+      throw new UnauthorizedException('Invalid credentials');
     }
 
     if (!(await compare(dto.password, user.password_hash))) {
-      throw new UnauthorizedException('Invalid super admin credentials');
+      throw new UnauthorizedException('Invalid credentials');
     }
 
     if (user.status !== 'active') {
