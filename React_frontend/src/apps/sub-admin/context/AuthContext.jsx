@@ -1,12 +1,12 @@
-import { createContext, useContext, useMemo, useState } from 'react';
-import { apiRequest } from '../api/client.js';
-import { bindSession, getTabId, readBoundSession } from '../../../app/session.js';
+import { createContext, useState } from "react";
+import { apiRequest } from "../api/client.js";
+import { bindSession, getTabId, readBoundSession } from "../../../app/session.js";
 
-const AuthContext = createContext(null);
+export const AuthContext = createContext(null);
 
 function readProfile() {
   try {
-    return readBoundSession('subadmin_profile') || {};
+    return readBoundSession("subadmin_profile") || {};
   } catch (_error) {
     return {};
   }
@@ -15,13 +15,13 @@ function readProfile() {
 export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(readProfile);
   const [isAuthenticated, setIsAuthenticated] = useState(
-    sessionStorage.getItem('subadmin_auth_status') === 'true' &&
-    sessionStorage.getItem('subadmin_tab_id') === getTabId(),
+    sessionStorage.getItem("subadmin_auth_status") === "true" &&
+      sessionStorage.getItem("subadmin_tab_id") === getTabId(),
   );
 
   async function login({ team, email, password }) {
-    const payload = await apiRequest('/sub-admin/login', {
-      method: 'POST',
+    const payload = await apiRequest("/sub-admin/login", {
+      method: "POST",
       body: JSON.stringify({ team, email, password }),
     });
     const account = payload?.data;
@@ -34,10 +34,10 @@ export function AuthProvider({ children }) {
       location_id: account.location_id,
     };
 
-    sessionStorage.setItem('subadmin_auth_status', 'true');
-    sessionStorage.setItem('subadmin_access_token', account.access_token || '');
-    sessionStorage.setItem('subadmin_tab_id', getTabId());
-    sessionStorage.setItem('subadmin_profile', JSON.stringify(bindSession(nextProfile)));
+    sessionStorage.setItem("subadmin_auth_status", "true");
+    sessionStorage.setItem("subadmin_access_token", account.access_token || "");
+    sessionStorage.setItem("subadmin_tab_id", getTabId());
+    sessionStorage.setItem("subadmin_profile", JSON.stringify(bindSession(nextProfile)));
     setProfile(nextProfile);
     setIsAuthenticated(true);
     return nextProfile;
@@ -47,20 +47,17 @@ export function AuthProvider({ children }) {
     sessionStorage.clear();
     setProfile({});
     setIsAuthenticated(false);
-    window.history.pushState({}, '', '/sub-admin/login');
+    window.history.pushState({}, "", "/login");
+    window.dispatchEvent(new PopStateEvent("popstate"));
   }
 
-  const value = useMemo(() => ({
+  const value = {
     profile,
     isAuthenticated,
     login,
     logout,
-    adminId: profile?.id || '',
-  }), [profile, isAuthenticated]);
+    adminId: profile?.id || "",
+  };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth() {
-  return useContext(AuthContext);
 }
