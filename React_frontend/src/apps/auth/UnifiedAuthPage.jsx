@@ -112,15 +112,8 @@ export default function UnifiedAuthPage() {
       const { password_hash, ...safeUser } = user;
 
       if (user.role === "diner") {
-        sessionStorage.setItem(
-          "dinetime_react_diner_session",
-          JSON.stringify(
-            bindSession({
-              access_token: auth.access_token,
-              user: safeUser,
-            }),
-          ),
-        );
+        const { dinerApi } = await import("../diner/api/dinerApi.js");
+        dinerApi.acceptLogin(auth);
       } else if (user.role === "manager") {
         sessionStorage.setItem(
           "manager_session_v1",
