@@ -1,4 +1,4 @@
-const TAB_KEY = 'dinetime_tab_id';
+const TAB_KEY = "dinetime_tab_id";
 
 export function getTabId() {
   if (!window.name) {
@@ -13,7 +13,7 @@ export function bindSession(session) {
 
 export function readBoundSession(key) {
   try {
-    const session = JSON.parse(sessionStorage.getItem(key) || 'null');
+    const session = JSON.parse(sessionStorage.getItem(key) || "null");
     if (!session || session.tab_id !== getTabId()) {
       if (session) sessionStorage.removeItem(key);
       return null;

@@ -4,6 +4,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "test": "node --test --test-timeout=15000 scripts/*.test.mjs",
+    "format": "prettier --write \"src/**/*.{js,jsx}\" \"scripts/**/*.mjs\" \"build/**/*.js\" vite.config.js",
+    "format:check": "prettier --check \"src/**/*.{js,jsx}\" \"scripts/**/*.mjs\" \"build/**/*.js\" vite.config.js",
     "dev": "vite --host 127.0.0.1 --port 5173",
     "build": "vite build --configLoader runner",
     "preview": "vite preview --host 127.0.0.1 --port 4173"
@@ -15,5 +18,8 @@
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "vite": "^7.1.5"
+  },
+  "devDependencies": {
+    "prettier": "3.6.2"
   }
 }
