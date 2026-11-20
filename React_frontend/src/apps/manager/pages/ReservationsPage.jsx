@@ -2,7 +2,7 @@ import { indiaToday } from "../../../app/indiaTime.js";
 import { createAction } from "../../../app/actions.js";
 import { useState, useContext } from "react";
 import ManagerLayout from "../components/ManagerLayout";
-import { ManagerContext } from "../context/ManagerContext.jsx";
+import { useManager } from "../../../store/hooks/useManager.js";
 import { ToastContext } from "../context/ToastContext.jsx";
 
 function todayIso() {
@@ -18,7 +18,7 @@ const stats = [
 ];
 
 export default function ReservationsPage() {
-  const { data, storage, refresh, navigate, params } = useContext(ManagerContext);
+  const { data, storage, refresh, navigate, params } = useManager();
   const { showToast } = useContext(ToastContext);
   const [query, setQuery] = useState("");
   const [date, setDate] = useState(params?.active === "true" ? "" : todayIso());

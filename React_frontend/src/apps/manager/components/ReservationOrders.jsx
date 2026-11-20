@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useResource } from "../../../store/hooks/useResource.js";
 
 const money = (amount) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(
@@ -6,39 +6,13 @@ const money = (amount) =>
   );
 
 export default function ReservationOrders({ reservationId, storage }) {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [attempt, setAttempt] = useState(0);
-  useEffect(() => {
-    let active = true;
-    let inFlight = false;
-    async function load() {
-      if (inFlight) return;
-      inFlight = true;
-      try {
-        const data = await storage.getReservationOrders(reservationId);
-        if (active) {
-          setOrders(data);
-          setError("");
-        }
-      } catch (cause) {
-        if (active) setError(cause.message || "Unable to load orders.");
-      } finally {
-        inFlight = false;
-        if (active) setLoading(false);
-      }
-    }
-    setLoading(true);
-    load();
-    const timer = window.setInterval(load, 15000);
-    window.addEventListener("focus", load);
-    return () => {
-      active = false;
-      window.clearInterval(timer);
-      window.removeEventListener("focus", load);
-    };
-  }, [storage, reservationId, attempt]);
+  const query = useResource(`/orders?reservation_id=${encodeURIComponent(reservationId)}`, {
+    pollingInterval: 15000,
+    skipPollingIfUnfocused: true,
+  });
+  const orders = query.currentData || [];
+  const loading = query.isFetching;
+  const error = query.error?.message || "";
   return (
     <section className="reservation-orders" aria-label="Diner orders">
       <div className="reservation-orders-heading">
@@ -47,7 +21,7 @@ export default function ReservationOrders({ reservationId, storage }) {
           type="button"
           className="btn btn-small"
           disabled={loading}
-          onClick={() => setAttempt((value) => value + 1)}
+          onClick={() => query.refetch()}
         >
           Refresh Orders
         </button>

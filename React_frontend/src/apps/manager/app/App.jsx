@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { readBoundSession } from "../../../app/session.js";
-import { ManagerProvider } from "../context/ManagerContext.jsx";
+import { useAuth } from "../../../store/hooks/useAuth.js";
+import "../utils/confirm.js";
+import { NavigationContext } from "../../../app/NavigationContext.jsx";
 import { ToastProvider } from "../context/ToastContext.jsx";
 import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
@@ -80,8 +81,7 @@ export default function App() {
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
 
-  const session = readBoundSession("manager_session_v1");
-  const isAuthenticated = !!session?.email && !!session?.access_token;
+  const { isAuthenticated } = useAuth("manager");
 
   useEffect(() => {
     if (!isAuthenticated && !publicPages.has(currentPage)) navigate("login");
@@ -139,14 +139,9 @@ export default function App() {
 
   return (
     <ToastProvider>
-      <ManagerProvider
-        key={`${session?.email || "guest"}:${session?.access_token || ""}`}
-        navigate={navigate}
-        currentPage={page}
-        params={params}
-      >
+      <NavigationContext.Provider value={{ navigate, currentPage: page, params }}>
         {content}
-      </ManagerProvider>
+      </NavigationContext.Provider>
     </ToastProvider>
   );
 }
