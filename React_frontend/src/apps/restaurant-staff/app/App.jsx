@@ -1,8 +1,8 @@
 // Restaurant-staff sub-router — mirrors diner/app/App.jsx structure.
 // Mounted under /restaurant-staff/* by the root src/app/App.jsx.
 import { useEffect, useState } from "react";
-import { staffApi } from "../api/staffApi.js";
-import { StaffContext } from "../context/StaffContext.js";
+import { useStaff } from "../../../store/hooks/useStaff.js";
+import { NavigationContext } from "../../../app/NavigationContext.jsx";
 import LoginPage from "../pages/LoginPage.jsx";
 import RegisterPage from "../pages/RegisterPage.jsx";
 import RequestPage from "../pages/RequestPage.jsx";
@@ -29,8 +29,7 @@ function readRoute() {
 export default function App() {
   const [currentPage, setCurrentPage] = useState(() => readRoute().page);
   const [params, setParams] = useState(() => readRoute().params);
-  const [data, setData] = useState(staffApi.getSnapshot());
-  const user = data.user;
+  const { user } = useStaff();
 
   function navigate(page, nextParams = {}) {
     if (page === "login") {
@@ -55,10 +54,6 @@ export default function App() {
     };
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
-  }, []);
-
-  useEffect(() => {
-    return staffApi.subscribe(() => setData(staffApi.getSnapshot()));
   }, []);
 
   useEffect(() => {
@@ -100,13 +95,11 @@ export default function App() {
 
   return (
     <StaffSurface page={page}>
-      <StaffContext.Provider
-        value={{ currentPage: page, params, navigate, ...data, api: staffApi }}
-      >
+      <NavigationContext.Provider value={{ currentPage: page, params, navigate }}>
         <div className={`staff-app staff-${page}`} key={page}>
           {content}
         </div>
-      </StaffContext.Provider>
+      </NavigationContext.Provider>
     </StaffSurface>
   );
 }

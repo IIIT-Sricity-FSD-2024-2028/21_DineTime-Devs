@@ -1,5 +1,5 @@
-import { useEffect, useContext } from "react";
-import { StaffContext } from "../context/StaffContext.js";
+import { useEffect } from "react";
+import { useStaff } from "../../../store/hooks/useStaff.js";
 import { image } from "../utils/images.js";
 
 /** Icon wrapper — uses FontAwesome class names just like the original HTML. */
@@ -9,7 +9,7 @@ export function Icon({ name, className = "" }) {
 
 /** Top navigation bar used on dashboard, check-in, and profile pages. */
 export function TopNav({ subtitle, showNotifications, onNotifications, showLogout = true }) {
-  const { navigate, user, api } = useContext(StaffContext);
+  const { navigate, user, api } = useStaff();
   return (
     <header className="top-nav">
       <div className="nav-inner">

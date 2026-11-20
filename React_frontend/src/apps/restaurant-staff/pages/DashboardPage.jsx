@@ -1,10 +1,10 @@
-import { useState, useEffect, useContext } from "react";
-import { StaffContext } from "../context/StaffContext.js";
+import { useState, useEffect } from "react";
+import { useStaff } from "../../../store/hooks/useStaff.js";
 import { ErrorMsg, Icon, Modal, TopNav } from "../components/StaffUI.jsx";
 import { toIsoDate, tableStatusLabel } from "../utils/format.js";
 
 export default function DashboardPage() {
-  const { navigate, api, tables, slots, activeSlotId, loading, error } = useContext(StaffContext);
+  const { navigate, api, tables, slots, activeSlotId, loading, error } = useStaff();
   const [currentDate, setCurrentDate] = useState(() => toIsoDate());
   const [slotId, setSlotId] = useState("");
   const [filter, setFilter] = useState("All");
@@ -17,7 +17,7 @@ export default function DashboardPage() {
 
   // Load data for the selected date
   useEffect(() => {
-    api.refresh(currentDate, slotId);
+    api.refresh(currentDate, slotId).catch(() => {});
   }, [currentDate, slotId]);
 
   const total = tables.length;
@@ -179,7 +179,13 @@ export default function DashboardPage() {
             </div>
 
             {loading ? (
-              <div style={{ padding: "40px", textAlign: "center", color: "#6b7280" }}>
+              <div
+                style={{
+                  padding: "40px",
+                  textAlign: "center",
+                  color: "#6b7280",
+                }}
+              >
                 Loading floor map...
               </div>
             ) : (
