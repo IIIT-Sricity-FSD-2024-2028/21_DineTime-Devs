@@ -1,23 +1,7 @@
 import { useState } from "react";
-import { bindSession, getTabId } from "../../app/session.js";
-import { requireApiBase } from "../manager/api/config.js";
+import { useAuth } from "../../store/hooks/useAuth.js";
 import heroImage from "../landing/images/restaurant-interior-hero.jpg";
 import "./unified-auth.css";
-
-const SESSION_KEYS = [
-  "dinetime_react_diner_session",
-  "manager_session_v1",
-  "manager_backend_ids_v1",
-  "dinetime_react_staff_session",
-  "subadmin_auth_status",
-  "subadmin_access_token",
-  "subadmin_tab_id",
-  "subadmin_profile",
-  "super_auth_status",
-  "super_access_token",
-  "super_tab_id",
-  "super_admin_profile",
-];
 
 function navigate(path) {
   window.history.pushState({}, "", path);
@@ -34,56 +18,8 @@ function goToRole(role) {
   navigate(destinations[role]);
 }
 
-async function readPayload(response) {
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    const message = payload?.message;
-    if (
-      response.status === 401 &&
-      /invalid.*credential|invalid.*password|invalid.*email/i.test(String(message))
-    ) {
-      throw new Error("Invalid credentials");
-    }
-    throw new Error(Array.isArray(message) ? message.join(", ") : message || "Unable to sign in.");
-  }
-  return payload?.data ?? payload;
-}
-
-async function postLogin(base, path, credentials) {
-  const response = await fetch(`${base}${path}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(credentials),
-  });
-  return readPayload(response);
-}
-
-async function authenticate(base, credentials) {
-  try {
-    const auth = await postLogin(base, "/auth/login", credentials);
-    if (auth?.user?.role && auth?.access_token) return auth;
-  } catch (_error) {
-    // Admin roles use separate API login endpoints.
-  }
-  try {
-    const user = await postLogin(base, "/super-admin/login", credentials);
-    if (user?.access_token) return { access_token: user.access_token, user };
-  } catch (_error) {
-    // Sub-admin login also requires its team name.
-  }
-  let lastError;
-  for (const team of ["support", "finance", "verification"]) {
-    try {
-      const user = await postLogin(base, "/sub-admin/login", { ...credentials, team });
-      if (user?.access_token) return { access_token: user.access_token, user: { ...user, team } };
-    } catch (error) {
-      lastError = error;
-    }
-  }
-  throw lastError || new Error("Invalid credentials");
-}
-
 export default function UnifiedAuthPage() {
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -95,107 +31,10 @@ export default function UnifiedAuthPage() {
     setError("");
     setBusy(true);
     try {
-      const base = requireApiBase();
-      const auth = await authenticate(base, { email: email.trim().toLowerCase(), password });
-      const user = auth?.user;
-      if (!user?.role || !auth?.access_token)
-        throw new Error("The server returned an incomplete login session.");
-      if (user.status !== "active") {
-        throw new Error(
-          user.role === "manager"
-            ? "Your manager account is awaiting verification."
-            : "Your account is not active yet.",
-        );
-      }
-
-      SESSION_KEYS.forEach((key) => sessionStorage.removeItem(key));
-      const { password_hash, ...safeUser } = user;
-
-      if (user.role === "diner") {
-        const { dinerApi } = await import("../diner/api/dinerApi.js");
-        dinerApi.acceptLogin(auth);
-      } else if (user.role === "manager") {
-        sessionStorage.setItem(
-          "manager_session_v1",
-          JSON.stringify(
-            bindSession({
-              email: safeUser.email,
-              access_token: auth.access_token,
-            }),
-          ),
-        );
-      } else if (user.role === "staff") {
-        const headers = {
-          role: "staff",
-          Authorization: `Bearer ${auth.access_token}`,
-        };
-        const [profileResponse, restaurantsResponse] = await Promise.all([
-          fetch(`${base}/users/${encodeURIComponent(user.id)}`, { headers }),
-          fetch(`${base}/restaurants`, { headers }),
-        ]);
-        const [profile, restaurants] = await Promise.all([
-          readPayload(profileResponse),
-          readPayload(restaurantsResponse),
-        ]);
-        const restaurantId = profile?.restaurant_id;
-        const restaurant = (Array.isArray(restaurants) ? restaurants : []).find(
-          (item) => item.id === restaurantId,
-        );
-        if (!restaurantId || !restaurant)
-          throw new Error("This staff account is not assigned to an active restaurant.");
-        sessionStorage.setItem(
-          "dinetime_react_staff_session",
-          JSON.stringify(
-            bindSession({
-              access_token: auth.access_token,
-              user: { ...safeUser, restaurantId, restaurantName: restaurant.name },
-            }),
-          ),
-        );
-      } else if (user.role === "super_user") {
-        sessionStorage.setItem("super_auth_status", "true");
-        sessionStorage.setItem("super_access_token", auth.access_token);
-        sessionStorage.setItem("super_tab_id", getTabId());
-        sessionStorage.setItem(
-          "super_admin_profile",
-          JSON.stringify(
-            bindSession({
-              id: safeUser.id,
-              name: safeUser.name,
-              email: safeUser.email,
-              role: safeUser.role,
-            }),
-          ),
-        );
-        goToRole("superAdmin");
-        return;
-      } else if (["support_admin", "finance_admin", "verification_admin"].includes(user.role)) {
-        const team =
-          user.team ||
-          {
-            support_admin: "support",
-            finance_admin: "finance",
-            verification_admin: "verification",
-          }[user.role];
-        const profile = {
-          id: safeUser.id,
-          name: safeUser.name,
-          email: safeUser.email,
-          role: safeUser.role,
-          team,
-          location_id: safeUser.location_id,
-        };
-        sessionStorage.setItem("subadmin_auth_status", "true");
-        sessionStorage.setItem("subadmin_access_token", auth.access_token);
-        sessionStorage.setItem("subadmin_tab_id", getTabId());
-        sessionStorage.setItem("subadmin_profile", JSON.stringify(bindSession(profile)));
-        navigate(`/sub-admin/${team}-dashboard`);
-        return;
-      } else {
-        throw new Error("This account type cannot use this sign-in page.");
-      }
-
-      goToRole(user.role);
+      const user = await login(email, password);
+      if (user.resumeBooking) navigate("/diner/payment_making");
+      else if (user.team) navigate(`/sub-admin/${user.team}-dashboard`);
+      else goToRole(user.role === "super_user" ? "superAdmin" : user.role);
     } catch (cause) {
       setError(cause.message || "Unable to sign in. Please try again.");
     } finally {

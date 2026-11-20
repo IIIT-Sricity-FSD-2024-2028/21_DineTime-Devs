@@ -9,14 +9,17 @@
     "format:check": "prettier --check \"src/**/*.{js,jsx}\" \"scripts/**/*.mjs\" \"build/**/*.js\" vite.config.js",
     "dev": "vite --host 127.0.0.1 --port 5173",
     "build": "vite build --configLoader runner",
-    "preview": "vite preview --host 127.0.0.1 --port 4173"
+    "preview": "vite preview --host 127.0.0.1 --port 4173",
+    "test:api": "node scripts/redux-api-smoke.mjs"
   },
   "dependencies": {
+    "@reduxjs/toolkit": "^2.14.0",
     "@vitejs/plugin-react": "^5.0.4",
     "leaflet": "^1.9.4",
     "qrcode": "^1.5.4",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "react-redux": "^9.3.1",
     "vite": "^7.1.5"
   },
   "devDependencies": {
