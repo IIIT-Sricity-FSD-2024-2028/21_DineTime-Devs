@@ -1,6 +1,6 @@
 import { indiaTime } from "../../../app/indiaTime.js";
-import { useEffect, useState, useContext } from "react";
-import { StaffContext } from "../context/StaffContext.js";
+import { useEffect, useState } from "react";
+import { useStaff } from "../../../store/hooks/useStaff.js";
 import { ConfirmModal, ErrorMsg, Icon, Modal, Toast, TopNav } from "../components/StaffUI.jsx";
 import { timeLabel, toIsoDate } from "../utils/format.js";
 
@@ -11,7 +11,7 @@ function currentTime() {
 }
 
 export default function CheckInPage() {
-  const { navigate, api, reservations, allTables, loading, error } = useContext(StaffContext);
+  const { navigate, api, reservations, allTables, loading, error } = useStaff();
   const [currentDate, setCurrentDate] = useState(() => toIsoDate());
   const [timeFilter, setTimeFilter] = useState("");
   const [search, setSearch] = useState("");
@@ -23,9 +23,7 @@ export default function CheckInPage() {
   const [walkinData, setWalkinData] = useState(emptyWalkIn);
 
   useEffect(() => {
-    api.refresh(currentDate);
-    const timer = window.setInterval(() => api.refresh(currentDate), 15000);
-    return () => window.clearInterval(timer);
+    api.refresh(currentDate).catch(() => {});
   }, [api, currentDate]);
 
   const dateReservations = reservations.filter((booking) => booking.date === currentDate);
@@ -372,7 +370,10 @@ export default function CheckInPage() {
                   required
                   value={walkinData.phone}
                   onChange={(event) =>
-                    setWalkinData({ ...walkinData, phone: event.target.value.replace(/\D/g, "") })
+                    setWalkinData({
+                      ...walkinData,
+                      phone: event.target.value.replace(/\D/g, ""),
+                    })
                   }
                 />
               </div>
@@ -405,7 +406,10 @@ export default function CheckInPage() {
                   required
                   value={walkinData.tableId}
                   onChange={(event) =>
-                    setWalkinData({ ...walkinData, tableId: event.target.value })
+                    setWalkinData({
+                      ...walkinData,
+                      tableId: event.target.value,
+                    })
                   }
                 >
                   <option value="">Select Table...</option>

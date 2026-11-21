@@ -1,9 +1,9 @@
-import { useState, useContext } from "react";
-import { StaffContext } from "../context/StaffContext.js";
+import { useState } from "react";
+import { useStaff } from "../../../store/hooks/useStaff.js";
 import { Icon, Toast } from "../components/StaffUI.jsx";
 
 export default function RequestPage() {
-  const { navigate } = useContext(StaffContext);
+  const { navigate } = useStaff();
   const [showToast, setShowToast] = useState(false);
 
   return (
