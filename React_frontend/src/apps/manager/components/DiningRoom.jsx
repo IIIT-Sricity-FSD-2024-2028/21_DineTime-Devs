@@ -3,7 +3,7 @@ import { createAction } from "../../../app/actions.js";
 import { indiaToday, isPastSlot } from "../../../app/indiaTime.js";
 import ManagerLayout from "./ManagerLayout.jsx";
 import SessionModal from "./SessionModal.jsx";
-import { ManagerContext } from "../context/ManagerContext.jsx";
+import { useManager } from "../../../store/hooks/useManager.js";
 import { ToastContext } from "../context/ToastContext.jsx";
 import { arrangeLayout } from "../utils/sessions.js";
 import "../styles/service-planner.css";
@@ -135,7 +135,7 @@ function TableBoxes({
 }
 
 export default function DiningRoom() {
-  const { data, storage, refresh, ready, params } = useContext(ManagerContext);
+  const { data, storage, refresh, ready, params } = useManager();
   const { showToast } = useContext(ToastContext);
   const today = indiaToday();
   const dates = rollingDates(today);

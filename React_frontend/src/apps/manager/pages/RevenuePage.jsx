@@ -1,37 +1,20 @@
-import { useEffect, useState, useContext } from "react";
+import { useResource } from "../../../store/hooks/useResource.js";
 import ManagerLayout from "../components/ManagerLayout";
-import { ManagerContext } from "../context/ManagerContext.jsx";
+import { useManager } from "../../../store/hooks/useManager.js";
 
 export default function RevenuePage() {
-  const { storage, navigate, data } = useContext(ManagerContext);
-  const [error, setError] = useState("");
-  const [revenue, setRevenue] = useState({
+  const { storage, navigate, data } = useManager();
+  const { restaurantId, managerId } = data.ids || {};
+  const revenueQuery = useResource(
+    `/restaurants/${restaurantId}/revenue?manager_id=${encodeURIComponent(managerId || "")}`,
+    { skip: !restaurantId || !managerId },
+  );
+  const revenue = revenueQuery.currentData || {
     pending_payout: 0,
     paid_by_platform: 0,
     payments: [],
-  });
-  useEffect(() => {
-    let active = true;
-    const load = async () => {
-      const ids = storage._getIds();
-      if (!ids.restaurantId || !ids.managerId) return;
-      try {
-        const response = await storage._request(
-          `/restaurants/${ids.restaurantId}/revenue?manager_id=${encodeURIComponent(ids.managerId)}`,
-          { headers: storage._headers("manager") },
-        );
-        if (active) setRevenue(response?.data || {});
-      } catch (cause) {
-        if (active) setError(cause.message);
-      }
-    };
-    load();
-    window.addEventListener("focus", load);
-    return () => {
-      active = false;
-      window.removeEventListener("focus", load);
-    };
-  }, [storage, data.restaurant?.id]);
+  };
+  const error = revenueQuery.error?.message || "";
   const settledPayments = (revenue.payments || []).filter(
     (payment) => payment.settled_at && payment.status !== "pending_payout",
   );
