@@ -1,19 +1,19 @@
 import "./styles.css";
-import { AuthProvider, AuthContext } from "../context/AuthContext.jsx";
+import { useAuth } from "../../../store/hooks/useAuth.js";
 import { ToastProvider } from "../context/ToastContext.jsx";
 import { LoginPage } from "../pages/LoginPage.jsx";
 import { SupportDashboard } from "../pages/support/SupportDashboard.jsx";
 import { FinanceDashboard } from "../pages/finance/FinanceDashboard.jsx";
 import { VerificationDashboard } from "../pages/verification/VerificationDashboard.jsx";
 
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useState } from "react";
 
 function getInitialPage() {
   return window.location.pathname.split("/").pop() || "login";
 }
 
 function AppBody() {
-  const { isAuthenticated, profile } = useContext(AuthContext);
+  const { isAuthenticated, profile } = useAuth("sub-admin");
   const [currentPage, setCurrentPage] = useState(getInitialPage);
 
   useEffect(() => {
@@ -48,9 +48,7 @@ function AppBody() {
 export function App() {
   return (
     <ToastProvider>
-      <AuthProvider>
-        <AppBody />
-      </AuthProvider>
+      <AppBody />
     </ToastProvider>
   );
 }
