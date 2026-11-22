@@ -1,10 +1,13 @@
+import { useFinance } from "../../../../store/hooks/useFinance.js";
+import { useActions } from "../../../../store/hooks/useActions.js";
+import { createFinanceActions } from "../../../../store/actions/financeActions.js";
 import { useEffect, useState, useContext } from "react";
-import { apiRequest } from "../../api/client.js";
+import { useApiRequest, useResource } from "../../../../store/hooks/useResource.js";
 import { AdminLayout } from "../../components/AdminLayout.jsx";
 import { DataTable } from "../../components/DataTable.jsx";
 import { Modal } from "../../components/Modal.jsx";
 import { StatusBadge } from "../../components/StatusBadge.jsx";
-import { AuthContext } from "../../context/AuthContext.jsx";
+import { useAuth } from "../../../../store/hooks/useAuth.js";
 import { ToastContext } from "../../context/ToastContext.jsx";
 import { formatDate, money } from "../../utils/format.js";
 import { createAction } from "../../../../app/actions.js";
@@ -16,19 +19,11 @@ function isReviewOnly(ticket) {
 }
 
 export function FinanceDashboard() {
-  const { profile, adminId } = useContext(AuthContext);
+  const apiRequest = useApiRequest();
+  const { profile, adminId } = useAuth("sub-admin");
   const { showToast } = useContext(ToastContext);
-  const [state, setState] = useState({
-    noShows: [],
-    refunds: [],
-    payouts: [],
-    pendingPayments: [],
-    revenue: null,
-    audit: [],
-    analytics: null,
-    recentPayments: [],
-    topRestaurants: [],
-  });
+  const { data, refetch, error: queryError } = useFinance();
+  const actions = useActions(createFinanceActions);
   const [filters, setFilters] = useState({
     dashboard: "",
     refunds: "",
@@ -38,69 +33,38 @@ export function FinanceDashboard() {
     audit: "",
     auditStatus: "",
   });
-  const [current, setCurrent] = useState(null);
+  const [currentId, setCurrentId] = useState(null);
+  const detailQuery = useResource(`/finance/refunds/${currentId}`, {
+    skip: !currentId,
+  });
+  const current = detailQuery.currentData
+    ? withRefundAmounts(detailQuery.currentData, data.audit)
+    : null;
   const [notes, setNotes] = useState("");
   const [refundBusy, setRefundBusy] = useState(false);
 
-  async function loadAll(auditStatus = filters.auditStatus) {
-    const [
-      refundsRes,
-      payoutsRes,
-      pendingRes,
-      revenueRes,
-      auditRes,
-      analyticsRes,
-      recentRes,
-      topRes,
-      noShowsRes,
-    ] = await Promise.all([
-      apiRequest("/finance/refunds", {}, "finance_admin"),
-      apiRequest("/finance/payouts", {}, "finance_admin"),
-      apiRequest("/finance/payouts/pending-payments", {}, "finance_admin"),
-      apiRequest("/finance/revenue", {}, "finance_admin"),
-      apiRequest("/finance/refund-audit", {}, "finance_admin"),
-      apiRequest("/finance/analytics", {}, "finance_admin"),
-      apiRequest("/finance/payments/recent?limit=10", {}, "finance_admin"),
-      apiRequest("/finance/payments/top-restaurants?limit=5", {}, "finance_admin"),
-      apiRequest("/finance/no-shows", {}, "finance_admin"),
-    ]);
-    setState({
-      refunds: (refundsRes?.data || []).map((ticket) =>
-        withRefundAmounts(ticket, auditRes?.data || []),
-      ),
-      noShows: noShowsRes?.data || [],
-      payouts: payoutsRes?.data || [],
-      pendingPayments: pendingRes?.data || [],
-      revenue: revenueRes?.data || null,
-      audit: (auditRes?.data || []).filter(
-        (payment) => !auditStatus || payment.status === auditStatus,
-      ),
-      analytics: analyticsRes?.data || null,
-      recentPayments: recentRes?.data || [],
-      topRestaurants: topRes?.data || [],
-    });
-  }
-
+  const state = {
+    ...data,
+    audit: data.audit.filter(
+      (payment) => !filters.auditStatus || payment.status === filters.auditStatus,
+    ),
+  };
+  const loadAll = () => refetch();
   useEffect(() => {
-    loadAll().catch((error) => showToast(error.message, "error"));
-    const timer = setInterval(() => loadAll().catch(() => {}), 20000);
-    return () => clearInterval(timer);
-  }, []);
+    if (queryError) showToast(queryError, "error");
+  }, [queryError]);
 
   function setFilter(key, value) {
     setFilters((currentFilters) => ({ ...currentFilters, [key]: value }));
   }
 
-  async function openRefund(id) {
-    try {
-      const res = await apiRequest(`/finance/refunds/${id}`, {}, "finance_admin");
-      const audit = await apiRequest("/finance/refund-audit", {}, "finance_admin");
-      setCurrent(withRefundAmounts(res.data, audit?.data || []));
-      setNotes("");
-    } catch (error) {
-      showToast(error.message, "error");
-    }
+  function openRefund(id) {
+    setCurrentId(id);
+    setNotes("");
   }
+  useEffect(() => {
+    if (detailQuery.error) showToast(detailQuery.error.message, "error");
+  }, [detailQuery.error]);
 
   async function refundDecision(approve) {
     if (refundBusy) return;
@@ -110,14 +74,9 @@ export function FinanceDashboard() {
     }
     setRefundBusy(true);
     try {
-      const res = await apiRequest(
-        `/finance/refunds/${current.id}/decision`,
-        {
-          method: "PATCH",
-          body: JSON.stringify({ approve, notes: notes.trim(), admin_id: adminId }),
-        },
-        "finance_admin",
-      );
+      const res = {
+        data: await actions.decideRefund(current.id, approve, notes, adminId),
+      };
       showToast(
         isReviewOnly(current)
           ? approve
@@ -127,7 +86,7 @@ export function FinanceDashboard() {
             ? `Refund approved${res?.data?.refunded_amount ? ` - ${money(res.data.refunded_amount)} refunded` : ""}.`
             : "Refund denied.",
       );
-      setCurrent(null);
+      setCurrentId(null);
       await loadAll();
     } catch (error) {
       showToast(error.message, "error");
@@ -138,11 +97,7 @@ export function FinanceDashboard() {
 
   async function toggle(path, blocked, success) {
     try {
-      await apiRequest(
-        path,
-        { method: "PATCH", body: JSON.stringify({ blocked, admin_id: adminId }) },
-        "finance_admin",
-      );
+      await actions.setBlocked(path, blocked, adminId);
       showToast(success);
       await loadAll();
     } catch (error) {
@@ -152,11 +107,7 @@ export function FinanceDashboard() {
 
   async function settleAll() {
     try {
-      const res = await apiRequest(
-        "/finance/payouts/settle-all",
-        { method: "POST", body: JSON.stringify({ admin_id: adminId }) },
-        "finance_admin",
-      );
+      const res = { data: await actions.settleAll(adminId) };
       const summary = res?.data;
       showToast(
         summary
@@ -175,10 +126,18 @@ export function FinanceDashboard() {
       label="FINANCE TEAM"
       navItems={[
         { id: "dashboard", label: "Dashboard", icon: "fa-chart-line" },
-        { id: "refunds", label: "Financial Requests", icon: "fa-money-bill-transfer" },
+        {
+          id: "refunds",
+          label: "Financial Requests",
+          icon: "fa-money-bill-transfer",
+        },
         { id: "payouts", label: "Restaurant Payouts", icon: "fa-store" },
         { id: "no-shows", label: "No-show Reviews", icon: "fa-user-clock" },
-        { id: "audit", label: "Transaction Audit", icon: "fa-clock-rotate-left" },
+        {
+          id: "audit",
+          label: "Transaction Audit",
+          icon: "fa-clock-rotate-left",
+        },
       ]}
     >
       {(activeTab) => (
@@ -229,7 +188,7 @@ export function FinanceDashboard() {
             notes={notes}
             setNotes={setNotes}
             close={() => {
-              if (!refundBusy) setCurrent(null);
+              if (!refundBusy) setCurrentId(null);
             }}
             refundDecision={refundDecision}
             busy={refundBusy}
@@ -241,6 +200,7 @@ export function FinanceDashboard() {
 }
 
 function NoShowReviews({ cases, adminId, reload, showToast }) {
+  const apiRequest = useApiRequest();
   const [current, setCurrent] = useState(null),
     [notes, setNotes] = useState(""),
     [query, setQuery] = useState("");
@@ -254,7 +214,11 @@ function NoShowReviews({ cases, adminId, reload, showToast }) {
         `/finance/no-shows/${current.id}/decision`,
         {
           method: "PATCH",
-          body: JSON.stringify({ decision, notes: notes.trim(), admin_id: adminId }),
+          body: JSON.stringify({
+            decision,
+            notes: notes.trim(),
+            admin_id: adminId,
+          }),
         },
         "finance_admin",
       );
@@ -610,6 +574,7 @@ function Refunds({ refunds, query, status, setQuery, setStatus, openRefund }) {
 }
 
 function Payouts({ state, filters, setFilter, toggle, settleAll, adminId, reload, showToast }) {
+  const apiRequest = useApiRequest();
   const pending = state.pendingPayments.filter(
     (p) =>
       !filters.pending ||
@@ -714,7 +679,10 @@ function Payouts({ state, filters, setFilter, toggle, settleAll, adminId, reload
                       try {
                         const res = await apiRequest(
                           `/finance/payouts/payments/${p.payment_id}/retry`,
-                          { method: "POST", body: JSON.stringify({ admin_id: adminId }) },
+                          {
+                            method: "POST",
+                            body: JSON.stringify({ admin_id: adminId }),
+                          },
                           "finance_admin",
                         );
                         showToast(`Release: ${res.data.release_status}`);
@@ -974,7 +942,13 @@ function RefundModal({ current, notes, setNotes, close, refundDecision, busy }) 
         </div>
       ) : (
         <div className="detail-section">
-          <p style={{ margin: 0, color: "var(--text-muted)", fontSize: "0.82rem" }}>
+          <p
+            style={{
+              margin: 0,
+              color: "var(--text-muted)",
+              fontSize: "0.82rem",
+            }}
+          >
             No reservation was linked to this ticket by Customer Support.
           </p>
         </div>
