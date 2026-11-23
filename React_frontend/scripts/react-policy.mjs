@@ -4,6 +4,19 @@ const require = createRequire(import.meta.url);
 const { parse } = require("@babel/parser");
 
 export const allowedHooks = new Set(["useState", "useEffect", "useContext", "useMemo", "useRef"]);
+const storeHooks = new Set([
+  "useData",
+  "useActions",
+  "useAuth",
+  "useDiner",
+  "useManager",
+  "useStaff",
+  "usePlatform",
+  "useFinance",
+  "useResource",
+  "useApiRequest",
+]);
+const reduxHooks = new Set(["useDispatch", "useSelector", "useStore"]);
 
 function walk(node, visit) {
   if (!node || typeof node !== "object") return;
@@ -19,6 +32,21 @@ function walk(node, visit) {
 export function auditReactSource(source, filename = "example.jsx") {
   const issues = [];
   const ast = parse(source, { sourceType: "module", plugins: ["jsx"] });
+  const approved = new Set(allowedHooks);
+  const inStoreHooks = /[/\\]store[/\\]hooks[/\\]/.test(filename);
+  for (const node of ast.program.body) {
+    if (node.type !== "ImportDeclaration") continue;
+    const moduleName = node.source.value;
+    for (const item of node.specifiers) {
+      const name = item.imported?.name;
+      if (
+        (moduleName.includes("/store/hooks/") && storeHooks.has(name)) ||
+        (inStoreHooks && moduleName === "react-redux" && reduxHooks.has(name)) ||
+        (inStoreHooks && moduleName === "./useData.js" && name === "useData")
+      )
+        approved.add(item.local.name);
+    }
+  }
   walk(ast, (node) => {
     const report = (message) => issues.push(`${filename}:${node.loc.start.line} ${message}`);
     if (node.type === "ImportDeclaration") {
@@ -44,7 +72,10 @@ export function auditReactSource(source, filename = "example.jsx") {
         }
       } else {
         for (const specifier of node.specifiers) {
-          if (/^use[A-Z]/.test(specifier.imported?.name || specifier.local?.name || ""))
+          if (
+            /^use[A-Z]/.test(specifier.imported?.name || specifier.local?.name || "") &&
+            !approved.has(specifier.local.name)
+          )
             report("Third-party hook");
         }
       }
@@ -53,12 +84,12 @@ export function auditReactSource(source, filename = "example.jsx") {
       ["FunctionDeclaration", "FunctionExpression", "VariableDeclarator"].includes(node.type) &&
       /^use[A-Z]/.test(node.id?.name || "")
     ) {
-      report("Custom hook");
+      if (!(inStoreHooks && storeHooks.has(node.id.name))) report("Custom hook");
     }
     if (node.type === "CallExpression") {
       const name =
         node.callee.type === "Identifier" ? node.callee.name : node.callee.property?.name;
-      if (/^use[A-Z]/.test(name || "") && !allowedHooks.has(name)) report("Unapproved hook call");
+      if (/^use[A-Z]/.test(name || "") && !approved.has(name)) report("Unapproved hook call");
     }
   });
   return issues;
