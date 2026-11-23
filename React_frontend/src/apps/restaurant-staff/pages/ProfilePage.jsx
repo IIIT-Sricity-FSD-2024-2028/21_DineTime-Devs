@@ -1,10 +1,10 @@
 import { createAction } from "../../../app/actions.js";
-import { useState, useContext } from "react";
-import { StaffContext } from "../context/StaffContext.js";
+import { useState } from "react";
+import { useStaff } from "../../../store/hooks/useStaff.js";
 import { Icon, ErrorMsg, SuccessMsg, Toast } from "../components/StaffUI.jsx";
 
 export default function ProfilePage() {
-  const { navigate, user, api } = useContext(StaffContext);
+  const { navigate, user, api } = useStaff();
   const [updateActionBusy, setUpdateActionBusy] = useState(false);
   const [updateActionError, setUpdateActionError] = useState("");
   const [updateActionRun] = useState(() => createAction(setUpdateActionBusy, setUpdateActionError));
@@ -144,7 +144,10 @@ export default function ProfilePage() {
                 value={formData.phone}
                 disabled={!editMode}
                 onChange={(e) =>
-                  setFormData({ ...formData, phone: e.target.value.replace(/[^0-9]/g, "") })
+                  setFormData({
+                    ...formData,
+                    phone: e.target.value.replace(/[^0-9]/g, ""),
+                  })
                 }
               />
             </div>

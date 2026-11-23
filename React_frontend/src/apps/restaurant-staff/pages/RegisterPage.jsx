@@ -1,11 +1,11 @@
 import { createAction } from "../../../app/actions.js";
-import { useState, useContext } from "react";
-import { StaffContext } from "../context/StaffContext.js";
+import { useState } from "react";
+import { useStaff } from "../../../store/hooks/useStaff.js";
 import { ErrorMsg, Icon } from "../components/StaffUI.jsx";
 import { image } from "../utils/images.js";
 
 export default function RegisterPage() {
-  const { navigate, api } = useContext(StaffContext);
+  const { navigate, api } = useStaff();
   const [registerActionBusy, setRegisterActionBusy] = useState(false);
   const [registerActionError, setRegisterActionError] = useState("");
   const [registerActionRun] = useState(() =>
@@ -80,7 +80,13 @@ export default function RegisterPage() {
           <img
             src={image("logo.png")}
             alt="DineTime Logo"
-            style={{ width: 32, height: 32, borderRadius: 8, objectFit: "contain", marginRight: 8 }}
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              objectFit: "contain",
+              marginRight: 8,
+            }}
           />
           <span className="brand-name">DineTime</span>
         </div>

@@ -1,11 +1,11 @@
 import { createAction } from "../../../app/actions.js";
-import { useState, useContext } from "react";
-import { StaffContext } from "../context/StaffContext.js";
+import { useState } from "react";
+import { useStaff } from "../../../store/hooks/useStaff.js";
 import { ErrorMsg, Icon, Toast } from "../components/StaffUI.jsx";
 import { image } from "../utils/images.js";
 
 export default function LoginPage() {
-  const { navigate, api } = useContext(StaffContext);
+  const { navigate, api } = useStaff();
   const [loginActionBusy, setLoginActionBusy] = useState(false);
   const [loginActionError, setLoginActionError] = useState("");
   const [loginActionRun] = useState(() => createAction(setLoginActionBusy, setLoginActionError));
@@ -155,7 +155,13 @@ export default function LoginPage() {
             <ErrorMsg message={loginAction.error} />
 
             {loginAction.error && loginAction.error.toLowerCase().includes("approval") && (
-              <div style={{ marginTop: "4px", marginBottom: "14px", textAlign: "center" }}>
+              <div
+                style={{
+                  marginTop: "4px",
+                  marginBottom: "14px",
+                  textAlign: "center",
+                }}
+              >
                 <a
                   href="#"
                   onClick={(e) => {
@@ -227,7 +233,13 @@ export default function LoginPage() {
               <Icon name="xmark" />
             </button>
             <h2 id="reset-title">Reset Password</h2>
-            <p style={{ marginBottom: 24, color: "var(--text-muted)", fontSize: 14 }}>
+            <p
+              style={{
+                marginBottom: 24,
+                color: "var(--text-muted)",
+                fontSize: 14,
+              }}
+            >
               Enter your email address and we'll send you a link to reset your password.
             </p>
             <form
