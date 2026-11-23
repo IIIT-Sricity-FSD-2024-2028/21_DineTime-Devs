@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { createAction } from "../../../app/actions.js";
 import { indiaToday } from "../../../app/indiaTime.js";
 import ManagerLayout from "./ManagerLayout.jsx";
-import { ManagerContext } from "../context/ManagerContext.jsx";
+import { useManager } from "../../../store/hooks/useManager.js";
 import { ToastContext } from "../context/ToastContext.jsx";
 import "../styles/service-planner.css";
 
@@ -118,7 +118,10 @@ function dateConfigFor(schedule, date) {
     .forEach((rule) => {
       if (
         !slots.some((slot) =>
-          sameSlot(slot, { start_time: rule.start_time, end_time: rule.end_time }),
+          sameSlot(slot, {
+            start_time: rule.start_time,
+            end_time: rule.end_time,
+          }),
         )
       )
         slots.push({ start_time: rule.start_time, end_time: rule.end_time });
@@ -170,7 +173,10 @@ function weeklyPayload(config) {
     close_time: config.close_time,
     slot_duration_minutes: Number(config.slot_duration_minutes),
     buffer_minutes: Number(config.buffer_minutes) || 0,
-    slots: config.slots.map((slot) => ({ start_time: slot.start_time, end_time: slot.end_time })),
+    slots: config.slots.map((slot) => ({
+      start_time: slot.start_time,
+      end_time: slot.end_time,
+    })),
   }));
 }
 
@@ -268,7 +274,7 @@ function SlotEditor({
 }
 
 export default function ServicePlanner() {
-  const { data, storage, refresh, ready, params } = useContext(ManagerContext);
+  const { data, storage, refresh, ready, params } = useManager();
   const { showToast } = useContext(ToastContext);
   const today = indiaToday();
   const dates = rollingDates(today);
