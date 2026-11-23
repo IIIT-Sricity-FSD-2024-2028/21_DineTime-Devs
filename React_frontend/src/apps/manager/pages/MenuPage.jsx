@@ -1,6 +1,6 @@
 import { useState, useContext } from "react";
 import ManagerLayout from "../components/ManagerLayout";
-import { ManagerContext } from "../context/ManagerContext.jsx";
+import { useManager } from "../../../store/hooks/useManager.js";
 import { ToastContext } from "../context/ToastContext.jsx";
 
 const categoryOrder = ["Starters", "Main Course", "Desserts", "Beverages"];
@@ -27,7 +27,7 @@ function readImage(file) {
 }
 
 export default function MenuPage() {
-  const { data, storage, refresh } = useContext(ManagerContext);
+  const { data, storage, refresh } = useManager();
   const { showToast } = useContext(ToastContext);
   const [form, setForm] = useState(emptyForm);
   const [modalOpen, setModalOpen] = useState(false);

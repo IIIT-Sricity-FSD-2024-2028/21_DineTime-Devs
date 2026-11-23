@@ -1,5 +1,4 @@
-import { useContext } from "react";
-import { ManagerContext } from "../context/ManagerContext.jsx";
+import { useManager } from "../../../store/hooks/useManager.js";
 
 const links = [
   ["profile", "ph-user", "Profile"],
@@ -21,7 +20,7 @@ const links = [
 ];
 
 export default function ManagerSidebar() {
-  const { navigate, currentPage } = useContext(ManagerContext);
+  const { navigate, currentPage } = useManager();
 
   return (
     <aside className="sidebar">

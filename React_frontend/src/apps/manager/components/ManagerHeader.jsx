@@ -1,19 +1,17 @@
-import { useState, useContext } from "react";
-import managerApi from "../api/managerApi";
-import { ManagerContext } from "../context/ManagerContext.jsx";
+import { useState } from "react";
+import { useManager } from "../../../store/hooks/useManager.js";
 
 export default function ManagerHeader({ title, description, variant = "user", icon = "" }) {
-  const { data, storage, refresh, navigate } = useContext(ManagerContext);
+  const { data, storage, refresh, navigate } = useManager();
   const [open, setOpen] = useState(false);
   const notifications = data?.notifications || [];
   const restaurant = data?.restaurant || {};
   const unread = notifications.filter((notification) => !notification.read).length;
   const markRead = () => {
-    storage.markAllNotificationsRead();
-    refresh();
+    storage.markAllNotificationsRead().catch(() => {});
   };
   const logout = () => {
-    managerApi.logout();
+    storage.logout();
     navigate("login");
   };
   const profileName = data?.profile?.name || "Rahul Sharma";

@@ -1,10 +1,11 @@
-import { useState, useContext } from "react";
+import { useContext, useState } from "react";
 import ManagerSidebar from "../components/ManagerSidebar";
-import { ManagerContext } from "../context/ManagerContext.jsx";
+import { useManager } from "../../../store/hooks/useManager.js";
 import { ToastContext } from "../context/ToastContext.jsx";
 
 export default function StaffPage() {
-  const { data, storage, refresh, navigate } = useContext(ManagerContext);
+  const { data, storage, refresh, navigate } = useManager();
+  const { showToast } = useContext(ToastContext);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("");
   const staff = data?.staff || [];
