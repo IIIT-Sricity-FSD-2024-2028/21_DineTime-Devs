@@ -1,8 +1,8 @@
-import { useState, useContext } from "react";
-import { AuthContext } from "../context/AuthContext.jsx";
+import { useState } from "react";
+import { useAuth } from "../../../store/hooks/useAuth.js";
 
 export function AdminLayout({ logoIcon, label, navItems, children }) {
-  const { logout } = useContext(AuthContext);
+  const { logout } = useAuth("sub-admin");
   const [activeTab, setActiveTab] = useState(navItems[0]?.id || "dashboard");
 
   return (

@@ -1,10 +1,13 @@
+import { useActions } from "../../../../store/hooks/useActions.js";
+import { createSupportActions } from "../../../../store/actions/supportActions.js";
 import { useContext, useEffect, useMemo, useState } from "react";
-import { apiRequest, assetUrl } from "../../api/client.js";
+import { assetUrl } from "../../api/client.js";
+import { useApiRequest, useResource } from "../../../../store/hooks/useResource.js";
 import { AdminLayout } from "../../components/AdminLayout.jsx";
 import { DataTable } from "../../components/DataTable.jsx";
 import { Modal } from "../../components/Modal.jsx";
 import { StatusBadge } from "../../components/StatusBadge.jsx";
-import { AuthContext } from "../../context/AuthContext.jsx";
+import { useAuth } from "../../../../store/hooks/useAuth.js";
 import { ToastContext } from "../../context/ToastContext.jsx";
 import { formatDate } from "../../utils/format.js";
 
@@ -18,28 +21,40 @@ const statuses = [
 ];
 
 export function SupportDashboard() {
-  const { profile, adminId } = useContext(AuthContext);
+  const apiRequest = useApiRequest();
+  const actions = useActions(createSupportActions);
+  const { profile, adminId } = useAuth("sub-admin");
   const { showToast } = useContext(ToastContext);
-  const [tickets, setTickets] = useState([]);
-  const [current, setCurrent] = useState(null);
-  const [extra, setExtra] = useState(null);
-  const [linked, setLinked] = useState(null);
+  const ticketsQuery = useResource("/support/tickets", {
+    pollingInterval: 20000,
+    skipPollingIfUnfocused: true,
+  });
+  const tickets = ticketsQuery.currentData || [];
+  const loadTickets = () => ticketsQuery.refetch();
+  const [currentId, setCurrentId] = useState(null);
+  const detailQuery = useResource(`/support/tickets/${currentId}`, {
+    skip: !currentId,
+  });
+  const current = detailQuery.currentData || null;
+  const lookupKind = current?.raised_by_role === "diner" ? "diner" : "manager";
+  const lookupQuery = useResource(`/support/lookup/${lookupKind}/${current?.raised_by_user_id}`, {
+    skip: !current,
+  });
+  const reservationQuery = useResource(
+    `/support/lookup/reservation/${encodeURIComponent(current?.linked_reservation_id || "")}`,
+    { skip: !current?.linked_reservation_id },
+  );
+  const extra = lookupQuery.currentData || null;
+  const linked = reservationQuery.currentData || null;
   const [notes, setNotes] = useState("");
   const [dashboardSearchBy, setDashboardSearchBy] = useState("category");
   const [dashboardQuery, setDashboardQuery] = useState("");
   const [dinerFilter, setDinerFilter] = useState("");
   const [managerFilter, setManagerFilter] = useState("");
 
-  async function loadTickets() {
-    const res = await apiRequest("/support/tickets", {}, "support_admin");
-    setTickets(res?.data || []);
-  }
-
   useEffect(() => {
-    loadTickets().catch((error) => showToast(error.message, "error"));
-    const timer = setInterval(() => loadTickets().catch(() => {}), 20000);
-    return () => clearInterval(timer);
-  }, []);
+    if (ticketsQuery.error) showToast(ticketsQuery.error.message, "error");
+  }, [ticketsQuery.error]);
 
   const counts = useMemo(
     () => ({
@@ -51,45 +66,17 @@ export function SupportDashboard() {
     [tickets],
   );
 
-  async function openTicket(id) {
-    try {
-      const res = await apiRequest(`/support/tickets/${id}`, {}, "support_admin");
-      const ticket = res.data;
-      setCurrent(ticket);
-      setExtra(null);
-      setLinked(null);
-      setNotes("");
-      const lookupPath =
-        ticket.raised_by_role === "diner"
-          ? `/support/lookup/diner/${ticket.raised_by_user_id}`
-          : `/support/lookup/manager/${ticket.raised_by_user_id}`;
-      const [lookup, reservation] = await Promise.all([
-        apiRequest(lookupPath, {}, "support_admin").catch(() => null),
-        ticket.linked_reservation_id
-          ? apiRequest(
-              `/support/lookup/reservation/${encodeURIComponent(ticket.linked_reservation_id)}`,
-              {},
-              "support_admin",
-            ).catch(() => null)
-          : Promise.resolve(null),
-      ]);
-      setExtra(lookup?.data || null);
-      setLinked(reservation?.data || null);
-    } catch (error) {
-      showToast(error.message, "error");
-    }
+  function openTicket(id) {
+    setCurrentId(id);
+    setNotes("");
   }
+  useEffect(() => {
+    if (detailQuery.error) showToast(detailQuery.error.message, "error");
+  }, [detailQuery.error]);
 
   async function claimTicket() {
     try {
-      await apiRequest(
-        `/support/tickets/${current.id}/claim`,
-        {
-          method: "PATCH",
-          body: JSON.stringify({ admin_id: adminId }),
-        },
-        "support_admin",
-      );
+      await actions.claim(current.id, adminId);
       showToast("Ticket claimed for review.");
       await loadTickets();
       await openTicket(current.id);
@@ -109,16 +96,9 @@ export function SupportDashboard() {
       return;
     }
     try {
-      await apiRequest(
-        `/support/tickets/${current.id}/${path}`,
-        {
-          method: "PATCH",
-          body: JSON.stringify(body),
-        },
-        "support_admin",
-      );
+      await actions.decide(current.id, path, body);
       showToast(success);
-      setCurrent(null);
+      setCurrentId(null);
       await loadTickets();
     } catch (error) {
       showToast(error.message, "error");
@@ -248,7 +228,7 @@ export function SupportDashboard() {
             notes={notes}
             setNotes={setNotes}
             adminId={adminId}
-            close={() => setCurrent(null)}
+            close={() => setCurrentId(null)}
             claimTicket={claimTicket}
             submitDecision={(decision) =>
               submitDecision(
@@ -397,7 +377,13 @@ function TicketModal(props) {
       </div>
       <div className="detail-section">
         <h4>Description</h4>
-        <p style={{ margin: "0 0 0.75rem", fontSize: "0.87rem", whiteSpace: "pre-wrap" }}>
+        <p
+          style={{
+            margin: "0 0 0.75rem",
+            fontSize: "0.87rem",
+            whiteSpace: "pre-wrap",
+          }}
+        >
           {current.description}
         </p>
         <Attachments attachments={current.attachments} />
@@ -432,7 +418,13 @@ function TicketModal(props) {
         </details>
       ) : current.linked_reservation_id ? (
         <div className="detail-section">
-          <p style={{ margin: 0, color: "var(--text-muted)", fontSize: "0.82rem" }}>
+          <p
+            style={{
+              margin: 0,
+              color: "var(--text-muted)",
+              fontSize: "0.82rem",
+            }}
+          >
             Loading linked reservation...
           </p>
         </div>
@@ -445,7 +437,13 @@ function TicketModal(props) {
         )
       ) : (
         <div className="detail-section">
-          <p style={{ margin: 0, color: "var(--text-muted)", fontSize: "0.82rem" }}>
+          <p
+            style={{
+              margin: 0,
+              color: "var(--text-muted)",
+              fontSize: "0.82rem",
+            }}
+          >
             Loading raiser history...
           </p>
         </div>
