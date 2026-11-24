@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { requireApiBase } from "../api/config";
-import managerApi from "../api/managerApi";
+import { useAuth } from "../../../store/hooks/useAuth.js";
+import { useApiRequest } from "../../../store/hooks/useResource.js";
 
 export default function LoginPage({ navigate }) {
+  const { login } = useAuth("manager");
+  const apiRequest = useApiRequest();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -14,25 +16,7 @@ export default function LoginPage({ navigate }) {
     event.preventDefault();
     setError("");
     try {
-      const response = await fetch(`${requireApiBase()}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
-      });
-      if (!response.ok) {
-        const payload = await response.json().catch(() => ({}));
-        throw new Error(
-          Array.isArray(payload.message)
-            ? payload.message.join(", ")
-            : payload.message || "Invalid login credentials.",
-        );
-      }
-      const auth = await response.json();
-      if (auth?.user?.role !== "manager")
-        throw new Error("This account is not a restaurant manager.");
-      if (auth?.user?.status !== "active")
-        throw new Error("Your manager account is awaiting verification.");
-      await managerApi.login(auth.user.email, auth.access_token || "");
+      await login(email, password);
       navigate("profile");
     } catch (loginError) {
       setError(loginError.message);
@@ -46,12 +30,10 @@ export default function LoginPage({ navigate }) {
       .value.trim()
       .toLowerCase();
     try {
-      const response = await fetch(`${requireApiBase()}/auth/password-reset-request`, {
+      await apiRequest("/auth/password-reset-request", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: resetEmail }),
+        body: { email: resetEmail },
       });
-      if (!response.ok) throw new Error("Unable to submit the reset request.");
       setResetSent(true);
       setTimeout(() => setForgotOpen(false), 3000);
     } catch (resetError) {

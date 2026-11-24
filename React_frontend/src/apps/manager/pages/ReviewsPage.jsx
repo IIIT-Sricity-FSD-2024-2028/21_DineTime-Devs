@@ -1,10 +1,10 @@
 import { useState, useContext } from "react";
 import ManagerLayout from "../components/ManagerLayout";
-import { ManagerContext } from "../context/ManagerContext.jsx";
+import { useManager } from "../../../store/hooks/useManager.js";
 import { ToastContext } from "../context/ToastContext.jsx";
 
 export default function ReviewsPage() {
-  const { data, storage, refresh } = useContext(ManagerContext);
+  const { data, storage, refresh } = useManager();
   const { showToast } = useContext(ToastContext);
   const [filter, setFilter] = useState("all");
   const [sort, setSort] = useState("recent");

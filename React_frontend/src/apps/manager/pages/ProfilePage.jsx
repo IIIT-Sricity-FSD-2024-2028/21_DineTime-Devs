@@ -1,10 +1,10 @@
 import { useEffect, useState, useContext } from "react";
 import ManagerLayout from "../components/ManagerLayout";
-import { ManagerContext } from "../context/ManagerContext.jsx";
+import { useManager } from "../../../store/hooks/useManager.js";
 import { ToastContext } from "../context/ToastContext.jsx";
 
 export default function ProfilePage() {
-  const { data, storage, refresh, navigate } = useContext(ManagerContext);
+  const { data, storage, refresh, navigate } = useManager();
   const { showToast } = useContext(ToastContext);
   const profile = data?.profile || {};
   const restaurant = data?.restaurant || {};

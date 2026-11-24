@@ -1,5 +1,5 @@
 import { useState, useContext, useEffect } from "react";
-import { requireApiBase } from "../api/config";
+import { useApiRequest, useResource } from "../../../store/hooks/useResource.js";
 import { ToastContext } from "../context/ToastContext.jsx";
 import { INDIAN_CITIES, VERIFICATION_TEAM_BY_STATE } from "../data/indianCities.js";
 
@@ -26,7 +26,9 @@ const initialForm = {
 export default function RegisterPage({ navigate }) {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState(initialForm);
-  const [verificationTeams, setVerificationTeams] = useState([]);
+  const apiRequest = useApiRequest();
+  const teamsQuery = useResource("/verification/teams", { skip: step !== 3 });
+  const verificationTeams = teamsQuery.currentData || [];
   const [submitting, setSubmitting] = useState(false);
   const { showToast } = useContext(ToastContext);
   const states = [...new Set(INDIAN_CITIES.map(({ state }) => state))].sort((a, b) =>
@@ -39,15 +41,8 @@ export default function RegisterPage({ navigate }) {
     verificationTeams[0];
 
   useEffect(() => {
-    if (step !== 3 || verificationTeams.length) return;
-    fetch(`${requireApiBase()}/verification/teams`)
-      .then(async (response) => {
-        if (!response.ok) throw new Error("Unable to load verification teams.");
-        return response.json();
-      })
-      .then((payload) => setVerificationTeams(payload?.data || []))
-      .catch((error) => showToast(error.message, "error"));
-  }, [step, verificationTeams.length, showToast]);
+    if (teamsQuery.error) showToast(teamsQuery.error.message, "error");
+  }, [teamsQuery.error]);
 
   useEffect(() => {
     if (step !== 3 || !verificationTeams.length || !form.state || form.verificationLocationId)
@@ -57,7 +52,10 @@ export default function RegisterPage({ navigate }) {
       verificationTeams.find(({ location_id }) => location_id === preferredTeamId) ||
       verificationTeams[0];
     if (preferredTeam) {
-      setForm((current) => ({ ...current, verificationLocationId: preferredTeam.location_id }));
+      setForm((current) => ({
+        ...current,
+        verificationLocationId: preferredTeam.location_id,
+      }));
     }
   }, [step, verificationTeams, form.state, form.verificationLocationId]);
 
@@ -194,18 +192,7 @@ export default function RegisterPage({ navigate }) {
       body.append("cuisine_type", form.cuisine.charAt(0).toUpperCase() + form.cuisine.slice(1));
       body.append("description", form.description || `${form.restaurantName} restaurant.`);
       body.append("document", form.document);
-      const response = await fetch(`${requireApiBase()}/managers/register`, {
-        method: "POST",
-        body,
-      });
-      if (!response.ok) {
-        const payload = await response.json().catch(() => ({}));
-        throw new Error(
-          Array.isArray(payload.message)
-            ? payload.message.join(", ")
-            : payload.message || "Registration failed.",
-        );
-      }
+      await apiRequest("/managers/register", { method: "POST", body });
       showToast("Application submitted! You can log in once it is verified.");
       setTimeout(() => navigate("login"), 1800);
     } catch (error) {
@@ -221,7 +208,12 @@ export default function RegisterPage({ navigate }) {
         <div className="file-upload-container">
           <label
             className="file-upload-box"
-            style={{ padding: "16px", display: "flex", alignItems: "center", gap: "12px" }}
+            style={{
+              padding: "16px",
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+            }}
           >
             <input
               type="file"
@@ -265,7 +257,10 @@ export default function RegisterPage({ navigate }) {
             placeholder: "e.g. Jane Doe",
             required: true,
           })}
-          {field("Manager Phone *", "phone", "tel", { maxLength: 10, required: true })}
+          {field("Manager Phone *", "phone", "tel", {
+            maxLength: 10,
+            required: true,
+          })}
           {field("Manager Email *", "email", "email", {
             placeholder: "manager@restaurant.com",
             required: true,
@@ -274,7 +269,9 @@ export default function RegisterPage({ navigate }) {
             placeholder: "Min. 8 characters",
             required: true,
           })}
-          {field("Confirm Password *", "confirm", "password", { required: true })}
+          {field("Confirm Password *", "confirm", "password", {
+            required: true,
+          })}
           <div className="business-divider">Business Verification</div>
           {field("Business License Number *", "license", "text", {
             placeholder: "e.g. BL-AB-1234",
@@ -297,7 +294,9 @@ export default function RegisterPage({ navigate }) {
     if (step === 2) {
       return (
         <>
-          {field("Restaurant Name *", "restaurantName", "text", { required: true })}
+          {field("Restaurant Name *", "restaurantName", "text", {
+            required: true,
+          })}
           <label className="login-form-group">
             <span className="login-label">Cuisine Type *</span>
             <select

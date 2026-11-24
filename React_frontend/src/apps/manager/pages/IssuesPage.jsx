@@ -1,10 +1,15 @@
+import { useResource } from "../../../store/hooks/useResource.js";
 import { useContext, useEffect, useState } from "react";
 import { createAction } from "../../../app/actions.js";
 import ManagerLayout from "../components/ManagerLayout.jsx";
-import { ManagerContext } from "../context/ManagerContext.jsx";
+import { useManager } from "../../../store/hooks/useManager.js";
 import { ToastContext } from "../context/ToastContext.jsx";
 const issues = [
-  { code: "customer_dispute_no_show", label: "Customer dispute or no-show", category: "other" },
+  {
+    code: "customer_dispute_no_show",
+    label: "Customer dispute or no-show",
+    category: "other",
+  },
   { code: "staff_issue", label: "Staff-side issue", category: "other" },
   { code: "app_problem", label: "App problem", category: "technical" },
   { code: "other", label: "Something else", category: "other" },
@@ -23,18 +28,29 @@ const money = (value) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(Number(value || 0));
 const validIssue = (value) => (issues.some((item) => item.code === value) ? value : "");
 export default function IssuesPage() {
-  const { data, storage, ready, params } = useContext(ManagerContext),
+  const { data, storage, ready, params } = useManager(),
     { showToast } = useContext(ToastContext);
-  const [context, setContext] = useState({
+  const managerId = data.ids?.managerId;
+  const options = {
+    skip: !ready || !managerId,
+    pollingInterval: 20000,
+    skipPollingIfUnfocused: true,
+  };
+  const contextQuery = useResource("/support/context", options);
+  const ticketsQuery = useResource(
+    `/support/tickets/mine?user_id=${encodeURIComponent(managerId || "")}`,
+    options,
+  );
+  const context = contextQuery.currentData || {
     restaurants: [],
     staff: [],
     reservations: [],
     slots: [],
     payments: [],
-  });
-  const [tickets, setTickets] = useState([]),
-    [loading, setLoading] = useState(true),
-    [loadError, setLoadError] = useState("");
+  };
+  const tickets = ticketsQuery.currentData || [];
+  const loading = contextQuery.isLoading || ticketsQuery.isLoading;
+  const loadError = contextQuery.error?.message || ticketsQuery.error?.message || "";
   const [issue, setIssue] = useState(validIssue(params?.issue)),
     [reservationId, setReservationId] = useState(params?.reservation || "");
   const [staffSelection, setStaffSelection] = useState("");
@@ -45,7 +61,6 @@ export default function IssuesPage() {
   const [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const [run] = useState(() => createAction(setBusy, setError));
-  const managerId = storage._getIds().managerId;
   useEffect(() => {
     setIssue(validIssue(params?.issue));
     setReservationId(params?.reservation || "");
@@ -53,41 +68,6 @@ export default function IssuesPage() {
     setPaymentId("");
     setQuery("");
   }, [params?.issue, params?.reservation, params?.slot]);
-  useEffect(() => {
-    if (!ready || !managerId) return;
-    let active = true;
-    const controller = new AbortController();
-    async function load() {
-      try {
-        const [details, mine] = await Promise.all([
-          storage._request("/support/context", {
-            headers: storage._headers(),
-            signal: controller.signal,
-          }),
-          storage._request(`/support/tickets/mine?user_id=${encodeURIComponent(managerId)}`, {
-            headers: storage._headers(),
-            signal: controller.signal,
-          }),
-        ]);
-        if (active) {
-          setContext(details.data);
-          setTickets(mine.data || []);
-          setLoadError("");
-        }
-      } catch (cause) {
-        if (active) setLoadError(cause.message);
-      } finally {
-        if (active) setLoading(false);
-      }
-    }
-    load();
-    const timer = setInterval(load, 20000);
-    return () => {
-      active = false;
-      controller.abort();
-      clearInterval(timer);
-    };
-  }, [ready, managerId, storage]);
   const selected = issues.find((item) => item.code === issue);
   const needsReservation = ["customer_dispute_no_show", "checkin_problem"].includes(issue),
     isPayout = issue === "payout_missing",
@@ -144,11 +124,6 @@ export default function IssuesPage() {
         headers: storage._authHeaders(),
         body,
       });
-      const mine = await storage._request(
-        `/support/tickets/mine?user_id=${encodeURIComponent(managerId)}`,
-        { headers: storage._headers() },
-      );
-      setTickets(mine.data || []);
       setNote("");
       setFiles([]);
       showToast("Issue submitted with the relevant details attached.");
@@ -377,8 +352,10 @@ export default function IssuesPage() {
                   <summary>View activity</summary>
                   {ticket.history.map((event, index) => (
                     <p key={index}>
-                      {new Date(event.at).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })} ·{" "}
-                      {statuses[event.status] || event.status}
+                      {new Date(event.at).toLocaleString("en-IN", {
+                        timeZone: "Asia/Kolkata",
+                      })}{" "}
+                      · {statuses[event.status] || event.status}
                       {event.notes ? ` — ${event.notes}` : ""}
                     </p>
                   ))}
