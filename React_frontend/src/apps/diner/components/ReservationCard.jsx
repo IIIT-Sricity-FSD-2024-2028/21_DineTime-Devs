@@ -1,6 +1,6 @@
-import { useContext, useState } from "react";
+import { useState } from "react";
 import { Icon, PageLink } from "./Navigation.jsx";
-import { DinerContext } from "../context/DinerContext.js";
+import { useDiner } from "../../../store/hooks/useDiner.js";
 import { statusLabel, timeLabel } from "../utils/format.js";
 import ReservationPayment from "./ReservationPayment.jsx";
 
@@ -36,7 +36,7 @@ export default function ReservationCard({
   compact = false,
 }) {
   const [dineCompletedLocally, setDineCompletedLocally] = useState(false);
-  const { restaurants, slots, reviews, tables } = useContext(DinerContext);
+  const { restaurants, slots, reviews, tables } = useDiner();
   const dineCompleted = Boolean(reservation.diner_completed_at || dineCompletedLocally);
   async function completeDine() {
     const result = await onDineComplete(reservation);

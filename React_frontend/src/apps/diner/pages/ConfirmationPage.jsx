@@ -1,12 +1,11 @@
-import { useContext } from "react";
 import { StackedHeader, Icon, PageLink } from "../components/Navigation.jsx";
 import { DataState, EmptyState } from "../components/Feedback.jsx";
 import { BookingInformation, RestaurantSummary } from "../components/BookingSummary.jsx";
-import { DinerContext } from "../context/DinerContext.js";
+import { useDiner } from "../../../store/hooks/useDiner.js";
 import { money } from "../utils/format.js";
 
 export default function ConfirmationPage() {
-  const { confirmation, restaurants, tables } = useContext(DinerContext);
+  const { confirmation, restaurants, tables } = useDiner();
   const restaurant = restaurants.find((item) => item.id === confirmation?.booking.restaurantId);
   const table = tables.find((item) => item.id === confirmation?.booking.tableId);
   return (

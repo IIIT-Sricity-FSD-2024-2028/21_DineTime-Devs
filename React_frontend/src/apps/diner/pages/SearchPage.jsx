@@ -1,13 +1,13 @@
-import { useState, useContext } from "react";
+import { useState } from "react";
 import { Icon, PageLink } from "../components/Navigation.jsx";
 import { DataState, EmptyState } from "../components/Feedback.jsx";
 import RestaurantCard from "../components/RestaurantCard.jsx";
 import { matchesRestaurant } from "../components/RestaurantFilters.jsx";
-import { DinerContext } from "../context/DinerContext.js";
+import { useDiner } from "../../../store/hooks/useDiner.js";
 import { image } from "../utils/images.js";
 
 export default function SearchPage() {
-  const { restaurants: restaurantCatalog, params, user } = useContext(DinerContext);
+  const { restaurants: restaurantCatalog, params, user } = useDiner();
   const restaurants = restaurantCatalog.filter(
     (restaurant) => restaurant.is_open !== false && !restaurant.is_closed,
   );

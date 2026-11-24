@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { dinerApi } from "../api/dinerApi.js";
-import { DinerContext } from "../context/DinerContext.js";
+import { useDiner } from "../../../store/hooks/useDiner.js";
+import { NavigationContext } from "../../../app/NavigationContext.jsx";
 import DinerSurface from "../components/DinerSurface.jsx";
 import LoginPage from "../pages/LoginPage.jsx";
 import RegisterPage from "../pages/RegisterPage.jsx";
@@ -65,10 +65,8 @@ function readRoute() {
 export default function App() {
   const [currentPage, setCurrentPage] = useState(() => readRoute().page);
   const [params, setParams] = useState(() => readRoute().params);
-  const [booking, setBooking] = useState(null);
-  const [confirmation, setConfirmation] = useState(null);
-  const [data, setData] = useState(dinerApi.getSnapshot());
-  const user = data.user;
+  const data = useDiner();
+  const { user, api } = data;
 
   function navigate(page, nextParams = {}) {
     if (page === "login") {
@@ -85,10 +83,6 @@ export default function App() {
   }
 
   useEffect(() => {
-    return dinerApi.subscribe(() => setData(dinerApi.getSnapshot()));
-  }, []);
-
-  useEffect(() => {
     const onPopState = () => {
       const route = readRoute();
       setCurrentPage(route.page);
@@ -97,20 +91,6 @@ export default function App() {
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
-
-  useEffect(() => {
-    dinerApi.refresh();
-    const onFocus = () => dinerApi.refresh();
-    window.addEventListener("focus", onFocus);
-    return () => window.removeEventListener("focus", onFocus);
-  }, [user?.id]);
-
-  useEffect(() => {
-    if (!user) {
-      setBooking(null);
-      setConfirmation(null);
-    }
-  }, [user?.id]);
 
   useEffect(() => {
     if (!user && !publicPages.has(currentPage)) navigate("login");
@@ -135,7 +115,7 @@ export default function App() {
           user={user}
           loading={data.loading}
           error={data.error}
-          onRetry={() => dinerApi.refresh()}
+          onRetry={() => api.refresh()}
         />
       );
       break;
@@ -191,19 +171,7 @@ export default function App() {
     "confirmation",
   ].includes(page);
   return (
-    <DinerContext.Provider
-      value={{
-        currentPage,
-        params,
-        navigate,
-        ...data,
-        api: dinerApi,
-        booking,
-        setBooking,
-        confirmation,
-        setConfirmation,
-      }}
-    >
+    <NavigationContext.Provider value={{ currentPage, params, navigate }}>
       <DinerSurface>
         <div
           className={`diner-app diner-${page}${page === "modify" ? " diner-book" : ""}${stacked ? " layout-stacked" : ""}`}
@@ -212,6 +180,6 @@ export default function App() {
           {content}
         </div>
       </DinerSurface>
-    </DinerContext.Provider>
+    </NavigationContext.Provider>
   );
 }

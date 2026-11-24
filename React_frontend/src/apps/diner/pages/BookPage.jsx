@@ -1,7 +1,8 @@
-import { useEffect, useState, useContext } from "react";
+import { useResource } from "../../../store/hooks/useResource.js";
+import { useEffect, useState } from "react";
 import { DinerLayout, Icon, PageLink } from "../components/Navigation.jsx";
 import { DataState, EmptyState, ErrorMessage } from "../components/Feedback.jsx";
-import { DinerContext } from "../context/DinerContext.js";
+import { useDiner } from "../../../store/hooks/useDiner.js";
 import { timeLabel, timeRangeLabel, today } from "../utils/format.js";
 
 export default function BookPage() {
@@ -15,7 +16,7 @@ export default function BookPage() {
     booking,
     setBooking,
     user,
-  } = useContext(DinerContext);
+  } = useDiner();
   const restaurant = restaurants.find((item) => item.id === params.id);
   const currentToday = today();
   const previous =
@@ -24,9 +25,15 @@ export default function BookPage() {
   const [slotId, setSlotId] = useState(previous?.slotId || "");
   const [guests, setGuests] = useState(previous?.guests || "");
   const [selected, setSelected] = useState("");
-  const [availability, setAvailability] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+
+  const [formError, setError] = useState("");
+  const availabilityQuery = useResource(
+    `/tableslots/availability?restaurant_id=${encodeURIComponent(params.id)}&slot_id=${encodeURIComponent(slotId)}`,
+    { skip: !slotId, refetchOnMountOrArgChange: true },
+  );
+  const availability = availabilityQuery.currentData || [];
+  const loading = availabilityQuery.isFetching;
+  const error = formError || availabilityQuery.error?.message || "";
 
   const isSlotInPast = (s) => {
     const slotDate = s.slot_date || s.date;
@@ -62,7 +69,7 @@ export default function BookPage() {
   const table = tables.find((item) => item.id === selected);
 
   useEffect(() => {
-    api.refresh();
+    api.refresh().catch(() => {});
   }, [api, params.id, date]);
 
   useEffect(() => {
@@ -74,22 +81,8 @@ export default function BookPage() {
 
   useEffect(() => {
     setSelected("");
-    setAvailability([]);
     setError("");
-    if (!slotId) return;
-    const controller = new AbortController();
-    setLoading(true);
-    api
-      .availability(params.id, slotId, controller.signal)
-      .then(setAvailability)
-      .catch((cause) => {
-        if (!controller.signal.aborted) setError(cause.message);
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
-      });
-    return () => controller.abort();
-  }, [api, params.id, slotId, slot]);
+  }, [params.id, slotId]);
 
   function confirm() {
     if (!table || !slot) return;
