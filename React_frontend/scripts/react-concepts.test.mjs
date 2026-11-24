@@ -23,17 +23,42 @@ async function sourceFiles(directory) {
   return groups.flat();
 }
 
-test("application uses only the five allowed hooks without custom hooks", async () => {
+test("application uses basic React hooks and the explicit Redux integration hooks", async () => {
   const issues = [];
   for (const url of await sourceFiles(sourceRoot)) {
     const filename = fileURLToPath(url);
     issues.push(...auditReactSource(await readFile(url, "utf8"), filename));
   }
   const manifest = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
-  for (const name of Object.keys({ ...manifest.dependencies, ...manifest.devDependencies })) {
+  for (const name of Object.keys({
+    ...manifest.dependencies,
+    ...manifest.devDependencies,
+  })) {
     if (/react.*router|router.*react/.test(name)) issues.push(`Router dependency: ${name}`);
   }
   assert.deepEqual(issues, []);
+});
+
+test("Redux integration hooks are allowed only at the store boundary", () => {
+  assert.deepEqual(
+    auditReactSource(
+      `import {useSelector} from 'react-redux'; export function useAuth() { return useSelector(s => s.auth); }`,
+      "/src/store/hooks/useAuth.js",
+    ),
+    [],
+  );
+  assert.ok(
+    auditReactSource(
+      `import {useSelector} from 'react-redux';`,
+      "/src/apps/diner/pages/Example.jsx",
+    ).length,
+  );
+  assert.deepEqual(
+    auditReactSource(
+      `import {useDiner} from '../../../store/hooks/useDiner.js'; function Page() { return useDiner(); }`,
+    ),
+    [],
+  );
 });
 
 test("hook policy allows exactly the requested hooks, context providers and DOM refs", () => {

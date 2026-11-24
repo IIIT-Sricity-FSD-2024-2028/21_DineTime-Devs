@@ -5,6 +5,7 @@ import { createRequire } from "node:module";
 import { runInNewContext } from "node:vm";
 import { transformSync } from "esbuild";
 
+import { mapCoordinates } from "../src/apps/diner/utils/mapCoordinates.js";
 const require = createRequire(import.meta.url);
 
 async function loadComponent(file, dependencies = {}, globals = {}) {
@@ -15,12 +16,18 @@ async function loadComponent(file, dependencies = {}, globals = {}) {
     "utf8",
   );
   const module = { exports: {} };
-  const { code } = transformSync(source, { loader: "jsx", format: "cjs", jsx: "automatic" });
+  const { code } = transformSync(source, {
+    loader: "jsx",
+    format: "cjs",
+    jsx: "automatic",
+  });
   runInNewContext(code, {
     module,
     exports: module.exports,
     ...globals,
     require(id) {
+      if (id.endsWith("/useDiner.js")) return {};
+      if (id.endsWith("/mapCoordinates.js")) return { mapCoordinates };
       if (id === "react")
         return {
           useEffect: (effect) => effects.push(effect),
@@ -42,7 +49,11 @@ test("native dialogs use a direct DOM ref and close when unmounted", async () =>
   const { components, effects } = await loadComponent("Feedback.jsx", {
     "../context/DinerContext.js": {},
   });
-  const dialog = components.Modal({ title: "Details", onClose() {}, children: "Reservation" });
+  const dialog = components.Modal({
+    title: "Details",
+    onClose() {},
+    children: "Reservation",
+  });
   let opened = 0,
     closed = 0;
   dialog.props.ref.current = {
