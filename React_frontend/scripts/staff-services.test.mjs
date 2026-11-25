@@ -1,26 +1,12 @@
-import test from "node:test";
+import { fetchData, selectData } from "../src/store/actions/dataActions.js";
+import { authActions as resetAuth } from "../src/store/slices/authSlice.js";
+import test, { afterEach } from "node:test";
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
-import { runInNewContext } from "node:vm";
-const source = (
-  await readFile(new URL("../src/apps/restaurant-staff/api/staffApi.js", import.meta.url), "utf8")
-)
-  .replace(/^import .*;\r?\n/gm, "")
-  .replaceAll("import.meta.env", "({})")
-  .replace("export const staffApi =", "globalThis.staffApi =");
+import { createAppStore } from "../src/store/store.js";
+import { createStaffActions } from "../src/store/actions/staffActions.js";
+const stores = [];
+afterEach(() => stores.splice(0).forEach((store) => store.dispatch(resetAuth.signedOut())));
 function fixture() {
-  const context = {
-    readBoundSession: () => ({
-      access_token: "fixture",
-      user: { id: "staff-test", role: "staff", restaurantId: "r" },
-    }),
-    toIsoDate: () => "2030-01-01",
-    bindSession: (value) => value,
-    sessionStorage: { setItem() {}, removeItem() {} },
-  };
-  runInNewContext(source, context);
-  const api = context.staffApi;
-  api.restaurantVerified = true;
   const values = {
     "/tables": [
       { id: "t1", restaurant_id: "r", capacity: 2, table_number: 1 },
@@ -54,13 +40,32 @@ function fixture() {
     "/reservations?restaurant_id=r": [],
   };
   const writes = [];
-  api.request = async (path, options = {}) => {
-    if (options.method === "PATCH") {
-      writes.push(options.body);
-      return {};
-    }
-    return values[path] || [];
-  };
+  const store = createAppStore({
+    session: {
+      read: () => ({
+        access_token: "fixture",
+        user: { id: "staff-test", role: "staff", restaurantId: "r" },
+      }),
+      write() {},
+    },
+    fetch: async (url, options) => {
+      const path = new URL(url).pathname + new URL(url).search;
+      if (options.method === "PATCH") writes.push(JSON.parse(options.body));
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ data: structuredClone(values[path] || []) }),
+      };
+    },
+  });
+  stores.push(store);
+  const api = createStaffActions(store.dispatch, store.getState);
+  api.getSnapshot = () =>
+    selectData(store.getState(), "staff", {
+      scope: store.getState().auth.generation,
+      date: store.getState().operations.date,
+      slotId: store.getState().operations.slotId,
+    })?.data;
   return { api, writes, values };
 }
 test("staff availability and capacity belong to the selected service", async () => {

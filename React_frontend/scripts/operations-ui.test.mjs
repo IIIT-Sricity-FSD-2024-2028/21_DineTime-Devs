@@ -10,13 +10,20 @@ import { tableStatusLabel } from "../src/apps/restaurant-staff/utils/format.js";
 const require = createRequire(import.meta.url);
 async function render(file, data, mocks, overrides = {}, exercise) {
   const source = await readFile(new URL(`../src/apps/${file}`, import.meta.url), "utf8");
-  const { code } = transformSync(source, { loader: "jsx", format: "cjs", jsx: "automatic" });
+  const { code } = transformSync(source, {
+    loader: "jsx",
+    format: "cjs",
+    jsx: "automatic",
+  });
   let stateIndex = 0;
   const module = { exports: {} };
   runInNewContext(code, {
     module,
+    window: { confirm: () => true },
     exports: module.exports,
     require(id) {
+      if (id.endsWith("/useStaff.js")) return { useStaff: () => data };
+      if (id.endsWith("/useManager.js")) return { useManager: () => data };
       if (id === "react")
         return {
           ...React,
@@ -63,7 +70,13 @@ const staffMocks = {
   },
   "../utils/format.js": { toIsoDate: () => "2030-01-01", tableStatusLabel },
 };
-const staffData = { tables: [], slots: [], api: {}, navigate() {}, loading: false };
+const staffData = {
+  tables: [],
+  slots: [],
+  api: {},
+  navigate() {},
+  loading: false,
+};
 test("staff only toggles available and blocked tables for the selected service", async () => {
   for (const status of ["Available", "Blocked"]) {
     const writes = [];
@@ -71,7 +84,10 @@ test("staff only toggles available and blocked tables for the selected service",
       "restaurant-staff/pages/DashboardPage.jsx",
       {
         ...staffData,
-        api: { updateTableStatus: async (...args) => writes.push(args), refresh: async () => {} },
+        api: {
+          updateTableStatus: async (...args) => writes.push(args),
+          refresh: async () => {},
+        },
       },
       staffMocks,
       {
@@ -211,4 +227,37 @@ test("manager closure and pause handlers report success through the toast provid
     "Restaurant closed.",
     "New reservations paused. 0 existing reservation(s) remain confirmed.",
   ]);
+});
+
+test("manager staff approvals and failures report through the toast provider", async () => {
+  for (const fail of [false, true]) {
+    const notices = [],
+      writes = [];
+    await render(
+      "manager/pages/StaffPage.jsx",
+      {
+        data: { staff: [{ id: "staff", name: "Test Staff", status: "Pending" }] },
+        storage: {
+          updateStaffStatus: async (...args) => {
+            if (fail) throw new Error("Approval failed");
+            writes.push(args);
+          },
+        },
+        refresh() {},
+        navigate() {},
+        showToast: (...args) => notices.push(args),
+      },
+      {
+        "../components/ManagerSidebar": () => null,
+        "../context/ToastContext.jsx": { ToastContext: {} },
+      },
+      {},
+      async (tree) => {
+        await findControl(tree, "Approve").props.onClick();
+      },
+    );
+    assert.equal(notices.length, 1);
+    assert.equal(notices[0][0], fail ? "Approval failed" : "Staff access approved!");
+    assert.equal(writes.length, fail ? 0 : 1);
+  }
 });
