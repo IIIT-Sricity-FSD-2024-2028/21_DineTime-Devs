@@ -1,7 +1,7 @@
 import { useEffect, useState, useContext } from "react";
-import { apiRequest } from "../api/client.js";
-import { AdminContext } from "../context/AdminContext.jsx";
-import { AuthContext } from "../context/AuthContext.jsx";
+import { useApiRequest, useResource } from "../../../store/hooks/useResource.js";
+import { usePlatform } from "../../../store/hooks/usePlatform.js";
+import { useAuth } from "../../../store/hooks/useAuth.js";
 import { ToastContext } from "../context/ToastContext.jsx";
 import { mapUserStatus, TEAM_LABELS, TICKET_STATUS_LABELS } from "../utils/mappers.js";
 
@@ -16,7 +16,8 @@ const navItems = [
 ];
 
 export function DashboardPage() {
-  const { logout, profile } = useContext(AuthContext);
+  const apiRequest = useApiRequest();
+  const { logout, profile } = useAuth("super_user");
   const {
     data,
     syncAdminState,
@@ -24,7 +25,7 @@ export function DashboardPage() {
     getRestaurantDisplay,
     getUserDisplay,
     getReservationDisplay,
-  } = useContext(AdminContext);
+  } = usePlatform();
   const { showToast } = useContext(ToastContext);
   const [activeTab, setActiveTab] = useState(() => {
     const tab = sessionStorage.getItem("dt_active_tab_v6") || "dashboard";
@@ -61,21 +62,15 @@ export function DashboardPage() {
     country: "India",
     showNewLocation: false,
   });
-  const [locations, setLocations] = useState([]);
-  const [resolveTicket, setResolveTicket] = useState({ open: false, id: "", notes: "" });
-
-  useEffect(() => {
-    syncAdminState().catch((error) =>
-      showToast(error.message || "Unable to sync admin dashboard.", "error"),
-    );
-    const timer = setInterval(() => syncAdminState().catch(() => {}), 15000);
-    const focus = () => syncAdminState().catch(() => {});
-    window.addEventListener("focus", focus);
-    return () => {
-      clearInterval(timer);
-      window.removeEventListener("focus", focus);
-    };
-  }, []);
+  const locationsQuery = useResource("/restaurants/locations", {
+    skip: subAdminForm.team !== "verification",
+  });
+  const locations = locationsQuery.currentData || [];
+  const [resolveTicket, setResolveTicket] = useState({
+    open: false,
+    id: "",
+    notes: "",
+  });
 
   function switchTab(tab) {
     setActiveTab(tab);
@@ -138,7 +133,11 @@ export function DashboardPage() {
     const roleMap = { diners: "diner", managers: "manager", staff: "staff" };
     await apiRequest("/notifications/broadcast", {
       method: "POST",
-      body: JSON.stringify({ role: roleMap[audience], message, type: "broadcast" }),
+      body: JSON.stringify({
+        role: roleMap[audience],
+        message,
+        type: "broadcast",
+      }),
     });
     await syncAdminState();
     form.reset();
@@ -162,15 +161,9 @@ export function DashboardPage() {
     setSubAdminModal(true);
   }
 
-  async function loadLocations() {
-    const res = await apiRequest("/restaurants/locations");
-    setLocations(res?.data || []);
-  }
-
   useEffect(() => {
-    if (subAdminForm.team === "verification")
-      loadLocations().catch((error) => showToast(error.message, "error"));
-  }, [subAdminForm.team]);
+    if (locationsQuery.error) showToast(locationsQuery.error.message, "error");
+  }, [locationsQuery.error]);
 
   async function createNewLocation() {
     const { city, address, pincode, country } = subAdminForm;
@@ -180,9 +173,13 @@ export function DashboardPage() {
     }
     const created = await apiRequest("/restaurants/locations", {
       method: "POST",
-      body: JSON.stringify({ city, address, pincode, country: country || "India" }),
+      body: JSON.stringify({
+        city,
+        address,
+        pincode,
+        country: country || "India",
+      }),
     });
-    await loadLocations();
     setSubAdminForm((form) => ({
       ...form,
       location_id: created?.data?.id || "",
@@ -244,7 +241,10 @@ export function DashboardPage() {
     event.preventDefault();
     await apiRequest(`/support/tickets/${resolveTicket.id}/resolve`, {
       method: "PATCH",
-      body: JSON.stringify({ resolution_notes: resolveTicket.notes, admin_id: profile?.id || "" }),
+      body: JSON.stringify({
+        resolution_notes: resolveTicket.notes,
+        admin_id: profile?.id || "",
+      }),
     });
     setResolveTicket({ open: false, id: "", notes: "" });
     showToast("Ticket marked as resolved.");
@@ -377,7 +377,13 @@ function GlobalDashboard({
           valueStyle={{ color: "#C62828" }}
         />
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: "1.5rem" }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1.5fr 1fr",
+          gap: "1.5rem",
+        }}
+      >
         <div className="panel">
           <div className="panel-head">
             <div className="panel-title">Recent System Activity</div>
@@ -393,7 +399,13 @@ function GlobalDashboard({
                 />
               ))
             ) : (
-              <div style={{ padding: "1.25rem", color: "var(--text-muted)", fontSize: "0.875rem" }}>
+              <div
+                style={{
+                  padding: "1.25rem",
+                  color: "var(--text-muted)",
+                  fontSize: "0.875rem",
+                }}
+              >
                 No recent activity yet.
               </div>
             )}
@@ -439,7 +451,10 @@ function GlobalDashboard({
                 placeholder="Enter current root access key"
                 value={passwordForm.current}
                 onChange={(event) =>
-                  setPasswordForm((form) => ({ ...form, current: event.target.value }))
+                  setPasswordForm((form) => ({
+                    ...form,
+                    current: event.target.value,
+                  }))
                 }
               />
             </div>
@@ -452,7 +467,10 @@ function GlobalDashboard({
                   placeholder="New secure key"
                   value={passwordForm.next}
                   onChange={(event) =>
-                    setPasswordForm((form) => ({ ...form, next: event.target.value }))
+                    setPasswordForm((form) => ({
+                      ...form,
+                      next: event.target.value,
+                    }))
                   }
                 />
               </div>
@@ -464,7 +482,10 @@ function GlobalDashboard({
                   placeholder="Match new key"
                   value={passwordForm.confirm}
                   onChange={(event) =>
-                    setPasswordForm((form) => ({ ...form, confirm: event.target.value }))
+                    setPasswordForm((form) => ({
+                      ...form,
+                      confirm: event.target.value,
+                    }))
                   }
                 />
               </div>
@@ -474,7 +495,13 @@ function GlobalDashboard({
                 Update Security Key
               </button>
               {passwordForm.message && (
-                <span style={{ fontSize: "0.85rem", fontWeight: 500, color: passwordForm.color }}>
+                <span
+                  style={{
+                    fontSize: "0.85rem",
+                    fontWeight: 500,
+                    color: passwordForm.color,
+                  }}
+                >
                   {passwordForm.message}
                 </span>
               )}
@@ -550,7 +577,12 @@ function RestaurantsView({
               <span style={muted}>{r.activeReservations} active bookings</span>
             </td>
             <td>{r.managerName}</td>
-            <td style={{ color: r.status === "Verified" ? "#2E7D32" : "#F57F17", fontWeight: 700 }}>
+            <td
+              style={{
+                color: r.status === "Verified" ? "#2E7D32" : "#F57F17",
+                fontWeight: 700,
+              }}
+            >
               {r.status}
             </td>
           </tr>
@@ -617,7 +649,12 @@ function UsersView({ data, filters, setFilter, getUserDisplay }) {
             </td>
             <td>{u.role}</td>
             <td>{u.node}</td>
-            <td style={{ color: u.status === "Active" ? "#2E7D32" : "#C62828", fontWeight: 700 }}>
+            <td
+              style={{
+                color: u.status === "Active" ? "#2E7D32" : "#C62828",
+                fontWeight: 700,
+              }}
+            >
               {u.status}
             </td>
           </tr>
@@ -752,7 +789,12 @@ function NotificationsView({ sendBroadcast }) {
             </div>
             <button
               type="submit"
-              style={{ ...greenButton, display: "inline-flex", alignItems: "center", gap: 8 }}
+              style={{
+                ...greenButton,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+              }}
             >
               <i className="fa-solid fa-bullhorn" style={{ color: "#fca5a5" }} /> Send Broadcast
             </button>
@@ -874,7 +916,13 @@ function EscalatedView({ data, setResolveTicket }) {
                   <td style={{ textAlign: "right" }}>
                     <button
                       className="btn-sm btn-outline"
-                      onClick={() => setResolveTicket({ open: true, id: ticket.id, notes: "" })}
+                      onClick={() =>
+                        setResolveTicket({
+                          open: true,
+                          id: ticket.id,
+                          notes: "",
+                        })
+                      }
                     >
                       Resolve
                     </button>
@@ -993,7 +1041,12 @@ function SubAdminModal({ open, close, form, setForm, locations, save, createNewL
               </select>
               <button
                 type="button"
-                onClick={() => setForm((f) => ({ ...f, showNewLocation: !f.showNewLocation }))}
+                onClick={() =>
+                  setForm((f) => ({
+                    ...f,
+                    showNewLocation: !f.showNewLocation,
+                  }))
+                }
                 style={linkButton}
               >
                 <i className="fa-solid fa-plus" />{" "}
@@ -1045,7 +1098,10 @@ function SubAdminModal({ open, close, form, setForm, locations, save, createNewL
                       <input
                         value={form.country}
                         onChange={(event) =>
-                          setForm((f) => ({ ...f, country: event.target.value }))
+                          setForm((f) => ({
+                            ...f,
+                            country: event.target.value,
+                          }))
                         }
                       />
                     </div>
@@ -1096,7 +1152,10 @@ function ResolveModal({ resolveTicket, setResolveTicket, resolveEscalated }) {
               placeholder="Explain what was done to resolve this."
               value={resolveTicket.notes}
               onChange={(event) =>
-                setResolveTicket((current) => ({ ...current, notes: event.target.value }))
+                setResolveTicket((current) => ({
+                  ...current,
+                  notes: event.target.value,
+                }))
               }
             />
           </div>
@@ -1227,7 +1286,13 @@ function QuickAction({ icon, color, label, onClick }) {
       }}
     >
       <i className={`fa-solid ${icon}`} style={{ color }} />{" "}
-      <span style={{ fontWeight: 600, fontSize: "0.85rem", color: "var(--text-dark)" }}>
+      <span
+        style={{
+          fontWeight: 600,
+          fontSize: "0.85rem",
+          color: "var(--text-dark)",
+        }}
+      >
         {label}
       </span>
     </button>
@@ -1249,9 +1314,20 @@ function RecentActivity({ reservation, data, divider }) {
     >
       <i
         className="fa-solid fa-calendar-check"
-        style={{ color: "#1976D2", fontSize: "1.1rem", width: 20, textAlign: "center" }}
+        style={{
+          color: "#1976D2",
+          fontSize: "1.1rem",
+          width: 20,
+          textAlign: "center",
+        }}
       />
-      <div style={{ fontWeight: 500, fontSize: "0.85rem", color: "var(--text-dark)" }}>
+      <div
+        style={{
+          fontWeight: 500,
+          fontSize: "0.85rem",
+          color: "var(--text-dark)",
+        }}
+      >
         New reservation: {user?.name || "A diner"} at {restaurant?.name || "a restaurant"}
       </div>
     </div>
@@ -1292,7 +1368,11 @@ const chip = {
   color: "var(--text-muted)",
   fontSize: "0.7rem",
 };
-const emptyCell = { textAlign: "center", color: "var(--text-muted)", padding: "1.5rem" };
+const emptyCell = {
+  textAlign: "center",
+  color: "var(--text-muted)",
+  padding: "1.5rem",
+};
 const darkButton = {
   background: "var(--text-dark)",
   color: "white",

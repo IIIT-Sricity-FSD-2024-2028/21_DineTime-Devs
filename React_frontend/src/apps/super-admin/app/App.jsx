@@ -1,13 +1,12 @@
-import { useContext, useEffect } from "react";
+import { useEffect } from "react";
 import "./styles.css";
-import { AuthProvider, AuthContext } from "../context/AuthContext.jsx";
+import { useAuth } from "../../../store/hooks/useAuth.js";
 import { ToastProvider } from "../context/ToastContext.jsx";
-import { AdminProvider } from "../context/AdminContext.jsx";
 import { LoginPage } from "../pages/LoginPage.jsx";
 import { DashboardPage } from "../pages/DashboardPage.jsx";
 
 function Body() {
-  const { isAuthenticated } = useContext(AuthContext);
+  const { isAuthenticated } = useAuth("super_user");
 
   useEffect(() => {
     if (!isAuthenticated && window.location.pathname !== "/super-admin/login") {
@@ -23,11 +22,7 @@ function Body() {
 export function App() {
   return (
     <ToastProvider>
-      <AuthProvider>
-        <AdminProvider>
-          <Body />
-        </AdminProvider>
-      </AuthProvider>
+      <Body />
     </ToastProvider>
   );
 }

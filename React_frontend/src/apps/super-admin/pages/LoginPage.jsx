@@ -1,9 +1,9 @@
-import { useState, useContext } from "react";
+import { useState } from "react";
 import logoUrl from "../assets/logo.png";
-import { AuthContext } from "../context/AuthContext.jsx";
+import { useAuth } from "../../../store/hooks/useAuth.js";
 
 export function LoginPage() {
-  const { login } = useContext(AuthContext);
+  const { login } = useAuth("super_user");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showError, setShowError] = useState(false);
@@ -87,7 +87,11 @@ export function LoginPage() {
             </button>
             <div className="demo-override" style={{ marginTop: "1.5rem", textAlign: "center" }}>
               <span
-                style={{ fontSize: "0.8rem", color: "var(--text-muted)", cursor: "help" }}
+                style={{
+                  fontSize: "0.8rem",
+                  color: "var(--text-muted)",
+                  cursor: "help",
+                }}
                 title="Default: admin@dinetime.com / admin123"
               >
                 <i className="ph ph-info" /> Missing keys? Check console logs.
