@@ -1,10 +1,10 @@
 import { createAction } from "../../../app/actions.js";
-import { useState, useContext } from "react";
+import { useState } from "react";
 import { Modal, ErrorMessage } from "./Feedback.jsx";
-import { DinerContext } from "../context/DinerContext.js";
+import { useDiner } from "../../../store/hooks/useDiner.js";
 
 export function CancelDialog({ reservation, onClose }) {
-  const { api } = useContext(DinerContext);
+  const { api } = useDiner();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [run] = useState(() => createAction(setBusy, setError));
@@ -34,7 +34,7 @@ export function CancelDialog({ reservation, onClose }) {
 }
 
 export function ReviewDialog({ reservation, onClose }) {
-  const { api, reviews, restaurants } = useContext(DinerContext);
+  const { api, reviews, restaurants } = useDiner();
   const existing = reviews.find((review) => review.reservation_id === reservation.id);
   const [rating, setRating] = useState(existing?.rating || 0);
   const [comment, setComment] = useState(existing?.comment || "");

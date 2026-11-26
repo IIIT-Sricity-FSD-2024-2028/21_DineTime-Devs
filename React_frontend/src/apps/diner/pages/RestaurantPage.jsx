@@ -1,11 +1,11 @@
-import { useState, useContext } from "react";
+import { useState } from "react";
 import { DinerLayout, Icon, PageLink } from "../components/Navigation.jsx";
 import { DataState, EmptyState } from "../components/Feedback.jsx";
-import { DinerContext } from "../context/DinerContext.js";
+import { useDiner } from "../../../store/hooks/useDiner.js";
 import { image } from "../utils/images.js";
 
 export default function RestaurantPage() {
-  const { restaurants, params, menu, reviews } = useContext(DinerContext);
+  const { restaurants, params, menu, reviews } = useDiner();
   const [slide, setSlide] = useState(0);
   const restaurant = restaurants.find((item) => item.id === params.id);
   const photos = restaurant?.images.length ? restaurant.images : [restaurant?.image];

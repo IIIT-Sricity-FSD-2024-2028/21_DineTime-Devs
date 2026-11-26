@@ -1,25 +1,24 @@
 import { createAction } from "../../../app/actions.js";
-import { useState, useContext } from "react";
+import { useState } from "react";
 import { StackedHeader, PageLink } from "../components/Navigation.jsx";
 import { DataState, EmptyState, ErrorMessage } from "../components/Feedback.jsx";
 import { SecureBadge, reservationCost } from "../components/BookingSummary.jsx";
 import PaymentMethods from "../components/PaymentMethods.jsx";
-import { DinerContext } from "../context/DinerContext.js";
+import { useDiner } from "../../../store/hooks/useDiner.js";
 import { money, today } from "../utils/format.js";
 
 export default function PaymentMethodPage() {
   const {
     api,
     booking: draftBooking,
-    setBooking,
     restaurants,
     tables,
     reservations,
     slots,
     params,
     navigate,
-    setConfirmation,
-  } = useContext(DinerContext);
+    completeBooking,
+  } = useDiner();
   const [method, setMethod] = useState("card");
   const [values, setValues] = useState({});
   const [busy, setBusy] = useState(false);
@@ -75,42 +74,14 @@ export default function PaymentMethodPage() {
         if (new Date(2000 + year, month, 1) <= new Date())
           throw new Error("Your card has expired.");
       }
-      if (isAdditional) {
-        const payment = await api.payAdditional(additionalReservation.id, method);
-        setConfirmation({
-          reservation: additionalReservation,
-          payment,
-          booking,
-          method,
-          additionalPayment: true,
-        });
-        setValues({});
-        await api.refresh();
-        navigate("confirmation");
-        return;
-      }
-      let reservation = booking.reservation;
-      let createdThisAttempt = false;
-      if (!reservation) {
-        reservation = await api.createReservation(booking);
-        createdThisAttempt = true;
-        setBooking({ ...booking, reservation });
-      }
-      try {
-        const payment = await api.pay(reservation.id, method);
-        setConfirmation({ reservation, payment, booking, method });
-        setValues({});
-        await api.refresh();
-        navigate("confirmation");
-      } catch (payError) {
-        if (createdThisAttempt && reservation?.id) {
-          try {
-            await api.deleteReservation(reservation.id);
-            setBooking({ ...booking, reservation: null });
-          } catch (_) {}
-        }
-        throw payError;
-      }
+      const confirmation = await completeBooking({
+        booking,
+        method,
+        additional: isAdditional,
+      });
+      if (!confirmation) return;
+      setValues({});
+      navigate("confirmation");
     });
   }
 

@@ -1,14 +1,14 @@
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { DinerLayout, Hero, PageLink, Icon } from "../components/Navigation.jsx";
 import { DataState, EmptyState } from "../components/Feedback.jsx";
 import { StatusBadge, canModify } from "../components/ReservationCard.jsx";
 import ReservationPayment from "../components/ReservationPayment.jsx";
 import { BookingInformation } from "../components/BookingSummary.jsx";
-import { DinerContext } from "../context/DinerContext.js";
+import { useDiner } from "../../../store/hooks/useDiner.js";
 
 export default function DetailsPage() {
-  const { params, reservations, restaurants, slots, tables } = useContext(DinerContext);
+  const { params, reservations, restaurants, slots, tables } = useDiner();
   const reservation = reservations.find((item) => item.id === params.id);
   const restaurant = restaurants.find((item) => item.id === reservation?.restaurant_id);
   const slot = slots.find((item) => item.id === reservation?.slot_id);

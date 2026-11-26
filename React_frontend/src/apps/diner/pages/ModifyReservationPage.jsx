@@ -1,13 +1,14 @@
-import { useContext, useEffect, useState } from "react";
+import { useResource } from "../../../store/hooks/useResource.js";
+import { useState } from "react";
 import { createAction } from "../../../app/actions.js";
-import { DinerContext } from "../context/DinerContext.js";
+import { useDiner } from "../../../store/hooks/useDiner.js";
 import { DinerLayout, Hero, PageLink } from "../components/Navigation.jsx";
 import { DataState, EmptyState } from "../components/Feedback.jsx";
 import { canModify } from "../components/ReservationCard.jsx";
 import { money, timeLabel, timeRangeLabel, today } from "../utils/format.js";
 
 function ModifyForm({ reservation }) {
-  const { api, restaurants, tables: tableCatalog, slots, navigate } = useContext(DinerContext);
+  const { api, restaurants, tables: tableCatalog, slots, navigate } = useDiner();
   const originalSlot = slots.find((item) => item.id === reservation.slot_id);
   const originalTables = reservation.table_ids || [reservation.table_id];
   const restaurantId = reservation.restaurant_id;
@@ -15,10 +16,14 @@ function ModifyForm({ reservation }) {
   const [slotId, setSlotId] = useState(reservation.slot_id);
   const [guests, setGuests] = useState(reservation.guest_count);
   const [selected, setSelected] = useState([]);
-  const [availability, setAvailability] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [availabilityError, setAvailabilityError] = useState("");
-  const [attempt, setAttempt] = useState(0);
+
+  const availabilityQuery = useResource(
+    `/tableslots/availability?restaurant_id=${encodeURIComponent(restaurantId)}&slot_id=${encodeURIComponent(slotId)}`,
+    { skip: !slotId, refetchOnMountOrArgChange: true },
+  );
+  const availability = availabilityQuery.currentData || [];
+  const loading = availabilityQuery.isFetching;
+  const availabilityError = availabilityQuery.error?.message || "";
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [run] = useState(() => createAction(setBusy, setError));
@@ -46,29 +51,6 @@ function ModifyForm({ reservation }) {
   const additionalPayment = Math.max(0, capacity - paidSeats) * seatRate;
   const ownAllocation =
     restaurantId === reservation.restaurant_id && slotId === reservation.slot_id;
-
-  useEffect(() => {
-    setAvailability([]);
-    setAvailabilityError("");
-    if (!slotId) {
-      setLoading(false);
-      return;
-    }
-    const controller = new AbortController();
-    setLoading(true);
-    api
-      .availability(restaurantId, slotId, controller.signal)
-      .then((entries) => {
-        if (!controller.signal.aborted) setAvailability(entries);
-      })
-      .catch((cause) => {
-        if (!controller.signal.aborted) setAvailabilityError(cause.message);
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
-      });
-    return () => controller.abort();
-  }, [api, restaurantId, slotId, slot, attempt]);
 
   function save(event) {
     event.preventDefault();
@@ -223,7 +205,7 @@ function ModifyForm({ reservation }) {
                 {availabilityError && (
                   <div role="alert">
                     <p>{availabilityError}</p>
-                    <button type="button" onClick={() => setAttempt((value) => value + 1)}>
+                    <button type="button" onClick={() => availabilityQuery.refetch()}>
                       Retry Availability
                     </button>
                   </div>
@@ -299,7 +281,7 @@ function ModifyForm({ reservation }) {
 }
 
 export default function ModifyReservationPage() {
-  const { reservations, params } = useContext(DinerContext);
+  const { reservations, params } = useDiner();
   const reservation = reservations.find((item) => item.id === params.id);
   return (
     <DinerLayout header={false}>

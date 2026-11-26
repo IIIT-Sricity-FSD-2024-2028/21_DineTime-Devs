@@ -1,16 +1,16 @@
 import { createAction } from "../../../app/actions.js";
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useState } from "react";
 import { DinerLayout, Icon, PageLink } from "../components/Navigation.jsx";
 import { DataState, EmptyState, ErrorMessage, Modal } from "../components/Feedback.jsx";
 import { LocationFields } from "../components/Fields.jsx";
 import LocationMap from "../components/LocationMap.jsx";
 import ReservationCard, { StatusBadge } from "../components/ReservationCard.jsx";
 import { CancelDialog, ReviewDialog } from "../components/ReservationDialogs.jsx";
-import { DinerContext } from "../context/DinerContext.js";
+import { useDiner } from "../../../store/hooks/useDiner.js";
 
 export default function ProfilePage() {
   const { api, user, reservations, restaurants, slots, notifications, navigate, params } =
-    useContext(DinerContext);
+    useDiner();
   const [showNotifications, setShowNotifications] = useState(false);
   const [editingLocation, setEditingLocation] = useState(false);
   const [location, setLocation] = useState({

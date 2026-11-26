@@ -1,4 +1,3 @@
-import { useContext } from "react";
 import { StackedHeader, PageLink } from "../components/Navigation.jsx";
 import { DataState, EmptyState } from "../components/Feedback.jsx";
 import {
@@ -6,11 +5,11 @@ import {
   CostSummary,
   RestaurantSummary,
 } from "../components/BookingSummary.jsx";
-import { DinerContext } from "../context/DinerContext.js";
+import { useDiner } from "../../../store/hooks/useDiner.js";
 import { today } from "../utils/format.js";
 
 export default function PaymentMakingPage() {
-  const { booking, restaurants, tables, navigate } = useContext(DinerContext);
+  const { booking, restaurants, tables, navigate } = useDiner();
   const restaurant = restaurants.find((item) => item.id === booking?.restaurantId);
   const table = tables.find((item) => item.id === booking?.tableId);
 

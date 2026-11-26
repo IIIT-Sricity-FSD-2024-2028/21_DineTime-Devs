@@ -1,5 +1,5 @@
-import { useContext, useState } from "react";
-import { DinerContext } from "../context/DinerContext.js";
+import { useState } from "react";
+import { useDiner } from "../../../store/hooks/useDiner.js";
 import { StackedHeader, PageLink } from "../components/Navigation.jsx";
 import { DataState, EmptyState } from "../components/Feedback.jsx";
 import {
@@ -10,8 +10,7 @@ import {
 import { money } from "../utils/format.js";
 
 export default function AdditionalPaymentPage() {
-  const { api, reservations, restaurants, tables, slots, params, navigate } =
-    useContext(DinerContext);
+  const { api, reservations, restaurants, tables, slots, params, navigate } = useDiner();
   const [discardError, setDiscardError] = useState("");
   const reservation = reservations.find((item) => item.id === params.id);
   const proposal = reservation?.pending_modification;
@@ -82,7 +81,12 @@ export default function AdditionalPaymentPage() {
               </div>
               <button
                 className="btn-proceed"
-                onClick={() => navigate("payment_method", { additional: "1", id: reservation.id })}
+                onClick={() =>
+                  navigate("payment_method", {
+                    additional: "1",
+                    id: reservation.id,
+                  })
+                }
               >
                 Continue to Payment Options
               </button>
