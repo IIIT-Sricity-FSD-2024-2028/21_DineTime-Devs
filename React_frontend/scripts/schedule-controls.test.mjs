@@ -16,12 +16,18 @@ async function loadComponent(file, expose = "") {
     new URL(`../src/apps/manager/components/${file}`, import.meta.url),
     "utf8",
   );
-  const { code } = transformSync(source, { loader: "jsx", format: "cjs", jsx: "automatic" });
+  const { code } = transformSync(source, {
+    loader: "jsx",
+    format: "cjs",
+    jsx: "automatic",
+  });
   const module = { exports: {} };
   runInNewContext(`${code}\n${expose}`, {
     module,
     exports: module.exports,
     require(id) {
+      if (id.endsWith("/useManager.js"))
+        return { useManager: () => React.useContext(ManagerContext) };
       if (id.includes("ManagerContext")) return { ManagerContext };
       if (id.includes("ToastContext")) return { ToastContext };
       if (id.includes("ManagerLayout"))
@@ -61,7 +67,11 @@ function plannerHtml(slots = windows, records = []) {
       ManagerContext.Provider,
       {
         value: {
-          data: { schedule: { weekly, rules: [] }, slotRecords: records, tableSlotRecords: [] },
+          data: {
+            schedule: { weekly, rules: [] },
+            slotRecords: records,
+            tableSlotRecords: [],
+          },
           ready: true,
           storage: {},
           refresh() {},
@@ -83,7 +93,12 @@ function removeButton(html, label) {
 
 test("booked date slots show their reservation and disable removal, while weekly controls stay editable", () => {
   const html = plannerHtml(windows, [
-    { ...windows[0], id: "booked", slot_date: "2030-01-02", reservation_count: 1 },
+    {
+      ...windows[0],
+      id: "booked",
+      slot_date: "2030-01-02",
+      reservation_count: 1,
+    },
   ]);
   assert.match(html, /Booked/);
   assert.match(removeButton(html, "Remove Date time slots slot 1"), /disabled/);
