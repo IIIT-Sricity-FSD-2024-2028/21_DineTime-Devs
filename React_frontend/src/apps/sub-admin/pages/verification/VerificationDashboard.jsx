@@ -1,30 +1,37 @@
+import { useActions } from "../../../../store/hooks/useActions.js";
+import { createVerificationActions } from "../../../../store/actions/verificationActions.js";
 import { useEffect, useState, useContext } from "react";
-import { apiRequest, assetUrl } from "../../api/client.js";
+import { assetUrl } from "../../api/client.js";
+import { useApiRequest, useResource } from "../../../../store/hooks/useResource.js";
 import { AdminLayout } from "../../components/AdminLayout.jsx";
 import { DataTable } from "../../components/DataTable.jsx";
 import { Modal } from "../../components/Modal.jsx";
 import { StatusBadge } from "../../components/StatusBadge.jsx";
-import { AuthContext } from "../../context/AuthContext.jsx";
+import { useAuth } from "../../../../store/hooks/useAuth.js";
 import { ToastContext } from "../../context/ToastContext.jsx";
 import { formatDate } from "../../utils/format.js";
 
 export function VerificationDashboard() {
-  const { profile, adminId } = useContext(AuthContext);
+  const apiRequest = useApiRequest();
+  const actions = useActions(createVerificationActions);
+  const { profile, adminId } = useAuth("sub-admin");
   const { showToast } = useContext(ToastContext);
-  const [applications, setApplications] = useState([]);
-  const [current, setCurrent] = useState(null);
+  const query = useResource("/verification/applications", {
+    pollingInterval: 20000,
+    skipPollingIfUnfocused: true,
+  });
+  const applications = query.currentData || [];
+  const loadApplications = () => query.refetch();
+  const [currentId, setCurrentId] = useState(null);
+  const detailQuery = useResource(`/verification/applications/${currentId}`, {
+    skip: !currentId,
+  });
+  const current = detailQuery.currentData || null;
   const [reason, setReason] = useState("");
 
-  async function loadApplications() {
-    const res = await apiRequest("/verification/applications", {}, "verification_admin");
-    setApplications(res?.data || []);
-  }
-
   useEffect(() => {
-    loadApplications().catch((error) => showToast(error.message, "error"));
-    const timer = setInterval(() => loadApplications().catch(() => {}), 20000);
-    return () => clearInterval(timer);
-  }, []);
+    if (query.error) showToast(query.error.message, "error");
+  }, [query.error]);
 
   const counts = {
     pending: applications.filter((item) => item.details.verification_status === "pending").length,
@@ -32,19 +39,13 @@ export function VerificationDashboard() {
     rejected: applications.filter((item) => item.details.verification_status === "rejected").length,
   };
 
-  async function openApplication(managerId) {
-    try {
-      const res = await apiRequest(
-        `/verification/applications/${managerId}`,
-        {},
-        "verification_admin",
-      );
-      setCurrent(res.data);
-      setReason("");
-    } catch (error) {
-      showToast(error.message, "error");
-    }
+  function openApplication(managerId) {
+    setCurrentId(managerId);
+    setReason("");
   }
+  useEffect(() => {
+    if (detailQuery.error) showToast(detailQuery.error.message, "error");
+  }, [detailQuery.error]);
 
   async function submitReview(decision) {
     if (!current) return;
@@ -53,16 +54,9 @@ export function VerificationDashboard() {
       return;
     }
     try {
-      await apiRequest(
-        `/verification/applications/${current.manager.id}/review`,
-        {
-          method: "PATCH",
-          body: JSON.stringify({ decision, reason: reason.trim(), reviewer_id: adminId }),
-        },
-        "verification_admin",
-      );
+      await actions.review(current.manager.id, decision, reason, adminId);
       showToast(decision === "approved" ? "Application approved." : "Application rejected.");
-      setCurrent(null);
+      setCurrentId(null);
       await loadApplications();
     } catch (error) {
       showToast(error.message, "error");
@@ -123,7 +117,11 @@ export function VerificationDashboard() {
       label="VERIFICATION TEAM"
       navItems={[
         { id: "dashboard", label: "Dashboard", icon: "fa-chart-line" },
-        { id: "pending", label: "Pending Applications", icon: "fa-hourglass-half" },
+        {
+          id: "pending",
+          label: "Pending Applications",
+          icon: "fa-hourglass-half",
+        },
       ]}
     >
       {(activeTab) => (
@@ -189,7 +187,7 @@ export function VerificationDashboard() {
             current={current}
             reason={reason}
             setReason={setReason}
-            close={() => setCurrent(null)}
+            close={() => setCurrentId(null)}
             submitReview={submitReview}
           />
         </>
@@ -267,7 +265,13 @@ function ApplicationModal({ current, close, reason, setReason, submitReview }) {
             <i className="fa-solid fa-file" /> View Document
           </a>
         ) : (
-          <p style={{ margin: 0, color: "var(--text-muted)", fontSize: "0.82rem" }}>
+          <p
+            style={{
+              margin: 0,
+              color: "var(--text-muted)",
+              fontSize: "0.82rem",
+            }}
+          >
             No document on file.
           </p>
         )}

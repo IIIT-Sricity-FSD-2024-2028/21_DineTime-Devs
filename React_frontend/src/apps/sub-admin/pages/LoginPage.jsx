@@ -1,5 +1,5 @@
-import { useState, useContext } from "react";
-import { AuthContext } from "../context/AuthContext.jsx";
+import { useState } from "react";
+import { useAuth } from "../../../store/hooks/useAuth.js";
 
 const destinations = {
   support: "/sub-admin/support-dashboard",
@@ -8,7 +8,7 @@ const destinations = {
 };
 
 export function LoginPage() {
-  const { login } = useContext(AuthContext);
+  const { login } = useAuth("sub-admin");
   const [team, setTeam] = useState("support");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,7 +18,11 @@ export function LoginPage() {
     event.preventDefault();
     setHasError(false);
     try {
-      const profile = await login({ team, email: email.trim().toLowerCase(), password });
+      const profile = await login({
+        team,
+        email: email.trim().toLowerCase(),
+        password,
+      });
       window.history.pushState({}, "", destinations[profile.team] || "/sub-admin/login");
       window.dispatchEvent(new PopStateEvent("popstate"));
     } catch (_error) {
