@@ -1,5 +1,6 @@
-import { useState, useContext } from "react";
-import { DinerContext } from "../context/DinerContext.js";
+import { useState } from "react";
+import { useContext } from "react";
+import { DinerDataContext } from "../../../app/PortalDataContext.jsx";
 import { image } from "../utils/images.js";
 
 export function Icon({ name, className = "" }) {
@@ -7,7 +8,7 @@ export function Icon({ name, className = "" }) {
 }
 
 export function PageLink({ page, params, children, ...props }) {
-  const { navigate } = useContext(DinerContext);
+  const { navigate } = useContext(DinerDataContext);
   return (
     <a
       {...props}
@@ -24,7 +25,7 @@ export function PageLink({ page, params, children, ...props }) {
 }
 
 export function Sidebar() {
-  const { currentPage } = useContext(DinerContext);
+  const { currentPage } = useContext(DinerDataContext);
   const links = [
     ["profile", "user", "Profile"],
     ["reservations", "calendar-check", "My Reservations"],
@@ -56,7 +57,7 @@ export function Sidebar() {
 }
 
 export function SearchHeader({ value, onChange, children }) {
-  const { navigate } = useContext(DinerContext);
+  const { navigate } = useContext(DinerDataContext);
   const [query, setQuery] = useState("");
   return (
     <header className="top-header">
