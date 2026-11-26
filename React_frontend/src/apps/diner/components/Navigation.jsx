@@ -55,7 +55,6 @@ export function Sidebar() {
     </aside>
   );
 }
-
 export function SearchHeader({ value, onChange, children }) {
   const { navigate } = useContext(DinerDataContext);
   const [query, setQuery] = useState("");
@@ -119,7 +118,6 @@ export function Hero({ title, subtitle, settings = false, children }) {
     </div>
   );
 }
-
 export function DinerLayout({ children, header = true, searchProps }) {
   return (
     <>
