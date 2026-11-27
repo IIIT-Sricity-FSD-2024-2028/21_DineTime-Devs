@@ -12,13 +12,34 @@ import { money, formatDate } from "../src/apps/sub-admin/utils/format.js";
 const require = createRequire(import.meta.url);
 async function load(file, mocks = {}, expose = "", globals = {}) {
   const source = await readFile(new URL(`../src/apps/${file}`, import.meta.url), "utf8");
-  const { code } = transformSync(source, { loader: "jsx", format: "cjs", jsx: "automatic" });
+  const { code } = transformSync(source, {
+    loader: "jsx",
+    format: "cjs",
+    jsx: "automatic",
+  });
   const module = { exports: {} };
   runInNewContext(`${code}\n${expose}`, {
     module,
     exports: module.exports,
     ...globals,
     require(id) {
+      if (id.endsWith("/useDiner.js"))
+        return {
+          useDiner: () => React.useContext(mocks["../context/DinerContext.js"].DinerContext),
+        };
+      if (id.endsWith("/useManager.js"))
+        return {
+          useManager: () => React.useContext(mocks["../context/ManagerContext.jsx"].ManagerContext),
+        };
+      if (id.endsWith("/useResource.js"))
+        return {
+          useResource: () => ({
+            currentData: mocks.react?.useState({ pending_payout: 0, payments: [] })[0] || {},
+            isFetching: false,
+          }),
+        };
+      if (id.includes("/store/hooks/") || id.includes("/store/actions/")) return {};
+
       if (Object.hasOwn(mocks, id)) return mocks[id];
       if (id.endsWith(".css")) return {};
       return require(id);
@@ -42,8 +63,18 @@ test("finance derives the actual paid amount from old responses and includes mod
   assert.equal(withRefundAmounts(ticket).refund_eligible_amount, 120);
   assert.equal(withRefundAmounts(ticket).already_refunded_amount, 120);
   const audit = [
-    { reservation_id: "resv-2", amount: 140, diner_platform_fee: 20, status: "paid" },
-    { reservation_id: "resv-2", amount: 60.25, diner_platform_fee: 0, status: "paid" },
+    {
+      reservation_id: "resv-2",
+      amount: 140,
+      diner_platform_fee: 20,
+      status: "paid",
+    },
+    {
+      reservation_id: "resv-2",
+      amount: 60.25,
+      diner_platform_fee: 0,
+      status: "paid",
+    },
     { reservation_id: "other", amount: 999, status: "paid" },
     { reservation_id: "resv-2", amount: 50, status: "failed" },
   ];
@@ -51,8 +82,9 @@ test("finance derives the actual paid amount from old responses and includes mod
   assert.equal(withRefundAmounts(ticket, audit).refundable_amount, 180.25);
   assert.equal(withRefundAmounts(ticket, audit).diner_platform_fee_amount, 20);
   assert.equal(
-    withRefundAmounts({ payment: { amount: 140, deposit_amount: 120, payment_status: "paid" } })
-      .refundable_amount,
+    withRefundAmounts({
+      payment: { amount: 140, deposit_amount: 120, payment_status: "paid" },
+    }).refundable_amount,
     120,
   );
   assert.equal(
@@ -127,13 +159,20 @@ test("completed diner history and cards hide the redundant completion button but
     {
       "./Navigation.jsx": { Icon: empty, PageLink: wrapper },
       "../context/DinerContext.js": { DinerContext },
-      "../utils/format.js": { statusLabel: (status) => status, timeLabel: (time) => time },
+      "../utils/format.js": {
+        statusLabel: (status) => status,
+        timeLabel: (time) => time,
+      },
       "./ReservationPayment.jsx": empty,
     },
   );
   const { default: ProfilePage } = await load("diner/pages/ProfilePage.jsx", {
     "../../../app/actions.js": { createAction: () => () => {} },
-    "../components/Navigation.jsx": { DinerLayout: wrapper, Icon: empty, PageLink: wrapper },
+    "../components/Navigation.jsx": {
+      DinerLayout: wrapper,
+      Icon: empty,
+      PageLink: wrapper,
+    },
     "../components/Feedback.jsx": {
       DataState: wrapper,
       EmptyState: wrapper,
@@ -142,7 +181,10 @@ test("completed diner history and cards hide the redundant completion button but
     },
     "../components/Fields.jsx": {},
     "../components/LocationMap.jsx": empty,
-    "../components/ReservationCard.jsx": { default: ReservationCard, StatusBadge },
+    "../components/ReservationCard.jsx": {
+      default: ReservationCard,
+      StatusBadge,
+    },
     "../components/ReservationDialogs.jsx": {},
     "../context/DinerContext.js": { DinerContext },
   });
@@ -278,25 +320,22 @@ test("manager payment history hides pending rows and displays the settlement dat
 });
 
 test("unified login hides role-specific invalid-credential messages from older APIs", async () => {
-  const auth = await load(
-    "auth/UnifiedAuthPage.jsx",
+  const { baseQuery } = await import("../src/store/api/baseQuery.js");
+  const result = await baseQuery(
+    { path: "/auth/login", method: "POST" },
     {
-      "../../app/session.js": {},
-      "../manager/api/config.js": {},
-      "../landing/images/restaurant-interior-hero.jpg": "",
-    },
-    "module.exports.authenticate = authenticate;",
-    {
-      fetch: async () => ({
-        ok: false,
-        status: 401,
-        json: async () => ({ message: "Invalid sub-admin credentials" }),
-      }),
+      getState: () => ({ auth: { generation: 0, session: null } }),
+      dispatch() {},
+      extra: {
+        fetch: async () => ({
+          ok: false,
+          status: 401,
+          json: async () => ({ message: "Invalid sub-admin credentials" }),
+        }),
+      },
     },
   );
-  await assert.rejects(auth.authenticate("http://local", { email: "wrong", password: "wrong" }), {
-    message: "Invalid credentials",
-  });
+  assert.equal(result.error.message, "Invalid credentials");
 });
 
 test("super-user reservations show all service dates initially and support clearing the date filter", async () => {
@@ -334,7 +373,12 @@ test("super-user reservations show all service dates initially and support clear
     renderToStaticMarkup(
       React.createElement(ReservationsView, {
         data: { reservations: rows, reservationsError: error },
-        filters: { resDate: date, resType: "restaurantName", resQuery: "", resStatus: "" },
+        filters: {
+          resDate: date,
+          resType: "restaurantName",
+          resQuery: "",
+          resStatus: "",
+        },
         setFilter() {},
         getReservationDisplay: (row) => row,
       }),
